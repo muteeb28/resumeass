@@ -1,0 +1,291 @@
+.resume-optimizer,
+.resume-content {
+  --resume-page-width: 8.5in;
+  --resume-page-height: 11in;
+  --resume-page-padding: 0.5in;
+  --resume-page-background: #ffffff;
+}
+
+.resume-optimizer .template-preview {
+  aspect-ratio: 8.5 / 11;
+  width: 100%;
+  height: auto;
+  overflow: hidden;
+  --resume-page-width: 100%;
+  --resume-page-height: 100%;
+  --resume-page-padding: clamp(8px, 1.6vw, 14px);
+}
+
+.resume-optimizer .resume-page {
+  width: var(--resume-page-width);
+  min-height: var(--resume-page-height);
+  padding: var(--resume-page-padding);
+  background: var(--resume-page-background);
+  margin: 0 auto;
+}
+
+.resume-optimizer .resume-preview-wrapper {
+  overflow-x: auto;
+}
+
+.resume-optimizer .resume-preview-shell {
+  overflow: visible;
+}
+
+.resume-optimizer .resume-preview-page {
+  display: flex;
+  justify-content: center;
+}
+
+.resume-optimizer .pdf-friendly {
+  font-family: "Source Sans 3", "Segoe UI", sans-serif;
+  line-height: 1.5;
+  color: #000000;
+  background-color: #ffffff;
+}
+
+.resume-optimizer .pdf-friendly * {
+  box-sizing: border-box;
+}
+
+.resume-optimizer .pdf-friendly h1,
+.resume-optimizer .pdf-friendly h2,
+.resume-optimizer .pdf-friendly h3,
+.resume-optimizer .pdf-friendly h4 {
+  font-family: "Source Serif 4", "Times New Roman", serif;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 8px;
+  page-break-after: avoid;
+}
+
+.resume-optimizer .classic-template,
+.resume-content .classic-template {
+  font-family: "Source Serif 4", "Times New Roman", serif;
+  line-height: 1.5;
+}
+
+.resume-optimizer .classic-template h1,
+.resume-optimizer .classic-template h2,
+.resume-optimizer .classic-template h3,
+.resume-optimizer .classic-template h4,
+.resume-content .classic-template h1,
+.resume-content .classic-template h2,
+.resume-content .classic-template h3,
+.resume-content .classic-template h4 {
+  font-family: "Source Serif 4", "Times New Roman", serif;
+  font-weight: 700;
+}
+
+.resume-optimizer .pdf-friendly p,
+.resume-optimizer .pdf-friendly li {
+  color: #000000;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.resume-optimizer .pdf-friendly .bg-gray-100,
+.resume-optimizer .pdf-friendly .bg-gray-50,
+.resume-optimizer .pdf-friendly .bg-teal-100,
+.resume-optimizer .pdf-friendly .bg-blue-100,
+.resume-optimizer .pdf-friendly .bg-purple-100,
+.resume-optimizer .pdf-friendly .bg-indigo-100 {
+  background-color: #f8f9fa !important;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.resume-optimizer .pdf-friendly .border,
+.resume-optimizer .pdf-friendly .border-b,
+.resume-optimizer .pdf-friendly .border-l,
+.resume-optimizer .pdf-friendly .border-r,
+.resume-optimizer .pdf-friendly .border-t,
+.resume-optimizer .pdf-friendly .border-gray-200,
+.resume-optimizer .pdf-friendly .border-gray-300 {
+  border-color: #000000 !important;
+  border-style: solid;
+}
+
+.resume-optimizer .pdf-friendly .text-gray-900,
+.resume-optimizer .pdf-friendly .text-gray-800,
+.resume-optimizer .pdf-friendly .text-gray-700 {
+  color: #000000 !important;
+}
+
+.resume-optimizer .pdf-friendly .text-gray-600,
+.resume-optimizer .pdf-friendly .text-gray-500 {
+  color: #333333 !important;
+}
+
+.resume-optimizer .pdf-friendly .rounded,
+.resume-optimizer .pdf-friendly .rounded-lg,
+.resume-optimizer .pdf-friendly .rounded-xl,
+.resume-optimizer .pdf-friendly .rounded-full {
+  border-radius: 2px !important;
+}
+
+.resume-optimizer .pdf-friendly .shadow-sm,
+.resume-optimizer .pdf-friendly .shadow,
+.resume-optimizer .pdf-friendly .shadow-lg,
+.resume-optimizer .pdf-friendly .shadow-xl {
+  box-shadow: none !important;
+}
+
+.resume-optimizer .pdf-friendly .no-page-break,
+.resume-optimizer .pdf-friendly .experience-item,
+.resume-optimizer .pdf-friendly .education-item,
+.resume-optimizer .pdf-friendly .project-item {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+@media (max-width: 768px) {
+
+  .resume-optimizer,
+  .resume-content {
+    --resume-page-width: 100%;
+    --resume-page-height: auto;
+    --resume-page-padding: 16px;
+  }
+
+  /* Scale Jake template to fit mobile screens */
+  .resume-content > div {
+    transform-origin: top left;
+    transform: scale(0.48);
+    width: 816px;
+  }
+
+  /* Adjust container height to match scaled content */
+  .resume-content {
+    height: calc(1056px * 0.48);
+    overflow: visible;
+  }
+}
+
+@media print {
+
+  .resume-optimizer,
+  .resume-content {
+    --resume-page-width: 8.5in;
+    --resume-page-height: 11in;
+    --resume-page-padding: 0.5in;
+  }
+}
+
+/* Modern Template Styles */
+.resume-optimizer .modern-template,
+.resume-content .modern-template {
+  font-family: "Inter", "Segoe UI", sans-serif;
+  line-height: 1.5;
+}
+
+.resume-optimizer .modern-template .modern-section-content,
+.resume-content .modern-template .modern-section-content {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Executive Template Styles */
+.resume-optimizer .executive-template,
+.resume-content .executive-template {
+  font-family: "Playfair Display", "Georgia", serif;
+  line-height: 1.6;
+}
+
+.resume-optimizer .executive-template .executive-content,
+.resume-content .executive-template .executive-content {
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* Creative Template Styles */
+.resume-optimizer .creative-template,
+.resume-content .creative-template {
+  font-family: "Poppins", "Segoe UI", sans-serif;
+  line-height: 1.5;
+}
+
+.resume-optimizer .creative-template .creative-section-content,
+.resume-content .creative-template .creative-section-content {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Tech Template Styles */
+.resume-optimizer .tech-template,
+.resume-content .tech-template {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  line-height: 1.6;
+}
+
+.resume-optimizer .tech-template .tech-section-content,
+.resume-content .tech-template .tech-section-content {
+  font-size: 11px;
+  line-height: 1.6;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+}
+
+/* Minimal Template Styles */
+.resume-optimizer .minimal-template,
+.resume-content .minimal-template {
+  font-family: "Helvetica Neue", "Arial", sans-serif;
+  line-height: 1.7;
+}
+
+.resume-optimizer .minimal-template .minimal-content,
+.resume-content .minimal-template .minimal-content {
+  font-size: 12px;
+  line-height: 1.7;
+  font-weight: 300;
+}
+
+/* PDF-friendly overrides for new templates */
+.resume-optimizer .pdf-friendly.modern-template,
+.resume-optimizer .pdf-friendly.executive-template,
+.resume-optimizer .pdf-friendly.creative-template,
+.resume-optimizer .pdf-friendly.tech-template,
+.resume-optimizer .pdf-friendly.minimal-template {
+  background-color: #ffffff !important;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* Ensure gradients and colors work in PDF */
+.resume-optimizer .pdf-friendly .bg-gradient-to-r,
+.resume-optimizer .pdf-friendly .bg-gradient-to-b {
+  background: #1e293b !important;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.resume-optimizer .pdf-friendly .text-green-400,
+.resume-optimizer .pdf-friendly .text-green-300,
+.resume-optimizer .pdf-friendly .text-green-600 {
+  color: #16a34a !important;
+}
+
+.resume-optimizer .pdf-friendly .text-blue-600,
+.resume-optimizer .pdf-friendly .text-blue-500,
+.resume-optimizer .pdf-friendly .text-blue-400 {
+  color: #2563eb !important;
+}
+
+.resume-optimizer .pdf-friendly .text-purple-600,
+.resume-optimizer .pdf-friendly .text-purple-500 {
+  color: #9333ea !important;
+}
+
+.resume-optimizer .pdf-friendly .bg-slate-900,
+.resume-optimizer .pdf-friendly .bg-slate-800 {
+  background-color: #1e293b !important;
+  color: #ffffff !important;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.resume-optimizer .pdf-friendly .bg-slate-50,
+.resume-optimizer .pdf-friendly .bg-slate-100 {
+  background-color: #f8fafc !important;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}

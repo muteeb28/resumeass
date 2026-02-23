@@ -1,0 +1,201 @@
+@import url("https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&display=swap");
+@import "tailwindcss";
+@import "./styles/resume-optimizer.css";
+
+:root {
+  --font-display: "Space Grotesk", "Segoe UI", sans-serif;
+  --font-body: "Manrope", "Segoe UI", sans-serif;
+  --font-sans: var(--font-body);
+  --app-bg: #fbfbf8;
+  --app-surface: #ffffff;
+  --app-ink: #0b0b0b;
+  --app-muted: #5f6368;
+  --app-border: #e6e6e3;
+  --app-accent: #111111;
+  --app-accent-contrast: #ffffff;
+  --app-neutral-50: var(--app-bg);
+  --app-neutral-100: #f5f5f1;
+  --app-neutral-200: var(--app-border);
+  --app-neutral-300: #d2d1c8;
+  --app-neutral-400: #b0afa6;
+  --app-neutral-500: #8a8981;
+  --app-neutral-600: #6a6a62;
+  --app-neutral-700: #4a4a44;
+  --app-neutral-800: #2f2f29;
+  --app-neutral-900: var(--app-accent);
+  --app-neutral-950: var(--app-ink);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
+
+@theme {
+  --color-teal-50: var(--app-neutral-50);
+  --color-teal-100: var(--app-neutral-100);
+  --color-teal-200: var(--app-neutral-200);
+  --color-teal-300: var(--app-neutral-300);
+  --color-teal-400: var(--app-neutral-400);
+  --color-teal-500: var(--app-neutral-500);
+  --color-teal-600: var(--app-neutral-600);
+  --color-teal-700: var(--app-neutral-700);
+  --color-teal-800: var(--app-neutral-800);
+  --color-teal-900: var(--app-neutral-900);
+  --color-teal-950: var(--app-neutral-950);
+  --color-green-50: var(--app-neutral-50);
+  --color-green-100: var(--app-neutral-100);
+  --color-green-200: var(--app-neutral-200);
+  --color-green-300: var(--app-neutral-300);
+  --color-green-400: var(--app-neutral-400);
+  --color-green-500: var(--app-neutral-500);
+  --color-green-600: var(--app-neutral-600);
+  --color-green-700: var(--app-neutral-700);
+  --color-green-800: var(--app-neutral-800);
+  --color-green-900: var(--app-neutral-900);
+  --color-green-950: var(--app-neutral-950);
+  --color-purple-50: var(--app-neutral-50);
+  --color-purple-100: var(--app-neutral-100);
+  --color-purple-200: var(--app-neutral-200);
+  --color-purple-300: var(--app-neutral-300);
+  --color-purple-400: var(--app-neutral-400);
+  --color-purple-500: var(--app-neutral-500);
+  --color-purple-600: var(--app-neutral-600);
+  --color-purple-700: var(--app-neutral-700);
+  --color-purple-800: var(--app-neutral-800);
+  --color-purple-900: var(--app-neutral-900);
+  --color-purple-950: var(--app-neutral-950);
+}
+
+@layer base {
+  html {
+    font-family: var(--font-body);
+    background-color: var(--app-bg);
+    color: var(--app-ink);
+  }
+
+  body {
+    min-height: 100%;
+    background-color: var(--app-bg);
+    color: var(--app-ink);
+  }
+
+  #root {
+    min-height: 100%;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+  }
+
+  a {
+    color: inherit;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font-family: inherit;
+    color: inherit;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+@keyframes scroll {
+  to {
+    transform: translateY(calc(-50% - 0.5rem));
+  }
+}
+
+.animate-scroll {
+  animation: scroll var(--animation-duration, 40s) linear infinite;
+  animation-direction: var(--animation-direction, forwards);
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+.bg-grid-white\/\[0\.05\] {
+  background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+}
+
+.bg-grid-16 {
+  background-size: 16px 16px;
+}
+
+@keyframes cell-ripple {
+  0% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(1.05);
+    opacity: 0.4;
+  }
+}
+
+.animate-cell-ripple {
+  animation: cell-ripple var(--duration, 600ms) ease-out var(--delay, 0ms);
+}
+
+.mask-radial-from-20\% {
+  mask-image: radial-gradient(circle at top, rgba(0, 0, 0, 1) 20%, rgba(0, 0, 0, 0) 75%);
+  -webkit-mask-image: radial-gradient(circle at top, rgba(0, 0, 0, 1) 20%, rgba(0, 0, 0, 0) 75%);
+}
+
+.mask-radial-at-top {
+  mask-position: top;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: top;
+  -webkit-mask-repeat: no-repeat;
+}

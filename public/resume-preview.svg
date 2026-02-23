@@ -1,0 +1,21 @@
+<svg width="800" height="1000" viewBox="0 0 800 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="800" height="1000" fill="white"/>
+<rect x="40" y="40" width="720" height="80" fill="#F3F4F6"/>
+<text x="400" y="90" fill="#374151" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="bold">JOHN DOE</text>
+<rect x="40" y="140" width="720" height="40" fill="#E5E7EB"/>
+<text x="60" y="165" fill="#626283" font-family="sans-serif" font-size="14" font-weight="normal">Senior Frontend Developer | email@example.com | (555) 123-4567</text>
+<rect x="40" y="200" width="720" height="20" fill="#374151"/>
+<text x="60" y="215" fill="white" font-family="sans-serif" font-size="16" font-weight="bold">EXPERIENCE</text>
+<text x="60" y="250" fill="#374151" font-family="sans-serif" font-size="14" font-weight="bold">Senior Frontend Developer</text>
+<text x="60" y="270" fill="#626283" font-family="sans-serif" font-size="12">Tech Company | 2020 - Present</text>
+<text x="60" y="290" fill="#374151" font-family="sans-serif" font-size="12">Led development of user-facing features using React and TypeScript</text>
+<text x="60" y="305" fill="#374151" font-family="sans-serif" font-size="12">Implemented state management with Redux and testing with Jest</text>
+<rect x="40" y="350" width="720" height="20" fill="#374151"/>
+<text x="60" y="365" fill="white" font-family="sans-serif" font-size="16" font-weight="bold">SKILLS</text>
+<text x="60" y="390" fill="#374151" font-family="sans-serif" font-size="12">React | TypeScript | JavaScript | Node.js | Redux | Git | CSS | HTML</text>
+<text x="60" y="405" fill="#374151" font-family="sans-serif" font-size="12">Jest | Cypress | Webpack | Vercel | AWS | Docker | MongoDB</text>
+<rect x="40" y="450" width="720" height="20" fill="#374151"/>
+<text x="60" y="465" fill="white" font-family="sans-serif" font-size="16" font-weight="bold">EDUCATION</text>
+<text x="60" y="490" fill="#374151" font-family="sans-serif" font-size="14" font-weight="bold">Bachelor of Science in Computer Science</text>
+<text x="60" y="510" fill="#626283" font-family="sans-serif" font-size="12">University of Example | 2016 - 2020</text>
+</svg>
