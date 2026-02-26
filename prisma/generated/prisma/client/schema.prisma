@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model users {
+  id        String   @id @default(cuid())
+  username  String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model hrIndianLists {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  title     String
+  company   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model jobApplications {
+  id        String   @id @default(cuid())
+  company   String
+  title     String   @unique
+  status    String
+  link      String
+  contact   String
+  date      String
+  stage     String
+  custom    Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

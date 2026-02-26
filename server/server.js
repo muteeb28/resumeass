@@ -44,6 +44,7 @@ import { addDatafForHrIndiaLists, getHrIndianListDemo } from './controller/commo
 import { deleteJobApplication, editJobApplication, getJobApplications, setJobApplication, updateJobApplicationStatus } from './controller/job.controller.js';
 import { getAllPosts, getPostBySlug, getFeaturedPosts, getCategories, getPopularPosts } from "./controller/blog.controller.js";
 import { savePortfolio, getPortfolio, deletePortfolio } from "./controller/portfolio.controller.js";
+import { protectRoute } from "./middleware/auth.middleware.js";
 
 const app = express();
 const PORT = process.env.PORT || 3007;
@@ -139,7 +140,7 @@ app.get('/api/health', (req, res) => {
 app.post("/api/user/create", createUser);
 app.post("/api/user/login", login);
 app.post("/api/user/logout", logout);
-app.get("/api/user/profile", authProfile);
+app.get("/api/user/profile", protectRoute, authProfile);
 app.get("/api/payment/charge", createOrder);
 app.post("/api/payment/verify", verifyPayment);
 app.get("/api/hr/list/demo", getHrIndianListDemo);
@@ -150,7 +151,7 @@ app.put('/api/job/application/status/update/:jobId', updateJobApplicationStatus)
 app.post("/api/job/application/delete", deleteJobApplication);
 
 // common controller paths
-app.post('/api/import/hr-indian-lists', addDatafForHrIndiaLists);
+// app.post('/api/import/hr-indian-lists', addDatafForHrIndiaLists);
 
 // Portfolio routes
 app.post("/api/portfolio", savePortfolio);

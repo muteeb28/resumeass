@@ -43,19 +43,7 @@ export default function SidebarDemo() {
     },
   ];
   const [open, setOpen] = useState(false);
-  const [rows, setRows] = useState<any[]>([
-    {
-      id: "1",
-      company: "Alpha Company",
-      title: "Data Analyst",
-      status: "Offer",
-      link: "example.com/jobpos",
-      contact: "Jane",
-      date: "3/21/2025",
-      stage: "Third Round",
-      custom: {},
-    },
-  ]);
+  const [rows, setRows] = useState<any[]>([]);
 
   useEffect(() => {
     const getJobApplications = async () => {
@@ -466,7 +454,7 @@ const Dashboard = ({ rows, setRows }: { rows: any[], setRows: (newRows: any) => 
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.map((row) => (
+                    {rows?.length === 0 ? <p className="my-4 text-center font-bold text-sm text-gray-600">start tracking your job. Click on the add card on the top right of the table.</p> : rows.map((row) => (
                       <tr
                         key={row.id}
                         className="border-b border-neutral-200 last:border-b-0"
