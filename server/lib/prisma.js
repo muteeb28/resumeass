@@ -1,27 +1,23 @@
-/**
- * PRISMA SHIM
- * This file is a temporary shim to prevent the server from crashing 
- * due to missing generated Prisma client files.
- * 
- * We are transitioning to direct SQL queries via server/db/db.js (pg Pool).
- */
+import "dotenv/config";
+import prismaPkg from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-const prismaMock = new Proxy({}, {
-  get: (target, prop) => {
-    return new Proxy(() => { }, {
-      get: (t, p) => {
-        // Return a function that logs a warning
-        return () => {
-          console.warn(`⚠️ Prisma call intercepted: prisma.${prop}.${p}. Transition to direct SQL query.`);
-          throw new Error(`Prisma client not generated. Use direct SQL instead of prisma.${prop}.${p}.`);
-        };
-      },
-      apply: (t, thisArg, argumentsList) => {
-        console.warn(`⚠️ Prisma call intercepted: prisma.${prop}(). Transition to direct SQL query.`);
-        throw new Error(`Prisma client not generated. Use direct SQL instead of prisma.${prop}().`);
-      }
-    });
-  }
-});
+const { PrismaClient } = prismaPkg;
 
-export default prismaMock;
+const prismaClientSingleton = () => {
+    const databaseUrl = process.env.DATABASE_URL;
+    if (!databaseUrl) {
+        throw new Error("DATABASE_URL is not set");
+    }
+
+    const adapter = new PrismaPg({ connectionString: databaseUrl });
+    return new PrismaClient({ adapter });
+};
+
+const globalForPrisma = global;
+
+const prisma = globalForPrisma.prisma || prismaClientSingleton();
+
+export default prisma;
+
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
