@@ -8,7 +8,7 @@ interface Props {
 }
 
 export default function TemplateSidebar({ data }: Props) {
-  const { basics, work, skills, projects, education, awards } = data;
+  const { basics, work, skills, projects, education, awards, volunteer, coursework, extraSections } = data;
   const summary = (data as any).summary || "";
 
   return (
@@ -95,6 +95,30 @@ export default function TemplateSidebar({ data }: Props) {
               ))}
             </div>
           )}
+
+          {/* Coursework */}
+          {coursework && coursework.length > 0 && (
+            <div className="tsb-sidebar-section">
+              <h3 className="tsb-sidebar-title">Coursework</h3>
+              <ul style={{ margin: 0, padding: "0 0 0 14px", listStyle: "disc" }}>
+                {coursework.map((c, i) => (
+                  <li key={i} style={{ fontSize: "8.5pt", color: "#4a5568", marginBottom: 3 }}>{c}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Extra Sections (Certifications, Languages, Interests, etc.) */}
+          {extraSections && extraSections.map((section, idx) => (
+            <div key={idx} className="tsb-sidebar-section">
+              <h3 className="tsb-sidebar-title">{section.title}</h3>
+              <div className="tsb-skill-list">
+                {section.items.map((item, j) => (
+                  <span key={j} className="tsb-skill-tag">{item}</span>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Right Main Content */}
@@ -199,6 +223,32 @@ export default function TemplateSidebar({ data }: Props) {
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/* Volunteer */}
+          {volunteer && volunteer.length > 0 && (
+            <div className="tsb-main-section">
+              <h2 className="tsb-main-title">Volunteering</h2>
+              {volunteer.map((v, i) => (
+                <div key={i} className="tsb-work-entry">
+                  <div className="tsb-work-header">
+                    <div>
+                      <div className="tsb-work-position">{v.position}</div>
+                      <div className="tsb-work-company">{v.organization}</div>
+                    </div>
+                    <div className="tsb-work-date">
+                      {v.startDate}{v.endDate ? ` – ${v.endDate}` : ""}
+                    </div>
+                  </div>
+                  {v.summary && <p style={{ margin: "4px 0 0", fontSize: "9pt", color: "#4a5568" }}>{v.summary}</p>}
+                  {v.highlights && v.highlights.length > 0 && (
+                    <ul className="tsb-work-bullets">
+                      {v.highlights.map((h, j) => <li key={j}>{h}</li>)}
+                    </ul>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </div>

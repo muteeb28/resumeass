@@ -8,7 +8,7 @@ interface Props {
 }
 
 export default function TemplateDarkSidebar({ data }: Props) {
-  const { basics, work, skills, projects, education, awards } = data;
+  const { basics, work, skills, projects, education, awards, volunteer, coursework, extraSections } = data;
   const summary = (data as any).summary || "";
 
   return (
@@ -73,6 +73,34 @@ export default function TemplateDarkSidebar({ data }: Props) {
               ))}
             </div>
           )}
+
+          {/* Coursework */}
+          {coursework && coursework.length > 0 && (
+            <div className="tds-sb-section">
+              <h3 className="tds-sb-title">Coursework</h3>
+              {coursework.map((c, i) => (
+                <div key={i} className="tds-sb-skill-item">
+                  <span className="tds-sb-skill-dot" />
+                  <span>{c}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Extra Sections (Certifications, Languages, Interests, etc.) */}
+          {extraSections && extraSections.map((section, idx) => (
+            <div key={idx} className="tds-sb-section">
+              <h3 className="tds-sb-title">{section.title}</h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                {section.items.map((item, j) => (
+                  <div key={j} className="tds-sb-skill-item">
+                    <span className="tds-sb-skill-dot" />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Right Main Content */}
@@ -173,6 +201,30 @@ export default function TemplateDarkSidebar({ data }: Props) {
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/* Volunteer */}
+          {volunteer && volunteer.length > 0 && (
+            <div className="tds-section">
+              <h2 className="tds-section-heading">Volunteering</h2>
+              {volunteer.map((v, i) => (
+                <div key={i} className="tds-exp-entry">
+                  <div className="tds-exp-top">
+                    <div className="tds-exp-position">{v.position}</div>
+                    <div className="tds-exp-date">
+                      {v.startDate}{v.endDate ? ` – ${v.endDate}` : ""}
+                    </div>
+                  </div>
+                  <div className="tds-exp-company">{v.organization}</div>
+                  {v.summary && <p style={{ margin: "4px 0 0", fontSize: "9pt", color: "#636e72" }}>{v.summary}</p>}
+                  {v.highlights && v.highlights.length > 0 && (
+                    <ul className="tds-exp-bullets">
+                      {v.highlights.map((h, j) => <li key={j}>{h}</li>)}
+                    </ul>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </div>

@@ -8,7 +8,7 @@ interface Props {
 }
 
 export default function TemplateTwoColumn({ data }: Props) {
-  const { basics, work, skills, projects, education, awards } = data;
+  const { basics, work, skills, projects, education, awards, volunteer, coursework, extraSections } = data;
   const summary = (data as any).summary || "";
 
   return (
@@ -109,6 +109,32 @@ export default function TemplateTwoColumn({ data }: Props) {
               })}
             </div>
           )}
+
+          {/* Volunteer */}
+          {volunteer && volunteer.length > 0 && (
+            <div className="ttc-section">
+              <h2 className="ttc-section-title ttc-accent-border">Volunteering</h2>
+              {volunteer.map((v, i) => (
+                <div key={i} className="ttc-entry">
+                  <div className="ttc-entry-header">
+                    <div>
+                      <strong className="ttc-entry-title">{v.position}</strong>
+                      <span className="ttc-entry-org"> — {v.organization}</span>
+                    </div>
+                    <span className="ttc-entry-date">
+                      {v.startDate}{v.endDate ? ` – ${v.endDate}` : ""}
+                    </span>
+                  </div>
+                  {v.summary && <p style={{ margin: "4px 0 0", fontSize: "9pt", color: "#343a40" }}>{v.summary}</p>}
+                  {v.highlights && v.highlights.length > 0 && (
+                    <ul className="ttc-bullets">
+                      {v.highlights.map((h, j) => <li key={j}>{h}</li>)}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Right column - Education, Skills, Awards */}
@@ -168,6 +194,30 @@ export default function TemplateTwoColumn({ data }: Props) {
               ))}
             </div>
           )}
+
+          {/* Coursework */}
+          {coursework && coursework.length > 0 && (
+            <div className="ttc-section">
+              <h2 className="ttc-section-title ttc-accent-border">Coursework</h2>
+              <div className="ttc-skill-pills">
+                {coursework.map((c, i) => (
+                  <span key={i} className="ttc-pill">{c}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Extra Sections (Certifications, Languages, Interests, etc.) */}
+          {extraSections && extraSections.map((section, idx) => (
+            <div key={idx} className="ttc-section">
+              <h2 className="ttc-section-title ttc-accent-border">{section.title}</h2>
+              <div className="ttc-skill-pills">
+                {section.items.map((item, j) => (
+                  <span key={j} className="ttc-pill">{item}</span>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

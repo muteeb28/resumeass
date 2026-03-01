@@ -77,6 +77,22 @@ const firstColumn = [
     avatar:
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&auto=format&fit=crop",
   },
+  {
+    quote:
+      "I stopped using LinkedIn because it became rubbish, completely useless. ResumeAssist Jobs is the only platform I'm on now to monitor all the job openings.",
+    name: "Niki",
+    title: "Product Designer, Mumbai",
+    avatar:
+      "https://images.unsplash.com/photo-1614644147724-2d4785d69962?q=80&w=400&auto=format&fit=crop",
+  },
+  {
+    quote:
+      "Hands down the best, most responsive and well structured remote job site I've found so far. Serious and professional and easy to navigate with updated and verified job listings.",
+    name: "Maurice",
+    title: "Software Engineer, Bengaluru",
+    avatar:
+      "https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?q=80&w=400&auto=format&fit=crop",
+  },
 ];
 
 const secondColumn = [
@@ -112,6 +128,22 @@ const secondColumn = [
     avatar:
       "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=400&auto=format&fit=crop",
   },
+  {
+    quote:
+      "I love all the opportunities this app gives you, and brings you straight to the application process, very neat and useful.",
+    name: "Kylie",
+    title: "UI Developer, Hyderabad",
+    avatar:
+      "https://images.unsplash.com/photo-1596436889106-be35e843f974?q=80&w=400&auto=format&fit=crop",
+  },
+  {
+    quote:
+      "Very easy to use, simple. Like the design and how clear it is. Also, their customer support is superb. Responded immediately during the weekend.",
+    name: "Clara",
+    title: "Data Analyst, Pune",
+    avatar:
+      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&auto=format&fit=crop",
+  },
 ];
 
 const thirdColumn = [
@@ -146,5 +178,21 @@ const thirdColumn = [
     title: "Support Lead, Dubai",
     avatar:
       "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?q=80&w=400&auto=format&fit=crop",
+  },
+  {
+    quote:
+      "Great for job hunters since you find openings not listed on other sites like LinkedIn. Makes application targeting easier with AI scoring for keywords.",
+    name: "Dhruv",
+    title: "Full Stack Developer, Chennai",
+    avatar:
+      "https://images.unsplash.com/photo-1604072366595-e75dc92d6bdc?q=80&w=400&auto=format&fit=crop",
+  },
+  {
+    quote:
+      "Very easy to use, simple. Like the design and how clear it is. Also, their customer support is superb. Responded immediately during the weekend.",
+    name: "Elaine",
+    title: "Backend Engineer, Bengaluru",
+    avatar:
+      "https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=400&auto=format&fit=crop",
   },
 ];

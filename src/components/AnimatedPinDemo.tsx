@@ -7,6 +7,7 @@ import { PaymentSection } from "./payment-section";
 import { BackgroundRippleLayout } from "./background-ripple-layout";
 import SidebarDemo from "./sidebar-demo";
 import { HeroSection } from "./hero-section";
+import { JobsPreviewSection } from "./jobs-preview-section";
 
 
 
@@ -40,6 +41,9 @@ export function AnimatedPinDemo() {
       <div id="pricing" className="relative z-10 isolate scroll-mt-24">
         <PaymentSection />
       </div>
+
+      {/* Live Jobs Preview */}
+      <JobsPreviewSection />
 
       {/* CTA Section with 3D Pin */}
       <div className="bg-white py-20 px-4 text-neutral-900">
