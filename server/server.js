@@ -38,7 +38,16 @@ import { extractSectionsWithGemini } from './services/geminiSectionExtractor.js'
 import { validateResumeJson } from './schemas/resumeSchema.js';
 
 // controllers
-import { authProfile, createUser, getAccount, login, logout } from "./controller/user.controller.js";
+import {
+  authProfile,
+  createUser,
+  getAccount,
+  login,
+  logout,
+  updateAccountBasic,
+  updateAccountCareer,
+  updateAccountPassword
+} from "./controller/user.controller.js";
 import { createOrder, verifyPayment } from "./controller/payment.controller.js";
 import { addDatafForHrIndiaLists, getHrIndianListDemo } from './controller/common.controller.js';
 import { deleteJobApplication, editJobApplication, getJobApplications, setJobApplication, updateJobApplicationStatus } from './controller/job.controller.js';
@@ -146,6 +155,9 @@ app.get("/api/payment/charge", createOrder);
 app.post("/api/payment/verify", verifyPayment);
 app.get("/api/hr/list/demo", getHrIndianListDemo);
 app.get('/api/user/account', protectRoute, getAccount);
+app.put('/api/user/account/basic', protectRoute, updateAccountBasic);
+app.put('/api/user/account/career', protectRoute, updateAccountCareer);
+app.put('/api/user/account/password', protectRoute, updateAccountPassword);
 
 // job controller routes
 app.get('/api/job/applications', getJobApplications);

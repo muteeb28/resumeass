@@ -165,3 +165,154 @@ export const getAccount = async (req, res) => {
     });
   }
 }
+
+const allowedGoals = new Set(["perfect_resume", "find_jobs", "hr_emails", "others"]);
+
+export const updateAccountBasic = async (req, res) => {
+  try {
+    const { username } = req.body || {};
+
+    if (!username || !String(username).trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "username is required.",
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { $set: { username: String(username).trim() } },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "user not found.",
+      });
+    }
+
+    await redis.del(`account:${req.user.id}`);
+
+    return res.status(200).json({
+      success: true,
+      message: "basic account details updated successfully.",
+      user,
+    });
+  } catch (error) {
+    console.log("error from updateAccountBasic controller: ", error.message);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "some unexpected error occured",
+    });
+  }
+};
+
+export const updateAccountCareer = async (req, res) => {
+  try {
+    const {
+      currentDesignation,
+      currentCompany,
+      experience,
+      desiredDesignation,
+      companyType,
+      goals,
+      otherGoal,
+      linkedinUrl,
+    } = req.body || {};
+
+    const payload = {
+      currentDesignation: currentDesignation ? String(currentDesignation).trim() : "",
+      currentCompany: currentCompany ? String(currentCompany).trim() : "",
+      experience: experience ? String(experience).trim() : "",
+      desiredDesignation: desiredDesignation ? String(desiredDesignation).trim() : "",
+      companyType: companyType ? String(companyType).trim() : "",
+      goals: Array.isArray(goals) ? goals.filter((goal) => allowedGoals.has(goal)) : [],
+      otherGoal: otherGoal ? String(otherGoal).trim() : "",
+      linkedinUrl: linkedinUrl ? String(linkedinUrl).trim() : "",
+    };
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { $set: payload },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "user not found.",
+      });
+    }
+
+    await redis.del(`account:${req.user.id}`);
+
+    return res.status(200).json({
+      success: true,
+      message: "career details updated successfully.",
+      user,
+    });
+  } catch (error) {
+    console.log("error from updateAccountCareer controller: ", error.message);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "some unexpected error occured",
+    });
+  }
+};
+
+export const updateAccountPassword = async (req, res) => {
+  try {
+    const { newPassword, confirmPassword } = req.body || {};
+
+    if (!newPassword || !confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "newPassword and confirmPassword are required.",
+      });
+    }
+
+    if (String(newPassword) !== String(confirmPassword)) {
+      return res.status(400).json({
+        success: false,
+        message: "Passwords do not match.",
+      });
+    }
+
+    if (String(newPassword).length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters long.",
+      });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(String(newPassword), salt);
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { $set: { password: hashedPassword } },
+      { new: true }
+    ).select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "user not found.",
+      });
+    }
+
+    await redis.del(`account:${req.user.id}`);
+
+    return res.status(200).json({
+      success: true,
+      message: "password updated successfully.",
+    });
+  } catch (error) {
+    console.log("error from updateAccountPassword controller: ", error.message);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "some unexpected error occured",
+    });
+  }
+};

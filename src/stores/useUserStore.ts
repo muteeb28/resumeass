@@ -32,12 +32,17 @@ interface UserStore {
 	login: (email: string, password: string) => Promise<{ success: boolean } | undefined>;
 	logout: () => Promise<void>;
 	checkAuth: () => Promise<void>;
+	updateUser: (user: Partial<User>) => void;
 }
 
 export const useUserStore = create<UserStore>((set) => ({
 	user: null,
 	loading: false,
 	checkingAuth: true,
+	updateUser: (data: Partial<User>) =>
+		set((state) => ({
+		user: state.user ? { ...state.user, ...data } : null,
+	})),
 
 	signup: async ({ username, email, password, confirmPassword, currentDesignation, currentCompany, experience, desiredDesignation, companyType, goals, otherGoal, linkedinUrl }: SignupData) => {
 		set({ loading: true });

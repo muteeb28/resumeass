@@ -27,9 +27,9 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { useUserStore } from "@/stores/useUserStore";
 import axiosInstance from "@/lib/axios";
 import { toast } from "sonner";
+import { useUserStore } from "@/stores/useUserStore";
 
 type ProfileMenu = "profile" | "orders" | "billing" | "support";
 
@@ -196,6 +196,9 @@ export default function ProfilePage() {
 }
 
 function ProfileSettingsPanel() {
+  const [fullName, setFullName] = useState("");
+  const [currentEmail, setCurrentEmail] = useState("");
+  const [newEmail, setNewEmail] = useState("");
   const [currentDesignation, setCurrentDesignation] = useState("");
   const [currentCompany, setCurrentCompany] = useState("");
   const [experience, setExperience] = useState("");
@@ -204,35 +207,111 @@ function ProfileSettingsPanel() {
   const [goals, setGoals] = useState<GoalOption["id"][]>([]);
   const [otherGoal, setOtherGoal] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [savingBasic, setSavingBasic] = useState(false);
+  const [savingCareer, setSavingCareer] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
 
-  const { user } = useUserStore();
+  const { updateUser } = useUserStore();
+
   useEffect(() => {
     const getProfile = async () => {
       try {
-        const res = await axiosInstance.get('/user/account');
+        const res = await axiosInstance.get("/user/account");
         if (res.data?.success) {
-          setCurrentCompany(res.data?.user?.currentDesignation);
-          setCurrentCompany(res.data?.user?.currentCompany);
-          setExperience(res.data?.user?.experience);
-          setDesiredDesignation(res?.data?.user?.desiredDesignation);
-          setCompanyType(res?.data?.user?.companyType);
-          setGoals(res?.data?.user?.goals);
-          setOtherGoal(res?.data?.user?.otherGoal);
-          setLinkedinUrl(res?.data?.user?.linkedinUrl);
+          setFullName(res.data?.user?.username || "");
+          setCurrentEmail(res.data?.user?.email || "");
+          setCurrentDesignation(res.data?.user?.currentDesignation || "");
+          setCurrentCompany(res.data?.user?.currentCompany || "");
+          setExperience(res.data?.user?.experience || "");
+          setDesiredDesignation(res?.data?.user?.desiredDesignation || "");
+          setCompanyType(res?.data?.user?.companyType || "");
+          setGoals(Array.isArray(res?.data?.user?.goals) ? res.data.user.goals : []);
+          setOtherGoal(res?.data?.user?.otherGoal || "");
+          setLinkedinUrl(res?.data?.user?.linkedinUrl || "");
         }
       } catch (error: any) {
-        console.log(error.messag);
-        toast.error(error?.reponse?.data?.message || 'some unexpected error occured. Please try again later.');
+        console.log(error?.message);
+        toast.error(error?.response?.data?.message || "Some unexpected error occurred. Please try again later.");
       }
-    }
+    };
 
     getProfile();
-  }, [])
+  }, []);
 
   const toggleGoal = (goal: GoalOption["id"]) => {
     setGoals((prev) =>
       prev.includes(goal) ? prev.filter((item) => item !== goal) : [...prev, goal]
     );
+  };
+
+  const handleSaveBasicInfo = async () => {
+    if (!fullName.trim()) {
+      toast.error("Full name is required.");
+      return;
+    }
+
+    try {
+      setSavingBasic(true);
+      const res = await axiosInstance.put("/user/account/basic", {
+        username: fullName.trim(),
+      });
+      toast.success(res.data?.message || "Basic account details updated successfully.");
+      updateUser({ username: fullName.trim() })
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Failed to update basic account details.");
+    } finally {
+      setSavingBasic(false);
+    }
+  };
+
+  const handleSaveCareerDetails = async () => {
+    try {
+      setSavingCareer(true);
+      const res = await axiosInstance.put("/user/account/career", {
+        currentDesignation,
+        currentCompany: currentCompany.trim(),
+        experience,
+        desiredDesignation: desiredDesignation.trim(),
+        companyType,
+        goals,
+        otherGoal: goals.includes("others") ? otherGoal.trim() : "",
+        linkedinUrl: linkedinUrl.trim(),
+      });
+      toast.success(res.data?.message || "Career details updated successfully.");
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Failed to update career details.");
+    } finally {
+      setSavingCareer(false);
+    }
+  };
+
+  const handleUpdatePassword = async () => {
+    if (!newPassword || !confirmPassword) {
+      toast.error("Please enter new password and confirm password.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match.");
+      return;
+    }
+
+    try {
+      setSavingPassword(true);
+      const res = await axiosInstance.put("/user/account/password", {
+        newPassword,
+        confirmPassword,
+      });
+      toast.success(res.data?.message || "Password updated successfully.");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Failed to update password.");
+    } finally {
+      setSavingPassword(false);
+    }
   };
 
   return (
@@ -252,12 +331,24 @@ function ProfileSettingsPanel() {
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <FormField label="Full Name" placeholder="John Doe" />
-          <FormField label="Current Designation" placeholder="Full Stack Developer" />
-          <FormField label="Current Company" placeholder="ResumeAssist AI" />
-          <FormField label="Years of Experience" placeholder="3-5 years" />
+          <div className="space-y-2">
+            <Label htmlFor="basic-full-name">Full Name</Label>
+            <Input
+              id="basic-full-name"
+              placeholder="John Doe"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+            />
+          </div>
           <div className="md:col-span-2">
-            <Button className="bg-blue-600 text-white hover:bg-blue-700">Save Basic Info</Button>
+            <Button
+              type="button"
+              className="bg-blue-600 text-white hover:bg-blue-700"
+              onClick={handleSaveBasicInfo}
+              disabled={savingBasic}
+            >
+              {savingBasic ? "Saving..." : "Save Basic Info"}
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -343,7 +434,6 @@ function ProfileSettingsPanel() {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {GOAL_OPTIONS.map((option) => {
                 const selected = goals.includes(option.id);
-
                 return (
                   <button
                     key={option.id}
@@ -387,7 +477,14 @@ function ProfileSettingsPanel() {
           </div>
 
           <div className="md:col-span-2">
-            <Button className="bg-indigo-600 text-white hover:bg-indigo-700">Save Career Details</Button>
+            <Button
+              type="button"
+              className="bg-indigo-600 text-white hover:bg-indigo-700"
+              onClick={handleSaveCareerDetails}
+              disabled={savingCareer}
+            >
+              {savingCareer ? "Saving..." : "Save Career Details"}
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -404,8 +501,19 @@ function ProfileSettingsPanel() {
             Changing your email requires OTP verification sent to your new email.
             For security, account access may be limited during verification.
           </p>
-          <FormField label="Current Email" placeholder="john@example.com" disabled />
-          <FormField label="New Email Address" placeholder="new-email@example.com" />
+          <div className="space-y-2">
+            <Label htmlFor="current-email">Current Email</Label>
+            <Input id="current-email" placeholder="john@example.com" value={currentEmail} disabled />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="new-email-address">New Email Address</Label>
+            <Input
+              id="new-email-address"
+              placeholder="new-email@example.com"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+            />
+          </div>
           <div className="flex flex-wrap gap-3">
             <Button className="bg-amber-600 text-white hover:bg-amber-700">
               Send OTP to New Email
@@ -425,10 +533,35 @@ function ProfileSettingsPanel() {
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <FormField label="New Password" type="password" placeholder="********" />
-          <FormField label="Confirm Password" type="password" placeholder="********" />
+          <div className="space-y-2">
+            <Label htmlFor="new-password">New Password</Label>
+            <Input
+              id="new-password"
+              type="password"
+              placeholder="********"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirm-password">Confirm Password</Label>
+            <Input
+              id="confirm-password"
+              type="password"
+              placeholder="********"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+          </div>
           <div className="md:col-span-2">
-            <Button className="bg-emerald-600 text-white hover:bg-emerald-700">Update Password</Button>
+            <Button
+              type="button"
+              className="bg-emerald-600 text-white hover:bg-emerald-700"
+              onClick={handleUpdatePassword}
+              disabled={savingPassword}
+            >
+              {savingPassword ? "Updating..." : "Update Password"}
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -579,7 +712,10 @@ function renderPanel(activeMenu: ProfileMenu) {
           <CardTitle className="text-emerald-700">Support Form</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <FormField label="Subject" placeholder="Issue with membership renewal" />
+          <div className="space-y-2">
+            <Label htmlFor="support-subject">Subject</Label>
+            <Input id="support-subject" placeholder="Issue with membership renewal" />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="message">Message</Label>
             <Textarea id="message" placeholder="Explain your issue in detail..." className="min-h-28" />
@@ -587,27 +723,6 @@ function renderPanel(activeMenu: ProfileMenu) {
           <Button className="bg-emerald-600 text-white hover:bg-emerald-700">Submit Request</Button>
         </CardContent>
       </Card>
-    </div>
-  );
-}
-
-function FormField({
-  label,
-  placeholder,
-  type = "text",
-  disabled = false,
-}: {
-  label: string;
-  placeholder: string;
-  type?: React.HTMLInputTypeAttribute;
-  disabled?: boolean;
-}) {
-  const id = label.toLowerCase().replace(/\s+/g, "-");
-
-  return (
-    <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
-      <Input id={id} type={type} placeholder={placeholder} disabled={disabled} />
     </div>
   );
 }
