@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   CircleHelp,
   CreditCard,
@@ -27,6 +27,9 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { useUserStore } from "@/stores/useUserStore";
+import axiosInstance from "@/lib/axios";
+import { toast } from "sonner";
 
 type ProfileMenu = "profile" | "orders" | "billing" | "support";
 
@@ -201,6 +204,30 @@ function ProfileSettingsPanel() {
   const [goals, setGoals] = useState<GoalOption["id"][]>([]);
   const [otherGoal, setOtherGoal] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
+
+  const { user } = useUserStore();
+  useEffect(() => {
+    const getProfile = async () => {
+      try {
+        const res = await axiosInstance.get('/user/account');
+        if (res.data?.success) {
+          setCurrentCompany(res.data?.user?.currentDesignation);
+          setCurrentCompany(res.data?.user?.currentCompany);
+          setExperience(res.data?.user?.experience);
+          setDesiredDesignation(res?.data?.user?.desiredDesignation);
+          setCompanyType(res?.data?.user?.companyType);
+          setGoals(res?.data?.user?.goals);
+          setOtherGoal(res?.data?.user?.otherGoal);
+          setLinkedinUrl(res?.data?.user?.linkedinUrl);
+        }
+      } catch (error: any) {
+        console.log(error.messag);
+        toast.error(error?.reponse?.data?.message || 'some unexpected error occured. Please try again later.');
+      }
+    }
+
+    getProfile();
+  }, [])
 
   const toggleGoal = (goal: GoalOption["id"]) => {
     setGoals((prev) =>

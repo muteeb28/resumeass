@@ -36,7 +36,7 @@ export const createUser = async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    password = hashedPassword;
+    req.body.password = hashedPassword;
     const user = await User.create(req.body);
 
     const userId = String(user._id);
@@ -133,3 +133,35 @@ export const logout = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const getAccount = async (req, res) => {
+  try {
+    // try fetching redis from the server
+    let user = null;
+    let rawUser = await redis.get(`account:${req.user.id}`);
+    if (rawUser) {
+      user = JSON.parse(rawUser);
+    }
+    else {
+      user = await User.findById(req.user.id).select('-password').lean();
+      await redis.set(`account:${user._id}`, JSON.stringify(user));
+    }
+    if (!user) {
+      return res.status(404).json({
+        success: true,
+        message: "user not found."
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "user fetched successfully!",
+      user: user,
+    });
+  } catch (error) {
+    console.log('error from the account controller: ', error.message);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "some unexpected error occured",
+    });
+  }
+}
