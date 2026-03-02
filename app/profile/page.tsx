@@ -148,6 +148,17 @@ const GOAL_OPTIONS: GoalOption[] = [
   { id: "others", label: "Others" },
 ];
 
+const SUPPORT_SUBJECT_OPTIONS = [
+  "General Inquiry",
+  "Technical Support",
+  "Billing & Payments",
+  "Account Assistance",
+  "Order Status",
+  "Returns & Refunds",
+  "Feature Request",
+  "Feedback & Suggestions",
+];
+
 export default function ProfilePage() {
   const [activeMenu, setActiveMenu] = useState<ProfileMenu>("profile");
 
@@ -569,6 +580,116 @@ function ProfileSettingsPanel() {
   );
 }
 
+function SupportPanel() {
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmitSupport = async () => {
+    if (!subject.trim() || !message.trim()) {
+      toast.error("Please fill all support form fields.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const res = await axiosInstance.post("/user/support-request", {
+        subject,
+        message: message.trim(),
+      });
+
+      toast.success(res.data?.message || "Support request submitted successfully.");
+      setSubject("");
+      setMessage("");
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Failed to submit support request.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-neutral-800">Help & Support</h2>
+        <p className="mt-1 text-sm text-neutral-500">
+          Reach out to us using email, phone, or the support form.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Card className="border-rose-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-rose-700">
+              <Mail className="h-5 w-5" />
+              Email Support
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-neutral-600">
+            <p>support@resumeassist.ai</p>
+            <p className="text-xs text-neutral-500">Response time: within 24 hours.</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-blue-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-blue-700">
+              <Phone className="h-5 w-5" />
+              Phone Support
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-neutral-600">
+            <p>+1 (555) 019-2048</p>
+            <p className="text-xs text-neutral-500">Mon-Fri, 9:00 AM to 6:00 PM.</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="border-emerald-200">
+        <CardHeader>
+          <CardTitle className="text-emerald-700">Support Form</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="support-subject">Subject</Label>
+            <Select value={subject} onValueChange={setSubject}>
+              <SelectTrigger id="support-subject" className="h-10 w-full rounded-lg border-neutral-200">
+                <SelectValue placeholder="Select support subject" />
+              </SelectTrigger>
+              <SelectContent>
+                {SUPPORT_SUBJECT_OPTIONS.map((item) => (
+                  <SelectItem key={item} value={item}>
+                    {item}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="support-message">Message</Label>
+            <Textarea
+              id="support-message"
+              placeholder="Explain your issue in detail..."
+              className="min-h-28"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+            />
+          </div>
+          <Button
+            type="button"
+            className="bg-emerald-600 text-white hover:bg-emerald-700"
+            onClick={handleSubmitSupport}
+            disabled={submitting}
+          >
+            {submitting ? "Submitting..." : "Submit Request"}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 function renderPanel(activeMenu: ProfileMenu) {
   if (activeMenu === "profile") {
     return <ProfileSettingsPanel />;
@@ -670,59 +791,5 @@ function renderPanel(activeMenu: ProfileMenu) {
     );
   }
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-neutral-800">Help & Support</h2>
-        <p className="mt-1 text-sm text-neutral-500">
-          Reach out to us using email, phone, or the support form.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card className="border-rose-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-rose-700">
-              <Mail className="h-5 w-5" />
-              Email Support
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm text-neutral-600">
-            <p>support@resumeassist.ai</p>
-            <p className="text-xs text-neutral-500">Response time: within 24 hours.</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-blue-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-blue-700">
-              <Phone className="h-5 w-5" />
-              Phone Support
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm text-neutral-600">
-            <p>+1 (555) 019-2048</p>
-            <p className="text-xs text-neutral-500">Mon-Fri, 9:00 AM to 6:00 PM.</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="border-emerald-200">
-        <CardHeader>
-          <CardTitle className="text-emerald-700">Support Form</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="support-subject">Subject</Label>
-            <Input id="support-subject" placeholder="Issue with membership renewal" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="message">Message</Label>
-            <Textarea id="message" placeholder="Explain your issue in detail..." className="min-h-28" />
-          </div>
-          <Button className="bg-emerald-600 text-white hover:bg-emerald-700">Submit Request</Button>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  return <SupportPanel />;
 }

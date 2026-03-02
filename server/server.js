@@ -50,6 +50,7 @@ import {
 } from "./controller/user.controller.js";
 import { createOrder, verifyPayment } from "./controller/payment.controller.js";
 import { addDatafForHrIndiaLists, getHrIndianListDemo, contactus } from './controller/common.controller.js';
+import { createSupportRequest } from "./controller/support.controller.js";
 import { deleteJobApplication, editJobApplication, getJobApplications, setJobApplication, updateJobApplicationStatus } from './controller/job.controller.js';
 import { getAllPosts, getPostBySlug, getFeaturedPosts, getCategories, getPopularPosts } from "./controller/blog.controller.js";
 import { savePortfolio, getPortfolio, deletePortfolio } from "./controller/portfolio.controller.js";
@@ -161,6 +162,9 @@ app.get('/api/user/account', protectRoute, getAccount);
 app.put('/api/user/account/basic', protectRoute, updateAccountBasic);
 app.put('/api/user/account/career', protectRoute, updateAccountCareer);
 app.put('/api/user/account/password', protectRoute, updateAccountPassword);
+
+// support controller
+app.post('/api/user/support-request', protectRoute, createSupportRequest);
 
 // job controller routes
 app.get('/api/job/applications', getJobApplications);
