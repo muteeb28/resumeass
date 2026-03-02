@@ -107,7 +107,7 @@ export default function SignupForm() {
     }
 
     if (step === 4) {
-      if (!linkedInUrl.trim() || !resumeFile || !password || !confirmPassword) {
+      if (!linkedInUrl.trim() || !password || !confirmPassword) {
         return "Please complete all fields in screen 4.";
       }
     }
@@ -156,6 +156,14 @@ export default function SignupForm() {
     const result = await signup({
       username: fullName.trim(),
       email: email.trim(),
+      currentDesignation,
+      currentCompany,
+      experience,
+      desiredDesignation,
+      companyType,
+      goals,
+      otherGoal: otherGoalText,
+      linkedinUrl: linkedInUrl,
       password,
       confirmPassword,
     });
@@ -356,21 +364,6 @@ export default function SignupForm() {
                 onChange={(e) => setLinkedInUrl(e.target.value)}
                 required
               />
-            </LabelInputContainer>
-            <LabelInputContainer>
-              <Label htmlFor="resumeUpload">Upload Resume</Label>
-              <Input
-                id="resumeUpload"
-                type="file"
-                accept=".pdf,.doc,.docx"
-                onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
-                required
-              />
-              {resumeFile && (
-                <p className="text-xs text-neutral-500">
-                  Selected file: <span className="font-medium">{resumeFile.name}</span>
-                </p>
-              )}
             </LabelInputContainer>
             <LabelInputContainer>
               <Label htmlFor="password">Password</Label>

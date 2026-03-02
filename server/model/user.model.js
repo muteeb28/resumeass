@@ -27,6 +27,32 @@ const userSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.Mixed,
       default: null,
     },
+    currentDesignation: {
+      type: String,
+    },
+    currentCompany: {
+      type: String,
+    },
+    experience: {
+      type: String,
+    },
+    desiredDesignation: {
+      type: String,
+    },
+    companyType: {
+      type: String,
+    },
+    goals: {
+      type: [String],
+      enum: ["perfect_resume", "find_jobs", "hr_emails", "others"],
+      default: []
+    },
+    otherGoal: {
+      type: String,
+    },
+    linkedinUrl: {
+      type: String,
+    }
   },
   { timestamps: true }
 );

@@ -26,9 +26,9 @@ const tokenStorage = async (userId, sessionData) => {
 };
 
 export const createUser = async (req, res) => {
-  const { email, password, name, address } = req.body;
   try {
-    const userExists = await User.findOne({ email }).lean();
+    let { email, password } = req.body;
+    const userExists = await User.findOne({ email }).select('_id').lean();
 
     if (userExists) {
       return res.status(400).json({ message: "User already exists" });
@@ -36,13 +36,8 @@ export const createUser = async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-
-    const user = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      address: address || null,
-    });
+    password = hashedPassword;
+    const user = await User.create(req.body);
 
     const userId = String(user._id);
     const sessionData = {
