@@ -18,6 +18,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
@@ -99,6 +106,45 @@ const memberships = [
   },
 ];
 
+type GoalOption = {
+  id: "perfect_resume" | "find_jobs" | "hr_emails" | "others";
+  label: string;
+};
+
+const DESIGNATION_OPTIONS = [
+  "Full Stack Developer",
+  "Frontend Developer",
+  "Backend Developer",
+  "Mobile Developer",
+  "Data Analyst",
+  "Product Manager",
+  "UI/UX Designer",
+];
+
+const EXPERIENCE_OPTIONS = [
+  "0-1 years",
+  "1-3 years",
+  "3-5 years",
+  "5-8 years",
+  "8-12 years",
+  "12+ years",
+];
+
+const COMPANY_TYPE_OPTIONS = [
+  "Startup",
+  "Mid-size Product Company",
+  "Enterprise",
+  "Service-Based Company",
+  "Remote-First Company",
+];
+
+const GOAL_OPTIONS: GoalOption[] = [
+  { id: "perfect_resume", label: "Create the perfect resume" },
+  { id: "find_jobs", label: "Find relevant jobs" },
+  { id: "hr_emails", label: "Get HR emails directly" },
+  { id: "others", label: "Others" },
+];
+
 export default function ProfilePage() {
   const [activeMenu, setActiveMenu] = useState<ProfileMenu>("profile");
 
@@ -146,77 +192,226 @@ export default function ProfilePage() {
   );
 }
 
+function ProfileSettingsPanel() {
+  const [currentDesignation, setCurrentDesignation] = useState("");
+  const [currentCompany, setCurrentCompany] = useState("");
+  const [experience, setExperience] = useState("");
+  const [desiredDesignation, setDesiredDesignation] = useState("");
+  const [companyType, setCompanyType] = useState("");
+  const [goals, setGoals] = useState<GoalOption["id"][]>([]);
+  const [otherGoal, setOtherGoal] = useState("");
+  const [linkedinUrl, setLinkedinUrl] = useState("");
+
+  const toggleGoal = (goal: GoalOption["id"]) => {
+    setGoals((prev) =>
+      prev.includes(goal) ? prev.filter((item) => item !== goal) : [...prev, goal]
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-neutral-800">Profile Settings</h2>
+        <p className="mt-1 text-sm text-neutral-500">
+          Update your personal details and account security information.
+        </p>
+      </div>
+
+      <Card className="border-blue-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg text-blue-700">
+            <UserRound className="h-5 w-5" />
+            Basic Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <FormField label="Full Name" placeholder="John Doe" />
+          <FormField label="Current Designation" placeholder="Full Stack Developer" />
+          <FormField label="Current Company" placeholder="ResumeAssist AI" />
+          <FormField label="Years of Experience" placeholder="3-5 years" />
+          <div className="md:col-span-2">
+            <Button className="bg-blue-600 text-white hover:bg-blue-700">Save Basic Info</Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-indigo-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg text-indigo-700">
+            <UserRound className="h-5 w-5" />
+            Career Details
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label>Current Designation</Label>
+            <Select value={currentDesignation} onValueChange={setCurrentDesignation}>
+              <SelectTrigger className="h-10 w-full rounded-lg border-neutral-200">
+                <SelectValue placeholder="Select your role" />
+              </SelectTrigger>
+              <SelectContent>
+                {DESIGNATION_OPTIONS.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="career-current-company">Current Company</Label>
+            <Input
+              id="career-current-company"
+              placeholder="Company name"
+              value={currentCompany}
+              onChange={(e) => setCurrentCompany(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Experience</Label>
+            <Select value={experience} onValueChange={setExperience}>
+              <SelectTrigger className="h-10 w-full rounded-lg border-neutral-200">
+                <SelectValue placeholder="Select experience" />
+              </SelectTrigger>
+              <SelectContent>
+                {EXPERIENCE_OPTIONS.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="career-desired-designation">Desired Designation</Label>
+            <Input
+              id="career-desired-designation"
+              placeholder="Senior Full Stack Developer"
+              value={desiredDesignation}
+              onChange={(e) => setDesiredDesignation(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Company Type</Label>
+            <Select value={companyType} onValueChange={setCompanyType}>
+              <SelectTrigger className="h-10 w-full rounded-lg border-neutral-200">
+                <SelectValue placeholder="Select company type" />
+              </SelectTrigger>
+              <SelectContent>
+                {COMPANY_TYPE_OPTIONS.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2 md:col-span-2">
+            <Label>Goals</Label>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {GOAL_OPTIONS.map((option) => {
+                const selected = goals.includes(option.id);
+
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => toggleGoal(option.id)}
+                    className={cn(
+                      "flex min-h-16 items-center rounded-lg border p-3 text-left text-sm transition",
+                      selected
+                        ? "border-neutral-900 bg-neutral-100 text-neutral-900"
+                        : "border-neutral-200 text-neutral-700 hover:border-neutral-400"
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {goals.includes("others") && (
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="career-other-goal">Other Goal</Label>
+              <Input
+                id="career-other-goal"
+                placeholder="Type your goal"
+                value={otherGoal}
+                onChange={(e) => setOtherGoal(e.target.value)}
+              />
+            </div>
+          )}
+
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="career-linkedin-url">Linkedin URL</Label>
+            <Input
+              id="career-linkedin-url"
+              type="url"
+              placeholder="https://www.linkedin.com/in/username"
+              value={linkedinUrl}
+              onChange={(e) => setLinkedinUrl(e.target.value)}
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <Button className="bg-indigo-600 text-white hover:bg-indigo-700">Save Career Details</Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-amber-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg text-amber-700">
+            <Mail className="h-5 w-5" />
+            Email Section
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
+            Changing your email requires OTP verification sent to your new email.
+            For security, account access may be limited during verification.
+          </p>
+          <FormField label="Current Email" placeholder="john@example.com" disabled />
+          <FormField label="New Email Address" placeholder="new-email@example.com" />
+          <div className="flex flex-wrap gap-3">
+            <Button className="bg-amber-600 text-white hover:bg-amber-700">
+              Send OTP to New Email
+            </Button>
+            <Button variant="outline" className="border-amber-200 text-amber-700 hover:bg-amber-50">
+              Verify OTP
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-emerald-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg text-emerald-700">
+            <ShieldCheck className="h-5 w-5" />
+            Password & Security
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <FormField label="New Password" type="password" placeholder="********" />
+          <FormField label="Confirm Password" type="password" placeholder="********" />
+          <div className="md:col-span-2">
+            <Button className="bg-emerald-600 text-white hover:bg-emerald-700">Update Password</Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 function renderPanel(activeMenu: ProfileMenu) {
   if (activeMenu === "profile") {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold text-neutral-800">Profile Settings</h2>
-          <p className="mt-1 text-sm text-neutral-500">
-            Update your personal details and account security information.
-          </p>
-        </div>
-
-        <Card className="border-blue-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg text-blue-700">
-              <UserRound className="h-5 w-5" />
-              Basic Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <FormField label="Full Name" placeholder="John Doe" />
-            <FormField label="Current Designation" placeholder="Full Stack Developer" />
-            <FormField label="Current Company" placeholder="ResumeAssist AI" />
-            <FormField label="Years of Experience" placeholder="3-5 years" />
-            <div className="md:col-span-2">
-              <Button className="bg-blue-600 text-white hover:bg-blue-700">Save Basic Info</Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-amber-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg text-amber-700">
-              <Mail className="h-5 w-5" />
-              Email Section
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
-              Changing your email requires OTP verification sent to your new email.
-              For security, account access may be limited during verification.
-            </p>
-            <FormField label="Current Email" placeholder="john@example.com" disabled />
-            <FormField label="New Email Address" placeholder="new-email@example.com" />
-            <div className="flex flex-wrap gap-3">
-              <Button className="bg-amber-600 text-white hover:bg-amber-700">
-                Send OTP to New Email
-              </Button>
-              <Button variant="outline" className="border-amber-200 text-amber-700 hover:bg-amber-50">
-                Verify OTP
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-emerald-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg text-emerald-700">
-              <ShieldCheck className="h-5 w-5" />
-              Password & Security
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <FormField label="New Password" type="password" placeholder="********" />
-            <FormField label="Confirm Password" type="password" placeholder="********" />
-            <div className="md:col-span-2">
-              <Button className="bg-emerald-600 text-white hover:bg-emerald-700">Update Password</Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <ProfileSettingsPanel />;
   }
 
   if (activeMenu === "orders") {
