@@ -3,6 +3,7 @@ import csv from "csv-parser";
 import path from "path";
 import { fileURLToPath } from "url";
 import HrIndianList from "../model/hrIndianList.model.js";
+import ContactUs from "../model/contactus.models.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -83,3 +84,26 @@ export const getHrIndianListDemo = async (req, res) => {
     });
   }
 };
+
+export const contactus = async (req, res) => {
+  try {
+    const result = await ContactUs.insertOne(req.body);
+    if (result && result._id) {
+      return res.status(200).json({
+        success: true,
+        message: "Thanks for contacting us. We will reach out to you as soon as possible.",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "some error occured. Please try again sometime."
+    });
+  } catch (error) {
+    console.log('error form the contactus controller: ', error.message);
+    return res.status(500).json({
+      success: false,
+      message: "some unexpected error occured. Try again later, if the issue still persists contact support."
+    });
+  }
+}

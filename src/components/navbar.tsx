@@ -88,7 +88,7 @@ export const Navbar = ({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => window.location.hash = "contact"}
+              onClick={() => window.location.href="/contact-us"}
               className={cn(
                 isLight ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100" : ""
               )}
@@ -210,7 +210,7 @@ export const Navbar = ({
                 ))}
                 <div className={cn("border-t pt-3 mt-3 space-y-2", isLight ? "border-slate-200" : "border-slate-700")}>
                   <a
-                    href="#contact"
+                    href="contact-us"
                     className={cn(
                       "block px-3 py-2 rounded-md transition-all duration-200 text-sm font-medium",
                       isLight

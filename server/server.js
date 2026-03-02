@@ -49,7 +49,7 @@ import {
   updateAccountPassword
 } from "./controller/user.controller.js";
 import { createOrder, verifyPayment } from "./controller/payment.controller.js";
-import { addDatafForHrIndiaLists, getHrIndianListDemo } from './controller/common.controller.js';
+import { addDatafForHrIndiaLists, getHrIndianListDemo, contactus } from './controller/common.controller.js';
 import { deleteJobApplication, editJobApplication, getJobApplications, setJobApplication, updateJobApplicationStatus } from './controller/job.controller.js';
 import { getAllPosts, getPostBySlug, getFeaturedPosts, getCategories, getPopularPosts } from "./controller/blog.controller.js";
 import { savePortfolio, getPortfolio, deletePortfolio } from "./controller/portfolio.controller.js";
@@ -146,6 +146,10 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// common controller
+app.get("/api/hr/list/demo", getHrIndianListDemo);
+app.post('/api/contact-us', contactus);
+
 // user controller routes
 app.post("/api/user/create", createUser);
 app.post("/api/user/login", login);
@@ -153,7 +157,6 @@ app.post("/api/user/logout", logout);
 app.get("/api/user/profile", protectRoute, authProfile);
 app.get("/api/payment/charge", createOrder);
 app.post("/api/payment/verify", verifyPayment);
-app.get("/api/hr/list/demo", getHrIndianListDemo);
 app.get('/api/user/account', protectRoute, getAccount);
 app.put('/api/user/account/basic', protectRoute, updateAccountBasic);
 app.put('/api/user/account/career', protectRoute, updateAccountCareer);
