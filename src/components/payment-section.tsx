@@ -2,6 +2,8 @@
 import { motion } from "motion/react";
 import { Button } from "./button";
 import { cn } from "../lib/utils";
+import { useNavigation } from "./hooks/useNavigation";
+import { useUserStore } from "@/stores/useUserStore";
 
 const PricingCard = ({
   title,
@@ -12,6 +14,7 @@ const PricingCard = ({
   isPopular = false,
   buttonText = "Get Started",
   className,
+  onClick
 }: {
   title: string;
   price: string;
@@ -21,6 +24,7 @@ const PricingCard = ({
   isPopular?: boolean;
   buttonText?: string;
   className?: string;
+  onClick: () => void;
 }) => {
   return (
     <motion.div
@@ -59,6 +63,7 @@ const PricingCard = ({
         </p>
 
         <Button
+          onClick={onClick}
           variant={isPopular ? "default" : "outline"}
           className={cn(
             "mb-6 w-full focus-visible:ring-neutral-900 focus-visible:ring-offset-white",
@@ -87,6 +92,18 @@ const PricingCard = ({
 };
 
 export const PaymentSection = () => {
+
+  const { navigate } = useNavigation();
+  const { user } = useUserStore();
+
+  const onClick = () => {
+    if (!user) {
+      navigate('/login');
+    } else {
+      alert('user found');
+    }
+  }
+
   return (
     <section className="relative bg-white py-24 px-4 text-neutral-900">
       <div className="absolute inset-0">
@@ -136,6 +153,7 @@ export const PaymentSection = () => {
               "One-time payment"
             ]}
             buttonText="Pay Rs 50"
+            onClick={onClick}
           />
 
           <PricingCard
@@ -153,6 +171,7 @@ export const PaymentSection = () => {
             ]}
             isPopular={true}
             buttonText="Unlock Full Access"
+            onClick={onClick}
           />
         </div>
 
