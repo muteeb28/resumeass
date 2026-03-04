@@ -1,10 +1,8 @@
 import os
 from dotenv import load_dotenv
 from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import JSONResponse
 
-from extractor import extract_blocks
-from classifier import classify_sections
+from extractor import extract_text
 from models import ExtractResponse
 
 load_dotenv()
@@ -27,15 +25,8 @@ async def extract(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Empty file")
 
     try:
-        blocks, page_count, raw_text = extract_blocks(pdf_bytes)
-        sections = classify_sections(blocks)
-
-        return ExtractResponse(
-            blocks=blocks,
-            sections=sections,
-            rawText=raw_text,
-            pageCount=page_count,
-        )
+        raw_text, page_count = extract_text(pdf_bytes)
+        return ExtractResponse(rawText=raw_text, pageCount=page_count)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"PDF extraction failed: {str(e)}")
 
