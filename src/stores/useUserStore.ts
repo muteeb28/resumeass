@@ -14,6 +14,14 @@ interface SignupData {
 	email: string;
 	password: string;
 	confirmPassword: string;
+	currentDesignation: string;
+	currentCompany: string;
+	experience: string;
+	desiredDesignation: string;
+	companyType: string;
+	goals: Array<string>;
+	otherGoal: string;
+	linkedinUrl: string;
 }
 
 interface UserStore {
@@ -24,14 +32,19 @@ interface UserStore {
 	login: (email: string, password: string) => Promise<{ success: boolean } | undefined>;
 	logout: () => Promise<void>;
 	checkAuth: () => Promise<void>;
+	updateUser: (user: Partial<User>) => void;
 }
 
 export const useUserStore = create<UserStore>((set) => ({
 	user: null,
 	loading: false,
 	checkingAuth: true,
+	updateUser: (data: Partial<User>) =>
+		set((state) => ({
+		user: state.user ? { ...state.user, ...data } : null,
+	})),
 
-	signup: async ({ username, email, password, confirmPassword }: SignupData) => {
+	signup: async ({ username, email, password, confirmPassword, currentDesignation, currentCompany, experience, desiredDesignation, companyType, goals, otherGoal, linkedinUrl }: SignupData) => {
 		set({ loading: true });
 
 		if (password !== confirmPassword) {
@@ -41,7 +54,7 @@ export const useUserStore = create<UserStore>((set) => ({
 		}
 
 		try {
-			const res = await axios.post("/user/create", { username, email, password });
+			const res = await axios.post("/user/create", { username, email, password, currentDesignation, currentCompany, experience, desiredDesignation, companyType, goals, otherGoal, linkedinUrl });
 			set({ user: res.data, loading: false });
 			return {
 				success: true

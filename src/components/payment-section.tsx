@@ -2,6 +2,8 @@
 import { motion } from "motion/react";
 import { cn } from "../lib/utils";
 import { Zap } from "lucide-react";
+import { useNavigation } from "./hooks/useNavigation";
+import { useUserStore } from "@/stores/useUserStore";
 
 const PricingCard = ({
   title,
@@ -14,6 +16,8 @@ const PricingCard = ({
   comingSoon = false,
   buttonText = "Get Started",
   delay = 0,
+  className,
+  onClick
 }: {
   title: string;
   price: string;
@@ -25,6 +29,8 @@ const PricingCard = ({
   comingSoon?: boolean;
   buttonText?: string;
   delay?: number;
+  className?: string;
+  onClick?: () => void;
 }) => {
   return (
     <motion.div
@@ -86,6 +92,7 @@ const PricingCard = ({
       {/* CTA Button */}
       <button
         disabled={comingSoon}
+        onClick={onClick}
         className={cn(
           "mb-6 w-full py-2.5 rounded-xl text-sm font-semibold transition-colors duration-200",
           isPopular
@@ -130,6 +137,18 @@ const PricingCard = ({
 };
 
 export const PaymentSection = () => {
+
+  const { navigate } = useNavigation();
+  const { user } = useUserStore();
+
+  const onClick = () => {
+    if (!user) {
+      navigate('/login');
+    } else {
+      alert('user found');
+    }
+  }
+
   return (
     <section className="relative bg-neutral-50 py-24 px-4 text-neutral-900">
       <div className="relative max-w-6xl mx-auto">
@@ -176,6 +195,7 @@ export const PaymentSection = () => {
               { text: "One-time payment" },
             ]}
             buttonText="Pay ₹50"
+            onClick={onClick}
           />
 
           <PricingCard
@@ -195,6 +215,7 @@ export const PaymentSection = () => {
             ]}
             isPopular
             buttonText="Unlock Full Access"
+            onClick={onClick}
           />
 
           <PricingCard
