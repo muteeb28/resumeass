@@ -26,15 +26,15 @@ export const AuthModal = ({ open, onClose }: { open: boolean; onClose: () => voi
 
 	const handleAccount = async (e: any) => {
 		e.preventDefault();
-        let res = null;
-        if (mode === "signup") {
-            res = await signup({email: form.email, password: form.password, username: form.username, confirmPassword});
-        } else {
-            res = await login(form.email, form.password);
-        }
-        if (res && res.success) {
-            onClose();
-        }
+        // let res = null;
+        // if (mode === "signup") {
+        //     res = await signup({email: form.email, password: form.password, username: form.username, confirmPassword});
+        // } else {
+        //     res = await login(form.email, form.password);
+        // }
+        // if (res && res.success) {
+        //     onClose();
+        // }
 	};
 
   const handleForm = (e: React.ChangeEvent<HTMLInputElement>) => {
