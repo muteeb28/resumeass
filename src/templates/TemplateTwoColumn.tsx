@@ -9,7 +9,7 @@ interface Props {
 
 export default function TemplateTwoColumn({ data }: Props) {
   const { basics, work, skills, projects, education, awards, volunteer, coursework, extraSections } = data;
-  const summary = (data as any).summary || "";
+  const summary = basics.summary || "";
 
   return (
     <div className="ttc-root" style={{ fontFamily: '"Segoe UI", "Helvetica Neue", Arial, sans-serif' }}>
@@ -26,6 +26,7 @@ export default function TemplateTwoColumn({ data }: Props) {
         )}
         <div className="ttc-header-left">
           <h1 className="ttc-name">{basics.name || "Your Name"}</h1>
+          {basics.headline && <div className="ttc-headline">{basics.headline}</div>}
           <div className="ttc-contact-row">
             {basics.email && <span>{basics.email}</span>}
             {basics.phone && <span>{basics.phone}</span>}
@@ -83,7 +84,19 @@ export default function TemplateTwoColumn({ data }: Props) {
                 return (
                   <div key={i} className="ttc-entry">
                     <div className="ttc-entry-header">
-                      <strong className="ttc-entry-title">{p.name}</strong>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                        <strong className="ttc-entry-title">{p.name}</strong>
+                        {(p.liveUrl || p.sourceUrl) && (
+                          <span style={{ display: "inline-flex", gap: 4 }}>
+                            {p.liveUrl && (
+                              <a href={p.liveUrl} target="_blank" rel="noopener noreferrer" className="ttc-proj-link">Website</a>
+                            )}
+                            {p.sourceUrl && (
+                              <a href={p.sourceUrl} target="_blank" rel="noopener noreferrer" className="ttc-proj-link">Source</a>
+                            )}
+                          </span>
+                        )}
+                      </div>
                       {projDates && <span className="ttc-entry-date">{projDates}</span>}
                     </div>
                     {p.role && <div className="ttc-tech-line">{p.role}</div>}
@@ -246,8 +259,16 @@ const twoColumnStyles = `
   .ttc-name {
     font-size: 26pt;
     font-weight: 700;
-    margin: 0 0 8px 0;
+    margin: 0 0 4px 0;
     letter-spacing: -0.5px;
+  }
+
+  .ttc-headline {
+    font-size: 12pt;
+    font-weight: 400;
+    margin: 0 0 8px 0;
+    opacity: 0.85;
+    letter-spacing: 0.2px;
   }
 
   .ttc-contact-row {
@@ -344,6 +365,24 @@ const twoColumnStyles = `
     color: #343a40;
     margin-bottom: 2px;
     line-height: 1.45;
+  }
+
+  .ttc-proj-link {
+    display: inline-flex;
+    align-items: center;
+    font-size: 8pt;
+    font-weight: 600;
+    padding: 1px 6px;
+    border: 1px solid #e8630a;
+    border-radius: 3px;
+    color: #e8630a !important;
+    text-decoration: none !important;
+    background: transparent;
+  }
+
+  .ttc-proj-link:hover {
+    background: #e8630a;
+    color: #fff !important;
   }
 
   .ttc-tech-line {

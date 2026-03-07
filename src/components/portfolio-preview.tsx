@@ -3,7 +3,9 @@
 import { useState } from "react";
 import BlurFade from "@/components/magicui/blur-fade";
 import BlurFadeText from "@/components/magicui/blur-fade-text";
+import { Badge } from "@/components/ui/badge";
 import { Dock, DockIcon } from "@/components/magicui/dock";
+import { FlickeringGrid } from "@/components/magicui/flickering-grid";
 import { ModeToggle } from "@/components/mode-toggle";
 import type {
   ResumeData,
@@ -114,7 +116,7 @@ function SectionPillHeader({
       <div className="flex items-center w-full">
         <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
         <div className="border bg-primary z-10 rounded-xl px-4 py-1 mx-2">
-          <span className="text-primary-foreground text-sm font-medium">
+          <span className="text-background text-sm font-medium">
             {label}
           </span>
         </div>
@@ -205,92 +207,42 @@ function WorkItem({ job }: { job: ResumeWork }) {
   );
 }
 
-// ─── Skills section ──────────────────────────────────────────────────
-function SkillBadge({ skill }: { skill: string }) {
-  return (
-    <div className="border bg-background border-border ring-2 ring-border/20 rounded-xl h-8 w-fit px-4 flex items-center gap-2 shadow-sm">
-      <span className="text-foreground text-sm font-medium">{skill}</span>
-    </div>
-  );
-}
-
-function SkillsGrid({
-  skills,
-}: {
-  skills: { name: string; keywords: string[] }[];
-}) {
-  const keywordsAreDescriptions = skills.some((g) =>
-    g.keywords.some((k) => k.split(" ").length > 4 || k.length > 35)
-  );
-
-  if (keywordsAreDescriptions) {
-    return (
-      <div className="flex flex-wrap gap-2">
-        {skills
-          .filter((g) => g.name)
-          .map((group, i) => (
-            <SkillBadge key={i} skill={group.name} />
-          ))}
-      </div>
-    );
-  }
-
-  if (
-    skills.length > 1 &&
-    skills.every(
-      (g) => g.name && g.name.toLowerCase() !== "skills"
-    )
-  ) {
-    return (
-      <div className="space-y-3">
-        {skills.map((group, gi) => (
-          <div key={gi}>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-              {group.name}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {group.keywords.filter(Boolean).map((skill, si) => (
-                <SkillBadge key={si} skill={skill} />
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  const all = skills.flatMap((g) => g.keywords).filter(Boolean);
-  return (
-    <div className="flex flex-wrap gap-2">
-      {all.map((skill, i) => (
-        <SkillBadge key={i} skill={skill} />
-      ))}
-    </div>
-  );
-}
 
 // ─── Project card ────────────────────────────────────────────────────
 function ProjectCard({ proj }: { proj: ResumeProject }) {
   const period = formatPeriod(proj.startDate, proj.endDate);
   const url = proj.liveUrl || proj.sourceUrl;
 
+  // Collect tag-like strings: role split by comma, plus any single-word highlights
+  const tags = [
+    ...(proj.role ? proj.role.split(/[,/]/).map((s) => s.trim()).filter(Boolean) : []),
+  ];
+
+  // Remaining highlights shown as bullet points
+  const bullets = proj.highlights ?? [];
+
   return (
-    <div className="flex flex-col h-full border border-border rounded-xl overflow-hidden hover:ring-2 hover:ring-muted transition-all duration-200 bg-background">
-      <div className="relative shrink-0 w-full h-40 bg-muted flex items-center justify-center">
-        <span className="text-2xl font-bold text-muted-foreground/30 select-none">
-          {proj.name?.[0]?.toUpperCase()}
-        </span>
-        <div className="absolute top-2 right-2 flex gap-2">
+    <div className="flex flex-col h-full border border-border rounded-xl overflow-hidden hover:ring-2 cursor-pointer hover:ring-muted transition-all duration-200">
+      {/* ── Image / preview area ── */}
+      <div className="relative shrink-0">
+        <div className="w-full h-48 bg-muted flex items-center justify-center">
+          <span className="text-3xl font-bold text-muted-foreground/20 select-none">
+            {proj.name?.[0]?.toUpperCase()}
+          </span>
+        </div>
+        {/* Link badges — match reference: black pill badges */}
+        <div className="absolute top-2 right-2 flex flex-wrap gap-2">
           {proj.liveUrl && (
             <a
               href={proj.liveUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="flex items-center gap-1 text-[11px] bg-foreground text-background px-2 py-1 rounded-md font-medium hover:opacity-90 transition-opacity"
             >
-              <Globe className="h-3 w-3" />
-              Website
+              <Badge className="flex items-center gap-1.5 text-xs bg-black text-white hover:bg-black/90 rounded-full px-2.5 py-0.5 border-transparent">
+                <Globe className="h-3 w-3" aria-hidden />
+                Website
+              </Badge>
             </a>
           )}
           {proj.sourceUrl && (
@@ -299,19 +251,21 @@ function ProjectCard({ proj }: { proj: ResumeProject }) {
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="flex items-center gap-1 text-[11px] bg-foreground text-background px-2 py-1 rounded-md font-medium hover:opacity-90 transition-opacity"
             >
-              <Github className="h-3 w-3" />
-              Source
+              <Badge className="flex items-center gap-1.5 text-xs bg-black text-white hover:bg-black/90 rounded-full px-2.5 py-0.5 border-transparent">
+                <Github className="h-3 w-3" aria-hidden />
+                Source
+              </Badge>
             </a>
           )}
         </div>
       </div>
 
-      <div className="p-5 flex flex-col gap-3 flex-1">
+      {/* ── Card body ── */}
+      <div className="p-6 flex flex-col gap-3 flex-1">
         <div className="flex items-start justify-between gap-2">
-          <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-            <h3 className="font-semibold leading-none text-sm">{proj.name}</h3>
+          <div className="flex flex-col gap-1">
+            <h3 className="font-semibold">{proj.name}</h3>
             {period && (
               <time className="text-xs text-muted-foreground tabular-nums">
                 {period}
@@ -323,23 +277,23 @@ function ProjectCard({ proj }: { proj: ResumeProject }) {
               href={url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground transition-colors rounded-sm"
+              className="text-muted-foreground hover:text-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               aria-label={`Open ${proj.name}`}
             >
-              <ArrowUpRight className="h-4 w-4" />
+              <ArrowUpRight className="h-4 w-4" aria-hidden />
             </a>
           )}
         </div>
 
         {proj.description && (
-          <p className="text-xs flex-1 leading-relaxed text-muted-foreground text-pretty">
+          <div className="text-xs flex-1 prose max-w-full text-pretty font-sans leading-relaxed text-muted-foreground dark:prose-invert">
             {proj.description}
-          </p>
+          </div>
         )}
 
-        {proj.highlights && proj.highlights.length > 0 && (
+        {bullets.length > 0 && (
           <ul className="text-xs text-muted-foreground space-y-1 flex-1">
-            {proj.highlights.map((h, i) => (
+            {bullets.map((h, i) => (
               <li key={i} className="flex gap-2">
                 <span className="text-muted-foreground/40 mt-0.5 flex-none">•</span>
                 <span>{h}</span>
@@ -348,11 +302,18 @@ function ProjectCard({ proj }: { proj: ResumeProject }) {
           </ul>
         )}
 
-        {proj.role && (
-          <div className="flex flex-wrap gap-1 mt-auto pt-1">
-            <span className="inline-flex items-center border border-border rounded-md h-6 px-2 text-[11px] font-medium text-muted-foreground">
-              {proj.role}
-            </span>
+        {/* Tag badges at bottom — matches reference layout */}
+        {tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-auto">
+            {tags.map((tag, i) => (
+              <Badge
+                key={i}
+                variant="outline"
+                className="text-[11px] font-medium border border-border h-6 w-fit px-2 rounded-full"
+              >
+                {tag}
+              </Badge>
+            ))}
           </div>
         )}
       </div>
@@ -363,16 +324,17 @@ function ProjectCard({ proj }: { proj: ResumeProject }) {
 // ─── Volunteer / Hackathon timeline ──────────────────────────────────
 function VolunteerTimeline({ items }: { items: ResumeVolunteer[] }) {
   return (
-    <div className="relative flex flex-col">
+    <div className="relative flex flex-col gap-0">
       {items.map((vol, idx) => {
         const period = formatPeriod(vol.startDate, vol.endDate);
         return (
           <div
             key={idx}
-            className="relative flex items-start gap-4 pb-8 last:pb-0"
+            className="w-full flex items-start justify-between gap-10 pb-8 last:pb-0"
           >
+            {/* Left: logo + connector line */}
             <div className="flex flex-col items-center flex-none">
-              <div className="size-10 z-10 rounded-full border shadow ring-2 ring-border bg-background flex items-center justify-center text-sm font-bold text-muted-foreground shrink-0 select-none">
+              <div className="size-10 bg-card z-10 shrink-0 overflow-hidden p-1 border rounded-full shadow ring-2 ring-border bg-background flex items-center justify-center text-sm font-bold text-muted-foreground select-none">
                 {getInitial(vol.organization)}
               </div>
               {idx < items.length - 1 && (
@@ -380,33 +342,19 @@ function VolunteerTimeline({ items }: { items: ResumeVolunteer[] }) {
               )}
             </div>
 
-            <div className="flex-1 min-w-0 pt-1">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1">
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold leading-none text-sm">
-                    {vol.organization}
-                  </h3>
-                  {vol.position && (
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                      {vol.position}
-                    </p>
-                  )}
-                </div>
-                {period && (
-                  <time className="flex-none text-xs tabular-nums text-muted-foreground whitespace-nowrap">
-                    {period}
-                  </time>
-                )}
-              </div>
-              {vol.highlights && vol.highlights.length > 0 && (
-                <ul className="mt-2 space-y-1 text-xs text-muted-foreground leading-relaxed">
-                  {vol.highlights.map((h, i) => (
-                    <li key={i} className="flex gap-2">
-                      <span className="text-muted-foreground/40 mt-0.5 flex-none">•</span>
-                      <span>{h}</span>
-                    </li>
-                  ))}
-                </ul>
+            {/* Right: content */}
+            <div className="flex flex-1 flex-col justify-start gap-1 min-w-0">
+              {period && (
+                <time className="text-xs text-muted-foreground tabular-nums">{period}</time>
+              )}
+              <h3 className="font-semibold leading-none text-sm">
+                {vol.organization}
+              </h3>
+              {vol.position && (
+                <p className="text-sm text-muted-foreground">{vol.position}</p>
+              )}
+              {vol.summary && (
+                <p className="text-sm text-muted-foreground leading-relaxed">{vol.summary}</p>
               )}
             </div>
           </div>
@@ -447,10 +395,10 @@ function PortfolioNavbar({ data }: { data: ResumeData }) {
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-4 z-30">
-      <Dock className="pointer-events-auto relative mx-auto flex h-16 gap-1 rounded-2xl border border-border bg-card/90 p-2 shadow-lg backdrop-blur-md">
+      <Dock className="z-50 pointer-events-auto relative h-14 p-2 w-fit mx-auto flex gap-2 border bg-card/90 backdrop-blur-3xl shadow-[0_0_10px_3px] shadow-primary/5">
         {navItems.map((item) => (
-          <a key={item.href} href={item.href} aria-label={item.label}>
-            <DockIcon className="rounded-xl cursor-pointer bg-background text-muted-foreground hover:text-foreground hover:bg-muted border border-border transition-colors">
+          <a key={item.href} href={item.href} title={item.label} aria-label={item.label}>
+            <DockIcon className="rounded-3xl cursor-pointer size-full bg-background p-0 text-muted-foreground hover:text-foreground hover:bg-muted backdrop-blur-3xl border border-border transition-colors">
               <item.icon className="size-full" />
             </DockIcon>
           </a>
@@ -465,9 +413,10 @@ function PortfolioNavbar({ data }: { data: ResumeData }) {
                 href={p.url}
                 target="_blank"
                 rel="noopener noreferrer"
+                title={p.network}
                 aria-label={p.network}
               >
-                <DockIcon className="rounded-xl cursor-pointer bg-background text-muted-foreground hover:text-foreground hover:bg-muted border border-border transition-colors">
+                <DockIcon className="rounded-3xl cursor-pointer size-full bg-background p-0 text-muted-foreground hover:text-foreground hover:bg-muted backdrop-blur-3xl border border-border transition-colors">
                   {getSocialIcon(p.network)}
                 </DockIcon>
               </a>
@@ -476,7 +425,7 @@ function PortfolioNavbar({ data }: { data: ResumeData }) {
         )}
 
         <div className="w-px h-2/3 my-auto bg-border shrink-0" />
-        <DockIcon className="rounded-xl bg-background text-muted-foreground hover:text-foreground hover:bg-muted border border-border transition-colors">
+        <DockIcon className="rounded-3xl cursor-pointer size-full bg-background p-0 text-muted-foreground hover:text-foreground hover:bg-muted backdrop-blur-3xl border border-border transition-colors">
           <ModeToggle className="size-full cursor-pointer" />
         </DockIcon>
       </Dock>
@@ -494,9 +443,24 @@ export default function PortfolioPreview({ data }: PortfolioPreviewProps) {
   const firstName = basics.name?.split(/\s+/)[0] ?? "there";
 
   return (
-    <>
+    <div className="min-h-screen bg-background text-foreground font-sans antialiased relative">
+      {/* FlickeringGrid background at the top */}
+      <div className="absolute inset-x-0 top-0 h-[200px] overflow-hidden z-0 pointer-events-none">
+        <FlickeringGrid
+          className="h-full w-full"
+          squareSize={2}
+          gridGap={2}
+          maxOpacity={0.15}
+          style={{
+            maskImage: "linear-gradient(to bottom, black, transparent)",
+            WebkitMaskImage: "linear-gradient(to bottom, black, transparent)",
+          }}
+        />
+      </div>
+
       <PortfolioNavbar data={data} />
-      <main className="min-h-dvh flex flex-col gap-14 bg-background text-foreground font-sans antialiased max-w-2xl mx-auto px-6 py-12 sm:py-24 pb-24">
+
+      <main className="relative z-10 min-h-dvh flex flex-col gap-14 max-w-2xl mx-auto px-6 py-12 sm:py-24 pb-24">
 
         {/* ── Hero ──────────────────────────────────────────────── */}
         <section id="hero">
@@ -592,7 +556,7 @@ export default function PortfolioPreview({ data }: PortfolioPreviewProps) {
                 <h2 className="text-xl font-bold">About</h2>
               </BlurFade>
               <BlurFade delay={BLUR_FADE_DELAY * 4}>
-                <p className="prose max-w-full text-pretty font-sans leading-relaxed text-muted-foreground">
+                <p className="prose max-w-full text-pretty font-sans leading-relaxed text-muted-foreground dark:prose-invert">
                   {basics.summary}
                 </p>
               </BlurFade>
@@ -684,9 +648,18 @@ export default function PortfolioPreview({ data }: PortfolioPreviewProps) {
               <BlurFade delay={BLUR_FADE_DELAY * 9}>
                 <h2 className="text-xl font-bold">Skills</h2>
               </BlurFade>
-              <BlurFade delay={BLUR_FADE_DELAY * 10}>
-                <SkillsGrid skills={skills} />
-              </BlurFade>
+              <div className="flex flex-wrap gap-2">
+                {skills
+                  .flatMap((g) => g.keywords)
+                  .filter(Boolean)
+                  .map((skill, idx) => (
+                    <BlurFade key={skill + idx} delay={BLUR_FADE_DELAY * 10 + idx * 0.05}>
+                      <div className="border bg-background border-border ring-2 ring-border/20 rounded-xl h-8 w-fit px-4 flex items-center gap-2 shadow-sm">
+                        <span className="text-foreground text-sm font-medium">{skill}</span>
+                      </div>
+                    </BlurFade>
+                  ))}
+              </div>
             </div>
           </section>
         )}
@@ -704,13 +677,8 @@ export default function PortfolioPreview({ data }: PortfolioPreviewProps) {
               </BlurFade>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 max-w-[800px] mx-auto auto-rows-fr w-full">
                 {projects.map((proj, idx) => (
-                  <BlurFade
-                    key={idx}
-                    delay={BLUR_FADE_DELAY * 12 + idx * 0.05}
-                  >
-                    <div className="h-full">
-                      <ProjectCard proj={proj} />
-                    </div>
+                  <BlurFade key={idx} delay={BLUR_FADE_DELAY * 12 + idx * 0.05}>
+                    <ProjectCard proj={proj} />
                   </BlurFade>
                 ))}
               </div>
@@ -720,12 +688,13 @@ export default function PortfolioPreview({ data }: PortfolioPreviewProps) {
 
         {/* ── Volunteering / Hackathons timeline ────────────────── */}
         {volunteer && volunteer.length > 0 && (
-          <section id="volunteering">
-            <div className="flex min-h-0 flex-col gap-y-8">
+          <section id="volunteering" className="overflow-hidden">
+            <div className="flex min-h-0 flex-col gap-y-8 w-full">
               <BlurFade delay={BLUR_FADE_DELAY * 13}>
                 <SectionPillHeader
-                  label="Volunteering"
-                  title="Giving back to the community"
+                  label="Hackathons"
+                  title="I like building things"
+                  description={`During my time I attended ${volunteer.length}+ events and competitions.`}
                 />
               </BlurFade>
               <BlurFade delay={BLUR_FADE_DELAY * 14}>
@@ -790,7 +759,9 @@ export default function PortfolioPreview({ data }: PortfolioPreviewProps) {
                   <h2 className="text-xl font-bold">{section.title}</h2>
                   <div className="flex flex-wrap gap-2">
                     {section.items.map((item, i) => (
-                      <SkillBadge key={i} skill={item} />
+                      <div key={i} className="border bg-background border-border ring-2 ring-border/20 rounded-xl h-8 w-fit px-4 flex items-center gap-2 shadow-sm">
+                        <span className="text-foreground text-sm font-medium">{item}</span>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -854,6 +825,6 @@ export default function PortfolioPreview({ data }: PortfolioPreviewProps) {
           </a>
         </footer>
       </main>
-    </>
+    </div>
   );
 }

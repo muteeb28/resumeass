@@ -29,6 +29,7 @@ export type ResumeProject = {
   bullets?: string[];
   tech?: string[];
   link?: string;
+  github?: string;
 };
 
 export type ResumeEducation = {
@@ -170,6 +171,7 @@ export interface ProjectItem {
   bullets?: string[];
   highlights?: string[];
   link?: string;
+  github?: string;
   startDate?: string;
   endDate?: string;
   role?: string;
@@ -450,6 +452,7 @@ export const migrateOldToNew = (v1: ResumeJSON): ResumeJSONv2 => {
     bullets: proj.bullets,
     highlights: (proj as any).highlights,
     link: proj.link,
+    github: proj.github,
     startDate: (proj as any).startDate,
     endDate: (proj as any).endDate,
     role: (proj as any).role,
@@ -740,6 +743,17 @@ export const parserToV2 = (parsed: any): ResumeJSONv2 => {
           // Flat object
           return { type: 'list', value: cat.name || cat.value || JSON.stringify(cat) };
         });
+      } else if (key === 'experience' || key === 'volunteer' || key === 'community') {
+        // Known timeline keys — always timeline regardless of field heuristics
+        layout = 'timeline';
+        items = val.map((item: any) => ({
+          type: 'timeline',
+          title: item.title || item.role || item.position || '',
+          organization: item.company || item.organization || item.employer || '',
+          dates: item.dates || item.date || item.year || '',
+          location: item.location || '',
+          bullets: item.bullets || (item.description ? [item.description] : [])
+        }));
       } else if (isProject) {
         layout = 'projects';
         items = val.map((item: any) => ({
@@ -754,7 +768,7 @@ export const parserToV2 = (parsed: any): ResumeJSONv2 => {
           endDate: item.endDate || '',
           role: item.role || '',
         }));
-      } else if (isTimeline || key === 'experience' || key === 'volunteer' || key === 'community') {
+      } else if (isTimeline) {
         layout = 'timeline';
         items = val.map((item: any) => ({
           type: 'timeline',

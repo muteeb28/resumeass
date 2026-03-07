@@ -1191,6 +1191,7 @@ export const CreateResumeSimple = () => {
               <PortfolioPreview data={portfolioData} />
             </div>
           )}
+
         </div>
 
         {/* Start over link */}

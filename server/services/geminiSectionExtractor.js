@@ -1,15 +1,14 @@
 /**
- * Resume section extractor using Mistral AI chat completions.
- * Sends all classified sections in a single API call to stay within rate limits.
- * Falls back gracefully if Mistral is unavailable.
+ * Resume extractor using Cohere.
+ * Sends full resume text in a single API call and returns structured JSON.
  */
 
-const MISTRAL_CHAT_URL = 'https://api.mistral.ai/v1/chat/completions';
-const MISTRAL_MODEL = 'mistral-small-latest';
+const COHERE_URL = 'https://api.cohere.com/v2/chat';
+const MODEL = 'command-a-03-2025';
 const TIMEOUT_MS = 60_000;
 
 function getApiKey() {
-  return process.env.MISTRAL_API_KEY;
+  return process.env.COHERE_API_KEY;
 }
 
 // ── JSON cleanup helpers ──────────────────────────────────────────────────────
@@ -123,15 +122,10 @@ function sanitizeExtraSections(arr) {
     }));
 }
 
-// ── Build combined prompt ─────────────────────────────────────────────────────
+// ── Prompt ────────────────────────────────────────────────────────────────────
 
-function buildCombinedPrompt(sections) {
-  const sectionBlocks = sections
-    .filter(s => s.type !== 'unknown')
-    .map(s => `=== SECTION: ${s.type} ===\n${s.rawText}`)
-    .join('\n\n');
-
-  return `You are a resume parser. Extract ALL structured data from the resume sections below.
+function buildPrompt(rawText) {
+  return `You are a resume parser. Extract ALL structured data from the resume text below.
 Return ONLY valid JSON matching this exact schema — no extra text, no markdown fences:
 {
   "basics": {
@@ -147,8 +141,8 @@ Return ONLY valid JSON matching this exact schema — no extra text, no markdown
     {
       "company": "string",
       "role": "string",
-      "location": "string (extract from 'date | location' format if present — the part AFTER the pipe)",
-      "dates": "string (the date range only, e.g. 'Jan 2020 - Present', NOT including the location after '|')",
+      "location": "string",
+      "dates": "string (date range, e.g. 'Jan 2020 - Present')",
       "bullets": ["string (each bullet point as a separate string — PRESERVE DUPLICATES exactly as written)"],
       "tech": ["string (technologies mentioned)"]
     }
@@ -159,7 +153,7 @@ Return ONLY valid JSON matching this exact schema — no extra text, no markdown
       "degree": "string",
       "location": "string (city/state/country if present)",
       "dates": "string (graduation year or date range)",
-      "details": ["string — include ALL sub-details: GPA (e.g. 'Cum. cGPA: 8.2/10.0'), honors (e.g. 'Dean's List (All Semesters)'), coursework, and any other details listed under the degree"]
+      "details": ["string — include ALL sub-details: GPA, honors, coursework, and any other details listed under the degree"]
     }
   ],
   "projects": [
@@ -169,14 +163,14 @@ Return ONLY valid JSON matching this exact schema — no extra text, no markdown
       "bullets": ["string — PRESERVE DUPLICATES exactly as written"],
       "tech": ["string"],
       "link": "string",
-      "role": "string (extract from 'date | role' metadata line if present — the part AFTER the pipe, e.g. 'Solo Developer')",
-      "dates": "string (extract from metadata line before the '|', e.g. 'Sep 2025 - Present')",
+      "role": "string",
+      "dates": "string",
       "location": "string"
     }
   ],
   "skills": [
     {
-      "name": "string (category name like Languages, Frameworks, Tools — use original label from resume)",
+      "name": "string (category name — use original label from resume)",
       "items": ["string (ONLY the skill/tool name — NOT descriptions or explanations)"]
     }
   ],
@@ -212,62 +206,57 @@ Rules:
 - If a section is missing from the resume, use empty string or empty array.
 - All values MUST be strings or arrays of strings. Never use objects for any field.
 - For experience/project bullets, extract EVERY bullet point as a SEPARATE string. PRESERVE EXACT DUPLICATES — do NOT remove them.
-- DATE | LOCATION lines: if a line has format "Jan 2023 – Nov 2024 | Remote", put "Jan 2023 – Nov 2024" in dates and "Remote" in location.
-- PROJECT METADATA lines: if a project has a line like "Sep 2025 – Present | Solo Developer", put "Sep 2025 – Present" in dates and "Solo Developer" in role.
+- CONTACT INFO: Scan the entire text for email (contains @), phone (digits + dashes/spaces/+), and URLs. Icon/emoji characters before contact info should be ignored — extract the value after them. Phone numbers may start with + or a country code.
+- COMPANY NAMES with pipe: "Company A | Company B" is a single company name — do NOT treat it as a date|location separator. The pipe only separates date from location when the left side is a date (contains month names or year digits like "Jan 2023", "2022-2024").
+- DATES: Look for date patterns like "Month Year - Month Year", "Month Year - Present", "Year - Year". The dates line is usually on its own line below the job title.
 - EDUCATION DETAILS: include ALL lines under a degree in details[] — GPA, honors (Dean's List), awards, location. Do NOT discard them.
 - VOLUNTEER / ORGANIZATIONS: Any section titled "Organizations", "Volunteer", "Community", "Activities", "Extracurricular" must go in volunteer[]. Do NOT put volunteer work in projects[].
-- EXTRA SECTIONS: Any section that does NOT fit into experience, education, projects, skills, certifications, volunteer, achievements, or coursework must go into extraSections[]. Examples: Interests, Hobbies, Languages, Publications, References, Awards (non-numeric), Leadership, Memberships. Use the exact section title as "title" and each item as a string in "items".
-- SKILLS — "Name: Description" format: When a skill is written as "Skill Name: Description or explanation of skill", extract ONLY the skill name (the part BEFORE the first colon) as the item. Do NOT include the description after the colon.
-- SKILLS — simple list format: When skills are a comma-separated or plain list, extract each individual skill as a separate item.
-- SKILLS — category format: When skills are grouped under a category label (e.g. "Languages: Python, Java"), use the category as "name" and extract individual skills as "items".
-- For skills, preserve the original category labels from the resume exactly as written.
+- EXTRA SECTIONS: Any section that does NOT fit into experience, education, projects, skills, certifications, volunteer, achievements, or coursework must go into extraSections[]. Examples: Interests, Hobbies, Languages, Publications, References, Leadership, Memberships. Use the exact section title as "title" and each item as a string in "items".
+- SKILLS — category headings without colons: When the resume has a standalone word or phrase as a category heading (e.g. "Expert", "Senior", "High Knowledge", "Tinkering", "Languages", "Frameworks") followed by a list of skills, use that heading as the category "name" and the skills beneath it as "items".
+- SKILLS — "Name: Description" format: extract ONLY the skill name (before the colon) as the item.
+- SKILLS — simple or comma-separated list: extract each individual skill as a separate item.
+- SKILLS — "Category: skill1, skill2" format: use the category label as "name" and each skill as an item.
+- Preserve original category labels exactly as written.
 - Extract ALL links (GitHub, LinkedIn, portfolio, personal website).
 
-RESUME SECTIONS:
-${sectionBlocks}`;
+RESUME TEXT:
+${rawText}`;
 }
 
-// ── Mistral API call ──────────────────────────────────────────────────────────
+// ── Cohere API call ───────────────────────────────────────────────────────────
 
-async function callMistral(prompt) {
+async function callCohere(prompt) {
   const apiKey = getApiKey();
   if (!apiKey || !apiKey.trim()) {
-    throw new Error('MISTRAL_API_KEY is not configured');
+    throw new Error('COHERE_API_KEY is not configured');
   }
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
   try {
-    const response = await fetch(MISTRAL_CHAT_URL, {
+    const response = await fetch(COHERE_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: MISTRAL_MODEL,
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-        response_format: { type: 'json_object' },
-        temperature: 0,
+        model: MODEL,
+        messages: [{ role: 'user', content: prompt }],
       }),
       signal: controller.signal,
     });
 
     if (!response.ok) {
       const errText = await response.text().catch(() => '');
-      throw new Error(`Mistral API ${response.status}: ${errText}`);
+      throw new Error(`Cohere API ${response.status}: ${errText}`);
     }
 
     const result = await response.json();
-    const content = result.choices?.[0]?.message?.content;
+    const content = result.message?.content?.[0]?.text;
     if (!content) {
-      throw new Error('Mistral returned empty content');
+      throw new Error('Cohere returned empty content');
     }
 
     return content;
@@ -279,65 +268,42 @@ async function callMistral(prompt) {
 // ── Main extraction function ──────────────────────────────────────────────────
 
 /**
- * Extract all sections in a single Mistral call and return a sanitized ResumeJSON.
- * @param {Array<{type: string, rawText: string}>} sections
- * @returns {Promise<object>} Merged ResumeJSON
+ * Extract structured resume data from raw text in a single Mistral call.
+ * @param {string} rawText - Full resume text (markdown or plain)
+ * @returns {Promise<object>} Structured ResumeJSON
  */
-export async function extractSectionsWithGemini(sections) {
-  const emptyResult = {
-    basics: { name: '', title: '', email: '', phone: '', location: '', summary: '', links: [] },
-    experience: [],
-    education: [],
-    projects: [],
-    skills: [],
-    certifications: [],
-    volunteer: [],
-    achievements: [],
-    coursework: [],
-    extraSections: [],
-  };
+export async function extractFromRawText(rawText) {
+  const prompt = buildPrompt(rawText);
 
-  const relevantSections = sections.filter(s => s.type !== 'unknown');
-  if (relevantSections.length === 0) return emptyResult;
+  console.log('[CohereExtractor] Calling Cohere with full resume text...');
+  const responseText = await callCohere(prompt);
+  const parsed = safeParse(responseText);
 
-  const prompt = buildCombinedPrompt(relevantSections);
-
-  try {
-    console.log('[MistralExtractor] Calling Mistral API with', relevantSections.length, 'sections...');
-    const rawText = await callMistral(prompt);
-    const parsed = safeParse(rawText);
-
-    if (!parsed) {
-      console.warn('[MistralExtractor] Failed to parse Mistral response');
-      return emptyResult;
-    }
-
-    console.log('[MistralExtractor] Successfully parsed structured resume data');
-
-    // Sanitize all fields
-    const basics = parsed.basics || {};
-    return {
-      basics: {
-        name: str(basics.name),
-        title: str(basics.title),
-        email: str(basics.email),
-        phone: str(basics.phone),
-        location: str(basics.location),
-        summary: str(basics.summary),
-        links: strArr(basics.links),
-      },
-      experience: sanitizeExperience(parsed.experience),
-      education: sanitizeEducation(parsed.education),
-      projects: sanitizeProjects(parsed.projects),
-      skills: sanitizeSkills(parsed.skills),
-      certifications: sanitizeCertifications(parsed.certifications),
-      volunteer: sanitizeVolunteer(parsed.volunteer),
-      achievements: strArr(parsed.achievements),
-      coursework: strArr(parsed.coursework),
-      extraSections: sanitizeExtraSections(parsed.extraSections),
-    };
-  } catch (error) {
-    console.warn('[MistralExtractor] Mistral call failed:', error.message);
-    return emptyResult;
+  if (!parsed) {
+    throw new Error('Cohere returned unparseable JSON');
   }
+
+  console.log('[CohereExtractor] Successfully parsed structured resume data');
+
+  const basics = parsed.basics || {};
+  return {
+    basics: {
+      name: str(basics.name),
+      title: str(basics.title),
+      email: str(basics.email),
+      phone: str(basics.phone),
+      location: str(basics.location),
+      summary: str(basics.summary),
+      links: strArr(basics.links),
+    },
+    experience: sanitizeExperience(parsed.experience),
+    education: sanitizeEducation(parsed.education),
+    projects: sanitizeProjects(parsed.projects),
+    skills: sanitizeSkills(parsed.skills),
+    certifications: sanitizeCertifications(parsed.certifications),
+    volunteer: sanitizeVolunteer(parsed.volunteer),
+    achievements: strArr(parsed.achievements),
+    coursework: strArr(parsed.coursework),
+    extraSections: sanitizeExtraSections(parsed.extraSections),
+  };
 }

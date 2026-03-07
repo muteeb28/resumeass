@@ -32,10 +32,9 @@ import { generateResumeDocxBuffer } from './services/docxGenerator.js';
 import { optimizeResumeForATS } from './services/atsResumeOptimizer.js';
 // Import portfolioly converter
 import { convertToPortfoliolyFormat } from './utils/portfoliolyConverter.js';
-// Import new extraction pipeline
-import { isPythonServiceHealthy, extractResumeWithPython } from './services/pythonParserClient.js';
-import { extractSectionsWithGemini } from './services/geminiSectionExtractor.js';
-import { validateResumeJson } from './schemas/resumeSchema.js';
+// Import extraction pipelines
+import { extractFromPDF, extractFromMarkdown } from './services/geminiPDFExtractor.js';
+import { extractMarkdownFromPDF } from './services/mistralOcrClient.js';
 
 // controllers
 import {
@@ -233,34 +232,43 @@ function normalizeParserResponse(raw) {
   const pi = data.personal_info || {};
   const result = {
     basics: {
-      name: pi.full_name || pi.name || data.name || '',
-      title: pi.headline || '',
-      email: pi.email || '',
-      phone: pi.phone || '',
-      location: pi.location || '',
-      summary: pi.summary || '',
+      name: pi.full_name || pi.name || data.name || data.basics?.name || '',
+      title: pi.headline || data.basics?.title || '',
+      email: pi.email || data.basics?.email || '',
+      phone: pi.phone || data.basics?.phone || '',
+      location: pi.location || data.basics?.location || '',
+      summary: pi.summary || data.basics?.summary || '',
       links: (pi.profiles || [])
         .map((p) => (typeof p === 'string' ? p : (p?.url || '')))
         .filter(Boolean),
     },
-    experience: (data.work_experiences || []).map(exp => {
-      const start = dateToString(exp.start_date);
-      const end = exp.is_current ? 'Present' : dateToString(exp.end_date);
-      let dates = '';
-      if (start || end) dates = [start, end].filter(Boolean).join(' - ');
-      let bullets = exp.highlights || [];
-      if (typeof bullets === 'string') {
-        bullets = bullets.split('\n').map(l => l.trim().replace(/^[-*•]\s*/, '')).filter(Boolean);
-      }
-      return {
-        company: exp.organization || exp.company || '',
-        role: exp.title || '',
-        location: exp.location || '',
-        dates,
-        bullets,
-        tech: exp.technologies || [],
-      };
-    }),
+    experience: data.work_experiences?.length
+      ? (data.work_experiences || []).map(exp => {
+          const start = dateToString(exp.start_date);
+          const end = exp.is_current ? 'Present' : dateToString(exp.end_date);
+          let dates = '';
+          if (start || end) dates = [start, end].filter(Boolean).join(' - ');
+          let bullets = exp.highlights || [];
+          if (typeof bullets === 'string') {
+            bullets = bullets.split('\n').map(l => l.trim().replace(/^[-*•]\s*/, '')).filter(Boolean);
+          }
+          return {
+            company: exp.organization || exp.company || '',
+            role: exp.title || '',
+            location: exp.location || '',
+            dates,
+            bullets,
+            tech: exp.technologies || [],
+          };
+        })
+      : (data.experience || []).map(exp => ({
+          company: exp.company || exp.organization || '',
+          role: exp.role || exp.title || '',
+          location: exp.location || '',
+          dates: typeof exp.dates === 'string' ? exp.dates : dateToString(exp.dates),
+          bullets: Array.isArray(exp.bullets) ? exp.bullets : [],
+          tech: exp.tech || exp.technologies || [],
+        })),
     education: (data.education || []).map(edu => {
       const start = dateToString(edu.start_date);
       const end = edu.is_current ? 'Present' : dateToString(edu.end_date);
@@ -588,113 +596,93 @@ function mergeMissingParsedData(primary, fallback) {
   return merged;
 }
 
-// Resume extraction endpoint (Python PDF service + Gemini per-section)
+// Resume extraction endpoint (Gemini Vision — PDF sent directly, no text extraction)
 app.post('/api/extract-resume', upload.single('resume'), async (req, res) => {
   try {
     const file = req.file;
 
     if (!file) {
-      return res.status(400).json({
-        success: false,
-        error: 'Resume file is required'
-      });
+      return res.status(400).json({ success: false, error: 'Resume file is required' });
     }
 
     console.log('\n========== RESUME UPLOAD ==========');
     console.log('File:', file.originalname);
     console.log('Size:', file.size, 'bytes');
 
-    const isPdf = file.originalname.toLowerCase().endsWith('.pdf');
-    if (!isPdf) {
+    if (!file.originalname.toLowerCase().endsWith('.pdf')) {
       throw new Error('Only PDF files are supported. Please upload a PDF resume.');
     }
 
-    // 1. Check Python PDF service health
-    const healthy = await isPythonServiceHealthy();
-    if (!healthy) {
-      throw new Error('Python PDF extraction service is not running. Start it with: npm run pdf-service');
-    }
+    // Extract structured data via Gemini Vision (PDF as inline data — no text extraction step)
+    console.log('Sending PDF to Gemini Vision...');
+    const rawData = await extractFromPDF(file.path);
 
-    // 2. Extract blocks + sections from PDF via Python service
-    console.log('Extracting PDF with Python service...');
-    const extraction = await extractResumeWithPython(file.path);
-    console.log(`Extracted ${extraction.blocks?.length || 0} blocks, ${extraction.sections?.length || 0} sections, ${extraction.pageCount} pages`);
-    console.log(`Raw text length: ${extraction.rawText?.length || 0} chars`);
-
-    // Detect image-based / unreadable PDFs early
-    if (!extraction.rawText || extraction.rawText.trim().length < 30) {
-      try { fs.unlinkSync(file.path); } catch {}
-      return res.status(400).json({
-        success: false,
-        error: 'This PDF appears to be image-based or scanned and cannot be read. Please paste your resume text manually.'
-      });
-    }
-
-    // 3. Run Gemini per-section extraction
-    console.log('Running Gemini per-section extraction...');
-    const rawData = await extractSectionsWithGemini(extraction.sections || []);
-
-    // 4. Validate with Zod — strip internal fields first so .strict() doesn't reject them
-    const { _parser: parserTag, ...rawDataForValidation } = rawData;
-    const validation = validateResumeJson(rawDataForValidation);
-    if (!validation.success) {
-      console.warn('Zod validation warnings:', validation.error?.issues?.map(i => i.message).join(', '));
-    }
-
-    // 5. Normalize to clean ResumeJSON — use rawData on validation failure to preserve Mistral output
-    let data = normalizeParserResponse(validation.success ? validation.data : rawData);
-    data._parser = parserTag || 'python-gemini-pipeline';
-
-    // 6. Fallback: run dynamicResumeParser on raw text to backfill missing sections
-    const rawText = extraction.rawText;
-    if (typeof rawText === 'string' && rawText.trim()) {
-      try {
-        const fallbackRaw = parseResumeUltimate(rawText);
-        const fallbackData = normalizeParserResponse(fallbackRaw || {});
-        data = mergeMissingParsedData(data, fallbackData);
-      } catch (fallbackError) {
-        console.warn('Fallback parser failed:', fallbackError.message);
-      }
-    }
-
-    // 7. Post-process
+    // Normalize and post-process
+    let data = normalizeParserResponse(rawData);
     data = postProcessResumeData(data);
+    data._parser = 'gemini-vision-pipeline';
 
-    // Clean up uploaded file
-    try {
-      fs.unlinkSync(file.path);
-    } catch (cleanupError) {
-      console.warn('Warning: Could not delete uploaded file:', cleanupError.message);
-    }
+    try { fs.unlinkSync(file.path); } catch {}
 
     console.log('Response:', {
       name: data.basics?.name,
       experience: data.experience?.length || 0,
       skills: data.skills?.length || 0,
-      achievements: data.achievements?.length || 0,
-      coursework: data.coursework?.length || 0,
     });
     console.log('===================================\n');
 
-    res.json({
-      success: true,
-      data: { ...data, rawText: extraction.rawText || "" }
-    });
+    res.json({ success: true, data });
   } catch (error) {
     console.error('Resume extraction error:', error);
+    if (req.file) try { fs.unlinkSync(req.file.path); } catch {}
+    res.status(500).json({ success: false, error: error.message || 'Failed to extract resume' });
+  }
+});
 
-    if (req.file) {
-      try {
-        fs.unlinkSync(req.file.path);
-      } catch (cleanupError) {
-        console.warn('Warning: Could not delete uploaded file after error:', cleanupError.message);
-      }
+// Portfolio extraction endpoint — separate pipeline from /api/extract-resume
+// Uses Mistral OCR (markdown) → Gemini text mode (structuring)
+app.post('/api/extract-portfolio', upload.single('resume'), async (req, res) => {
+  try {
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ success: false, error: 'Resume file is required' });
     }
 
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Failed to extract resume'
+    console.log('\n========== PORTFOLIO UPLOAD ==========');
+    console.log('File:', file.originalname);
+    console.log('Size:', file.size, 'bytes');
+
+    if (!file.originalname.toLowerCase().endsWith('.pdf')) {
+      throw new Error('Only PDF files are supported. Please upload a PDF resume.');
+    }
+
+    // Step 1: Mistral OCR — extract clean markdown from PDF
+    console.log('Step 1: Extracting markdown via Mistral OCR...');
+    const markdown = await extractMarkdownFromPDF(file.path);
+
+    // Step 2: Gemini text mode — structure the markdown with full normalization rules
+    console.log('Step 2: Structuring with Gemini...');
+    const rawData = await extractFromMarkdown(markdown);
+
+    let data = normalizeParserResponse(rawData);
+    data = postProcessResumeData(data);
+    data._parser = 'mistral-ocr+gemini-pipeline';
+
+    try { fs.unlinkSync(file.path); } catch {}
+
+    console.log('Response:', {
+      name: data.basics?.name,
+      experience: data.experience?.length || 0,
+      skills: data.skills?.length || 0,
     });
+    console.log('======================================\n');
+
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('Portfolio extraction error:', error);
+    if (req.file) try { fs.unlinkSync(req.file.path); } catch {}
+    res.status(500).json({ success: false, error: error.message || 'Failed to extract portfolio resume' });
   }
 });
 

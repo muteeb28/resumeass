@@ -144,30 +144,49 @@ const ANNOTATION_PROMPT = `Extract ALL resume information faithfully. Follow the
 
 PERSONAL INFO:
 - Extract email addresses, phone numbers, and location only when explicitly present.
+- Phone: read each digit individually — never drop, transpose, or merge digits. Count every digit carefully.
 - For links/profiles, preserve exactly what appears in the document.
 - If shown as handles like "Github:// username" or "LinkedIn:// username", keep that form.
 - Do NOT infer or fabricate full profile URLs from names/handles.
 
 WORK EXPERIENCE:
 - Extract title/role and organization exactly as written.
-- Capture location metadata (e.g., Remote/Hybrid/Onsite/city) when present.
+- Capture location metadata (e.g., Remote/Hybrid/Onsite/city, country) when present anywhere in the job block.
 - Preserve all bullets exactly as written (including duplicates).
-- Dates should be start_date and end_date as strings.
+- Dates should be start_date and end_date as strings. Always include both start AND end (e.g. "July 2020" and "Present").
 
 EDUCATION:
 - Extract institution, degree, graduation date(s), and location.
-- Extract GPA/CGPA, honors/Dean's list, and highlights when present.
-- Do not invent missing start/end dates.
+- Always extract BOTH start and end year. If only graduation year is shown and it is a 4-year degree, subtract 4 for the start year.
+- Extract GPA/CGPA exactly as labelled (e.g. "CGPA: 7.69"). Look anywhere in the education block — inline, in parentheses, in a sub-line.
+- Extract honors/Dean's list and highlights when present.
 
 SKILLS:
-- Keep explicit skill categories (Languages, Frameworks, Cloud, Tools, etc.).
+- Keep explicit skill categories exactly as labelled (Expert, Senior, High Knowledge, Tinkering, Languages, Frameworks, etc.).
 - Do not put all skills into a single category.
 - Extract coursework into coursework field when present.
 
 PROJECTS:
 - Extract project role metadata and dates when present.
+- If a project appears inside a company's experience block, use the company's date range and mark role as "Professional".
+- Extract live_link: any URL associated with the project — website, App Store, Play Store, GitHub, or domain (e.g. "cointopper.com").
 - Extract technologies only if explicitly listed as tech/stack/tools.
-- Do NOT infer technologies from descriptive prose.`;
+- Preserve impact metrics (downloads, users, revenue) in highlights exactly as written.
+
+TEXT NORMALISATION — apply these corrections automatically:
+- "Al" (A + lowercase l) → "AI" when referring to Artificial Intelligence; "Gen Al" → "Gen AI"
+- "A, B Testing" → "A/B Testing"
+- "Neo-6,000,000 GPS" or similar comma-separated part numbers → "Neo-6M GPS"
+- "3d Printing" or "3D printing" → "3D Printing"
+- "go" as a standalone skill → "Go" (programming language)
+- "Rest API" → "REST API"; "GIT" (all caps) → "Git"
+- "fine tuning" or "finetuning" → "Fine-tuning"
+- "BLOC" → "BLoC"; "tensorflow" or "Tensorflow" → "TensorFlow"
+- "Chat GPT" → "ChatGPT"; "Koltin" → "Kotlin"; "Olama" → "Ollama"; "Riverpods" → "Riverpod"
+- "AWS lambda" → "AWS Lambda"; "Github" → "GitHub"; "Mysql" → "MySQL"
+- "Ios" → "iOS"; "Javascript" → "JavaScript"; "Typescript" → "TypeScript"
+- "Graphql" → "GraphQL"; "Nosql" → "NoSQL"
+- Trailing punctuation on technology names (e.g. "Websockets." → "Websockets")`;
 
 export function isMistralConfigured() {
   const key = getApiKey();
@@ -459,7 +478,58 @@ export async function parseResumeWithMistralOCR(filePath) {
   }
 }
 
+/**
+ * Extract raw markdown text from a PDF using Mistral OCR.
+ * No annotation/schema — just clean OCR output for downstream processing.
+ * @param {string} filePath - Absolute path to the PDF file
+ * @returns {Promise<string>} Raw markdown text from all pages
+ */
+export async function extractMarkdownFromPDF(filePath) {
+  const apiKey = getApiKey();
+  if (!apiKey || !apiKey.trim()) {
+    throw new Error('MISTRAL_API_KEY is not configured');
+  }
 
+  console.log('[MISTRAL OCR] Reading PDF from disk…');
+  const pdfBuffer = fs.readFileSync(filePath);
+  const base64Data = pdfBuffer.toString('base64');
 
+  const body = {
+    model: OCR_MODEL,
+    document: {
+      type: 'document_url',
+      document_url: `data:application/pdf;base64,${base64Data}`,
+    },
+  };
 
+  console.log(`[MISTRAL OCR] Extracting markdown (${Math.round(pdfBuffer.length / 1024)}KB)…`);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+  try {
+    const response = await fetch(OCR_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Mistral OCR API ${response.status}: ${errText}`);
+    }
+
+    const result = await response.json();
+    console.log('[MISTRAL OCR] Pages processed:', result.usage_info?.pages_processed ?? '?');
+
+    const markdown = (result.pages || []).map(p => p.markdown || '').join('\n\n');
+    console.log('[MISTRAL OCR] Markdown length:', markdown.length, 'chars');
+    return markdown;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 

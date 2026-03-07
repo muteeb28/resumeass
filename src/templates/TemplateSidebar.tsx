@@ -9,7 +9,7 @@ interface Props {
 
 export default function TemplateSidebar({ data }: Props) {
   const { basics, work, skills, projects, education, awards, volunteer, coursework, extraSections } = data;
-  const summary = (data as any).summary || "";
+  const summary = basics.summary || "";
 
   return (
     <div className="tsb-root" style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}>
@@ -25,6 +25,7 @@ export default function TemplateSidebar({ data }: Props) {
           />
         )}
         <h1 className="tsb-name">{basics.name || "Your Name"}</h1>
+        {basics.headline && <p className="tsb-role">{basics.headline}</p>}
         {summary && <p className="tsb-subtitle">{summary.length > 120 ? summary.slice(0, 120) + "..." : summary}</p>}
       </div>
 
@@ -59,7 +60,11 @@ export default function TemplateSidebar({ data }: Props) {
                 {basics.profiles.map((p, i) => (
                   <div key={i} className="tsb-contact-item">
                     <span className="tsb-contact-icon tsb-link-icon">{p.network.charAt(0)}</span>
-                    <span className="tsb-link-text">{p.url || p.network}</span>
+                    {p.url ? (
+                      <a href={p.url} target="_blank" rel="noopener noreferrer" className="tsb-link-text">{p.url}</a>
+                    ) : (
+                      <span className="tsb-link-text">{p.network}</span>
+                    )}
                   </div>
                 ))}
               </div>
@@ -200,7 +205,19 @@ export default function TemplateSidebar({ data }: Props) {
                   <div key={i} className="tsb-work-entry">
                     <div className="tsb-work-header">
                       <div>
-                        <div className="tsb-work-position">{p.name}</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                          <span className="tsb-work-position">{p.name}</span>
+                          {(p.liveUrl || p.sourceUrl) && (
+                            <span style={{ display: "inline-flex", gap: 4 }}>
+                              {p.liveUrl && (
+                                <a href={p.liveUrl} target="_blank" rel="noopener noreferrer" className="tsb-proj-link">Website</a>
+                              )}
+                              {p.sourceUrl && (
+                                <a href={p.sourceUrl} target="_blank" rel="noopener noreferrer" className="tsb-proj-link">Source</a>
+                              )}
+                            </span>
+                          )}
+                        </div>
                         {p.role && <div className="tsb-work-company">{p.role}</div>}
                         {p.entity && <div className="tsb-work-company">{p.entity}</div>}
                       </div>
@@ -277,8 +294,16 @@ const sidebarStyles = `
   .tsb-name {
     font-size: 28pt;
     font-weight: 700;
-    margin: 0 0 6px 0;
+    margin: 0 0 4px 0;
     letter-spacing: 1px;
+  }
+
+  .tsb-role {
+    font-size: 12pt;
+    font-weight: 400;
+    margin: 0 0 6px 0;
+    opacity: 0.9;
+    letter-spacing: 0.3px;
   }
 
   .tsb-subtitle {
@@ -473,5 +498,23 @@ const sidebarStyles = `
     font-size: 8.5pt;
     color: #a0aec0;
     margin-top: 2px;
+  }
+
+  .tsb-proj-link {
+    display: inline-flex;
+    align-items: center;
+    font-size: 8pt;
+    font-weight: 600;
+    padding: 1px 6px;
+    border: 1px solid #4a5568;
+    border-radius: 3px;
+    color: #4a5568 !important;
+    text-decoration: none !important;
+    background: transparent;
+  }
+
+  .tsb-proj-link:hover {
+    background: #4a5568;
+    color: #fff !important;
   }
 `;

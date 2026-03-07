@@ -9,7 +9,7 @@ interface Props {
 
 export default function TemplateDarkSidebar({ data }: Props) {
   const { basics, work, skills, projects, education, awards, volunteer, coursework, extraSections } = data;
-  const summary = (data as any).summary || "";
+  const summary = basics.summary || "";
 
   return (
     <div className="tds-root" style={{ fontFamily: '"Inter", "Segoe UI", Arial, sans-serif' }}>
@@ -26,8 +26,8 @@ export default function TemplateDarkSidebar({ data }: Props) {
         )}
         <div className="tds-header-content">
           <h1 className="tds-name">{basics.name || "Your Name"}</h1>
-          {work.length > 0 && work[0].position && (
-            <div className="tds-title-line">{work[0].position}</div>
+          {(basics.headline || (work.length > 0 && work[0].position)) && (
+            <div className="tds-title-line">{basics.headline || work[0].position}</div>
           )}
         </div>
       </div>
@@ -42,7 +42,11 @@ export default function TemplateDarkSidebar({ data }: Props) {
             {basics.email && <div className="tds-sb-item">{basics.email}</div>}
             {basics.phone && <div className="tds-sb-item">{basics.phone}</div>}
             {basics.profiles?.map((p, i) => (
-              <div key={i} className="tds-sb-item tds-sb-link">{p.url || p.network}</div>
+              p.url ? (
+                <a key={i} href={p.url} target="_blank" rel="noopener noreferrer" className="tds-sb-item tds-sb-link">{p.url}</a>
+              ) : (
+                <div key={i} className="tds-sb-item tds-sb-link">{p.network}</div>
+              )
             ))}
           </div>
 
@@ -179,7 +183,19 @@ export default function TemplateDarkSidebar({ data }: Props) {
                 return (
                   <div key={i} className="tds-exp-entry">
                     <div className="tds-exp-top">
-                      <div className="tds-exp-position">{p.name}</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                        <span className="tds-exp-position">{p.name}</span>
+                        {(p.liveUrl || p.sourceUrl) && (
+                          <span style={{ display: "inline-flex", gap: 4 }}>
+                            {p.liveUrl && (
+                              <a href={p.liveUrl} target="_blank" rel="noopener noreferrer" className="tds-proj-link">Website</a>
+                            )}
+                            {p.sourceUrl && (
+                              <a href={p.sourceUrl} target="_blank" rel="noopener noreferrer" className="tds-proj-link">Source</a>
+                            )}
+                          </span>
+                        )}
+                      </div>
                       {projDates && <div className="tds-exp-date">{projDates}</div>}
                     </div>
                     {p.role && <div className="tds-exp-company">{p.role}</div>}
@@ -420,5 +436,32 @@ const darkSidebarStyles = `
     font-size: 8.5pt;
     color: #b2bec3;
     margin-top: 2px;
+  }
+
+  a.tds-sb-link {
+    display: block;
+    text-decoration: none;
+  }
+
+  a.tds-sb-link:hover {
+    text-decoration: underline;
+  }
+
+  .tds-proj-link {
+    display: inline-flex;
+    align-items: center;
+    font-size: 8pt;
+    font-weight: 600;
+    padding: 1px 6px;
+    border: 1px solid #74b9ff;
+    border-radius: 3px;
+    color: #74b9ff !important;
+    text-decoration: none !important;
+    background: transparent;
+  }
+
+  .tds-proj-link:hover {
+    background: #74b9ff;
+    color: #2d3436 !important;
   }
 `;

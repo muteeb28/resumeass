@@ -122,7 +122,7 @@ export function JobsPreviewSection() {
   }, []);
 
   return (
-    <section ref={ref} className="py-24 px-4 bg-neutral-50 overflow-hidden">
+    <section ref={ref} className="py-14 px-4 bg-neutral-50 overflow-hidden">
       <div className="max-w-6xl mx-auto">
 
         {/* Header */}
@@ -130,7 +130,7 @@ export function JobsPreviewSection() {
           initial={{ opacity: 0, y: 30 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-12"
+          className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-8"
         >
           <div>
             {/* Live pill */}
@@ -276,7 +276,7 @@ export function JobsPreviewSection() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.5 }}
-            className="text-center mt-12"
+            className="text-center mt-8"
           >
             <Link
               href="/job-tracker"

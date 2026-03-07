@@ -1,13 +1,15 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Navbar } from "./navbar";
 import { BackgroundRippleLayout } from "./background-ripple-layout";
 import { Button } from "./button";
 import ResumeDataEditor from "./edit/ResumeDataEditor";
 import PortfolioPreview from "./portfolio-preview";
-import { extractResumeData, buildApiUrl } from "../services/resumeOptimizerApi";
+import { extractPortfolioData, buildApiUrl } from "../services/resumeOptimizerApi";
 import { convertToPortfoliolyFormat } from "../utils/resume-converter";
+import { parserToV2 } from "@/types/resume";
 import type { ResumeData } from "@/types/portfolioly-resume";
 import {
   Upload,
@@ -21,11 +23,13 @@ import {
   ExternalLink,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { DeployToVercelButton } from "./DeployToVercelButton";
 
 type StepId = "upload" | "edit" | "published";
-type ViewMode = "edit" | "preview";
+type ViewMode = "edit" | "preview" | "raw";
 
 export default function CreatePortfolioPage() {
+  const searchParams = useSearchParams();
   const [step, setStep] = useState<StepId>("upload");
   const [showUploadZone, setShowUploadZone] = useState(false);
 
@@ -36,6 +40,7 @@ export default function CreatePortfolioPage() {
 
   // Editor state
   const [resumeData, setResumeData] = useState<ResumeData | null>(null);
+  const [rawExtracted, setRawExtracted] = useState<any>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("edit");
 
   // Publish state
@@ -43,6 +48,23 @@ export default function CreatePortfolioPage() {
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
   const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // Live URL after Vercel deployment
+  const [liveUrl, setLiveUrl] = useState("");
+  const [liveCopied, setLiveCopied] = useState(false);
+
+  // Detect Vercel redirect: /portfolio?vercel_deployed=true&slug=xxx
+  useEffect(() => {
+    const vercelDeployed = searchParams.get("vercel_deployed");
+    const slug = searchParams.get("slug");
+    if (vercelDeployed === "true" && slug) {
+      const url = `${window.location.origin}/p/${slug}`;
+      setPublishedSlug(slug);
+      setPublishedUrl(url);
+      setLiveUrl(`https://${slug}-portfolio.vercel.app`);
+      setStep("published");
+    }
+  }, [searchParams]);
 
   // ─── Upload Handler ───────────────────────────────────────────────
 
@@ -65,10 +87,17 @@ export default function CreatePortfolioPage() {
     setUploadedFileName(file.name);
 
     try {
-      const parsed = await extractResumeData(file);
-      const converted = convertToPortfoliolyFormat(parsed as any);
-      setResumeData(converted);
+      const parsed = await extractPortfolioData(file);
+      setRawExtracted(parsed);
+      setViewMode("raw");
       setStep("edit");
+      try {
+        const v2 = parserToV2(parsed as any);
+        const converted = convertToPortfoliolyFormat(v2);
+        setResumeData(converted);
+      } catch {
+        // conversion failed — raw view still shows
+      }
     } catch (error: any) {
       setUploadError(error?.message || "Failed to extract resume. Please try again.");
     } finally {
@@ -197,7 +226,7 @@ export default function CreatePortfolioPage() {
   // ─── Step 2: Edit / Preview (matches /create results toolbar) ─────
 
   const renderEditStep = () => {
-    if (!resumeData) return null;
+    if (!resumeData && !rawExtracted) return null;
 
     return (
       <div className="space-y-0">
@@ -226,6 +255,17 @@ export default function CreatePortfolioPage() {
               <Eye className="h-3.5 w-3.5" />
               Preview
             </button>
+            <button
+              onClick={() => setViewMode("raw")}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                viewMode === "raw"
+                  ? "bg-neutral-900 text-white"
+                  : "text-neutral-600 hover:bg-neutral-100"
+              }`}
+            >
+              <FileText className="h-3.5 w-3.5" />
+              Raw
+            </button>
           </div>
 
           <div className="flex items-center gap-2">
@@ -242,15 +282,25 @@ export default function CreatePortfolioPage() {
 
         {/* Content area */}
         <div className="rounded-b-2xl border border-t-0 border-neutral-200 bg-white">
-          {viewMode === "edit" && (
+          {viewMode === "edit" && resumeData && (
             <div className="p-6">
               <ResumeDataEditor data={resumeData} onChange={setResumeData} />
             </div>
           )}
 
-          {viewMode === "preview" && (
+          {viewMode === "preview" && resumeData && (
             <div className="p-6">
               <PortfolioPreview data={resumeData} />
+            </div>
+          )}
+
+          {viewMode === "raw" && (
+            <div className="p-6">
+              <textarea
+                readOnly
+                value={JSON.stringify(rawExtracted, null, 2)}
+                className="w-full h-[70vh] font-mono text-xs bg-neutral-50 border border-neutral-200 rounded-xl p-4 text-neutral-800 resize-none focus:outline-none"
+              />
             </div>
           )}
         </div>
@@ -306,29 +356,85 @@ export default function CreatePortfolioPage() {
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 justify-center">
-          <a
-            href={`/p/${publishedSlug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-5 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors text-sm font-medium"
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-            View Portfolio
-          </a>
-          <button
-            onClick={() => {
-              setStep("upload");
-              setResumeData(null);
-              setUploadedFileName(null);
-              setPublishedUrl(null);
-              setPublishedSlug(null);
-              setShowUploadZone(false);
-            }}
-            className="px-5 py-2 border border-neutral-200 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors text-sm font-medium"
-          >
-            Create Another
-          </button>
+        <div className="flex flex-col gap-3">
+          <div className="flex gap-3 justify-center">
+            <a
+              href={`/p/${publishedSlug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors text-sm font-medium"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              View Portfolio
+            </a>
+            <button
+              onClick={() => {
+                setStep("upload");
+                setResumeData(null);
+                setUploadedFileName(null);
+                setPublishedUrl(null);
+                setPublishedSlug(null);
+                setShowUploadZone(false);
+              }}
+              className="px-5 py-2 border border-neutral-200 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors text-sm font-medium"
+            >
+              Create Another
+            </button>
+          </div>
+
+          {/* One-click Vercel deploy */}
+          {publishedSlug && (
+            <div className="pt-2 border-t border-neutral-100 space-y-4">
+              <div>
+                <p className="text-xs text-neutral-400 text-center mb-3">
+                  Want your own domain? Deploy to Vercel in one click.
+                </p>
+                <div className="flex justify-center">
+                  <DeployToVercelButton slug={publishedSlug} />
+                </div>
+              </div>
+
+              {/* Live URL section */}
+              <div className="pt-2 border-t border-neutral-100">
+                <p className="text-xs text-neutral-500 font-semibold mb-2 text-center">
+                  After deploying, paste your live site URL here
+                </p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="url"
+                    value={liveUrl}
+                    onChange={(e) => setLiveUrl(e.target.value)}
+                    placeholder="https://your-portfolio.vercel.app"
+                    className="flex-1 bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-400 font-mono"
+                  />
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(liveUrl);
+                      setLiveCopied(true);
+                      setTimeout(() => setLiveCopied(false), 2000);
+                    }}
+                    disabled={!liveUrl}
+                    className="shrink-0 text-neutral-500 hover:text-neutral-700 disabled:opacity-30 transition-colors"
+                    title="Copy live URL"
+                  >
+                    {liveCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  </button>
+                  {liveUrl && (
+                    <a
+                      href={liveUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors text-xs font-medium"
+                      title="Open live site"
+                    >
+                      <Globe className="h-3.5 w-3.5" />
+                      Visit
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

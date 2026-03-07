@@ -150,7 +150,7 @@ export const PaymentSection = () => {
   }
 
   return (
-    <section className="relative bg-neutral-50 py-24 px-4 text-neutral-900">
+    <section className="relative bg-neutral-50 py-14 px-4 text-neutral-900">
       <div className="relative max-w-6xl mx-auto">
         {/* Header */}
         <motion.p
@@ -173,7 +173,7 @@ export const PaymentSection = () => {
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.5, ease: "easeOut" }}
-          className="mx-auto mb-12 max-w-2xl text-center text-base text-neutral-500"
+          className="mx-auto mb-8 max-w-2xl text-center text-base text-neutral-500"
         >
           Simple pricing for resume optimization and job tracking. Pay once for a resume or go monthly for tracking and outreach.
         </motion.p>

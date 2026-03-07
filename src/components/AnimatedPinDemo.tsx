@@ -8,6 +8,7 @@ import { BackgroundRippleLayout } from "./background-ripple-layout";
 import SidebarDemo from "./sidebar-demo";
 import { HeroSection } from "./hero-section";
 import { JobsPreviewSection } from "./jobs-preview-section";
+import { WhyUsSection, FAQSection } from "./why-us-faq";
 
 
 
@@ -20,7 +21,7 @@ export function AnimatedPinDemo() {
       <HeroSection />
 
       {/* Features Section */}
-      <section id="features" className="py-20 px-4 scroll-mt-24 bg-neutral-50 text-neutral-900">
+      <section id="features" className="py-12 px-4 scroll-mt-24 bg-neutral-50 text-neutral-900">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-5xl font-bold text-neutral-900 mb-4">
@@ -42,11 +43,17 @@ export function AnimatedPinDemo() {
         <PaymentSection />
       </div>
 
+      {/* Why Us */}
+      <WhyUsSection />
+
       {/* Live Jobs Preview */}
       <JobsPreviewSection />
 
+      {/* FAQ */}
+      <FAQSection />
+
       {/* CTA Section with 3D Pin */}
-      <div className="bg-white py-20 px-4 text-neutral-900">
+      <div className="bg-white py-12 px-4 text-neutral-900">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-5xl font-bold text-neutral-900 mb-4">
             Ready to Land Your Dream Job?

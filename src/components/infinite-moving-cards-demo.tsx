@@ -4,7 +4,7 @@ import { InfiniteMovingCards } from "@/components/ui/infinite-moving-cards";
 
 export default function InfiniteMovingCardsDemo() {
   return (
-    <section className="bg-white py-20 px-4 text-neutral-900">
+    <section className="bg-white py-12 px-4 text-neutral-900">
       <div className="mx-auto max-w-6xl">
         <div className="text-center">
           <h2 className="text-3xl font-semibold tracking-tight text-neutral-900 md:text-5xl">

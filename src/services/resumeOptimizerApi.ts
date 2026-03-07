@@ -171,6 +171,57 @@ export async function extractResumeData(
 }
 
 /**
+ * Extract resume data for the portfolio flow — calls /api/extract-portfolio (separate pipeline)
+ */
+export async function extractPortfolioData(
+  file: File,
+  onProgress?: (progress: number) => void
+): Promise<ExtractedResumeData> {
+  const formData = new FormData();
+  formData.append('resume', file);
+
+  const url = buildApiUrl('extract-portfolio');
+
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+
+    if (onProgress) {
+      xhr.upload.addEventListener("progress", (event) => {
+        if (event.lengthComputable) {
+          onProgress((event.loaded / event.total) * 100);
+        }
+      });
+    }
+
+    xhr.addEventListener("load", () => {
+      try {
+        if (xhr.status >= 400) {
+          let errorData: any;
+          try { errorData = JSON.parse(xhr.responseText); } catch { }
+          reject(new Error(errorData?.error || `HTTP ${xhr.status}`));
+          return;
+        }
+        const result = JSON.parse(xhr.responseText);
+        if (!result.success) {
+          reject(new Error(result.error || 'Failed to extract portfolio resume'));
+          return;
+        }
+        resolve(result.data);
+      } catch (error) {
+        reject(error);
+      }
+    });
+
+    xhr.addEventListener("error", () => reject(new Error("Network error during file upload.")));
+    xhr.addEventListener("timeout", () => reject(new Error("Upload timed out. Please try again.")));
+
+    xhr.open("POST", url);
+    xhr.timeout = 180000; // 3 minute timeout (two-step pipeline takes longer)
+    xhr.send(formData);
+  });
+}
+
+/**
  * Parse pasted resume text without calling AI
  */
 export async function parseResumeText(text: string, pageCount?: number): Promise<any> {

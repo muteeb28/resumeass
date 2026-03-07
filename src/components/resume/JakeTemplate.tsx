@@ -18,7 +18,8 @@ import {
 const PAGE_WIDTH_PX = 8.5 * 96;
 const PAGE_HEIGHT_PX = 11 * 96;
 const PAGE_PADDING_PX = 0.5 * 96;
-const CONTENT_HEIGHT_PX = PAGE_HEIGHT_PX - PAGE_PADDING_PX * 2;
+// Extra buffer prevents content from being clipped when measurement is slightly off
+const CONTENT_HEIGHT_PX = PAGE_HEIGHT_PX - PAGE_PADDING_PX * 2 - 36;
 
 interface PageContent {
   startIndex: number;
@@ -125,6 +126,14 @@ const jakeStyles = `
     margin: 0;
   }
 
+  .jake-headline {
+    font-size: 11pt;
+    font-weight: 400;
+    margin: 2px 0 0 0;
+    color: #444;
+    letter-spacing: 0.3px;
+  }
+
   .jake-contact {
     font-size: 10pt;
     margin-top: 4px;
@@ -137,6 +146,32 @@ const jakeStyles = `
 
   .jake-contact a:hover {
     color: #333;
+  }
+
+  .jake-proj-links {
+    display: inline-flex;
+    gap: 4px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  .jake-proj-link-btn {
+    display: inline-flex;
+    align-items: center;
+    font-size: 8pt;
+    font-weight: 600;
+    padding: 1px 6px;
+    border: 1px solid #555;
+    border-radius: 3px;
+    color: #333 !important;
+    text-decoration: none !important;
+    background: #f5f5f5;
+    transition: background 0.15s;
+  }
+
+  .jake-proj-link-btn:hover {
+    background: #e0e0e0;
+    color: #000 !important;
   }
 
   .jake-section {
@@ -384,6 +419,9 @@ function buildHeaderSection(data: ResumeData): React.ReactNode {
         />
       )}
       <h1>{basics?.name}</h1>
+      {basics?.headline && (
+        <p className="jake-headline">{basics.headline}</p>
+      )}
       {contactParts.length > 0 && (
         <p className="jake-contact">
           {contactParts.map((part, i) => (
@@ -517,6 +555,20 @@ function buildProjectEntries(
           <div className="jake-entry-header">
             <span className="jake-project-title">
               <span className="jake-entry-title">{proj.name}</span>
+              {(proj.liveUrl || proj.sourceUrl) && (
+                <span className="jake-proj-links">
+                  {proj.liveUrl && (
+                    <a href={proj.liveUrl} target="_blank" rel="noopener noreferrer" className="jake-proj-link-btn">
+                      Website
+                    </a>
+                  )}
+                  {proj.sourceUrl && (
+                    <a href={proj.sourceUrl} target="_blank" rel="noopener noreferrer" className="jake-proj-link-btn">
+                      Source
+                    </a>
+                  )}
+                </span>
+              )}
             </span>
             <span style={{ fontSize: "10pt" }}>{rightLabel}</span>
           </div>
@@ -658,7 +710,14 @@ function buildSections(
   for (const sectionType of sectionOrder) {
     switch (sectionType) {
       case "basics":
-        // Header already added
+        // Header already added; render summary if present
+        if (data?.basics?.summary) {
+          sections.push(
+            <Section key="summary" title="Summary">
+              <p style={{ margin: 0, fontSize: "10pt", lineHeight: 1.6 }}>{data.basics.summary}</p>
+            </Section>
+          );
+        }
         break;
 
       case "education":

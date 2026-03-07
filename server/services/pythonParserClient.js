@@ -20,9 +20,9 @@ export async function isPythonServiceHealthy() {
 }
 
 /**
- * Send a PDF file to the Python service for extraction.
+ * Send a PDF file to the Python service for text extraction.
  * @param {string} filePath - Absolute path to the PDF file
- * @returns {Promise<{blocks: Array, sections: Array, rawText: string, pageCount: number}>}
+ * @returns {Promise<{rawText: string, pageCount: number}>}
  */
 export async function extractResumeWithPython(filePath) {
   const fileBuffer = fs.readFileSync(filePath);
