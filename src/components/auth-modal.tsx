@@ -22,7 +22,7 @@ export const AuthModal = ({ open, onClose }: { open: boolean; onClose: () => voi
     else document.body.style.overflow = "auto";
   }, [open]);
 
-	const { login, signup, loading } = useUserStore();
+	const { loading } = useUserStore();
 
 	const handleAccount = async (e: any) => {
 		e.preventDefault();

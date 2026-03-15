@@ -75,7 +75,7 @@ export default function SignupForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const { signup, loading } = useUserStore();
+  const { loading } = useUserStore();
   const router = useRouter();
 
   const stepErrors = useMemo(() => {
@@ -153,24 +153,24 @@ export default function SignupForm() {
       return;
     }
 
-    const result = await signup({
-      username: fullName.trim(),
-      email: email.trim(),
-      currentDesignation,
-      currentCompany,
-      experience,
-      desiredDesignation,
-      companyType,
-      goals,
-      otherGoal: otherGoalText,
-      linkedinUrl: linkedInUrl,
-      password,
-      confirmPassword,
-    });
+    // const result = await signup({
+    //   username: fullName.trim(),
+    //   email: email.trim(),
+    //   currentDesignation,
+    //   currentCompany,
+    //   experience,
+    //   desiredDesignation,
+    //   companyType,
+    //   goals,
+    //   otherGoal: otherGoalText,
+    //   linkedinUrl: linkedInUrl,
+    //   password,
+    //   confirmPassword,
+    // });
 
-    if (result?.success) {
-      router.push("/");
-    }
+    // if (result?.success) {
+    //   router.push("/");
+    // }
   };
 
   return (

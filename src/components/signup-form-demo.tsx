@@ -10,15 +10,15 @@ import { LoaderFive } from "@/components/ui/loader";
 export default function SignupFormDemo() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { login, loading } = useUserStore();
+  const { loading } = useUserStore();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const result = await login(email, password);
-    if (result?.success) {
-      router.push("/");
-    }
+    // const result = await login(email, password);
+    // if (result?.success) {
+    //   router.push("/");
+    // }
   };
 
   return (
