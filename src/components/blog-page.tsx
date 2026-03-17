@@ -104,34 +104,561 @@ export default function BlogPage() {
 
       <div className="pt-24 pb-16 px-4">
         <div className="max-w-4xl mx-auto">
-          {/* Header - Minimal like the image */}
+          {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="mb-16 text-center"
           >
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 text-slate-900">Blog</h1>
-            <p className="text-slate-600 text-lg mb-4">
-              Career insights, resume tips, and job search strategies from Muteeb Masoodi.
-            </p>
-            <p className="text-slate-500 text-sm">
-              Follow us{" "}
-              <a href="#" className="text-slate-700 hover:text-slate-900 underline">
-                @resumeassistai
-              </a>{" "}
-              &{" "}
-              <a href="#" className="text-slate-700 hover:text-slate-900 underline">
-                LinkedIn
-              </a>
+            <p className="text-xs uppercase tracking-[0.35em] text-slate-500 mb-4">Off-Campus Job Hunt</p>
+            <h1 className="text-5xl md:text-6xl font-bold mb-4 text-slate-900">Complete Playbook</h1>
+            <p className="text-slate-600 text-lg max-w-3xl mx-auto">
+              100 Active HR Contacts | Cold Call Script | Email Templates | LinkedIn Messages | Full Strategy
             </p>
           </motion.div>
+
+          {/* Table of Contents */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="mb-16"
+          >
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm">
+              <h2 className="text-xl font-semibold text-slate-900 mb-6 text-center">Table of Contents</h2>
+              <div className="grid md:grid-cols-2 gap-4 text-slate-700">
+                <div className="flex items-start gap-3">
+                  <span className="text-slate-400 font-semibold">SECTION 1</span>
+                  <span>Off-Campus Strategy Roadmap (7 Steps)</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-slate-400 font-semibold">SECTION 2</span>
+                  <span>Timing Guide — When to Connect &amp; Send</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-slate-400 font-semibold">SECTION 3</span>
+                  <span>Cold Calling Script (Full + Short Version)</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-slate-400 font-semibold">SECTION 4</span>
+                  <span>Cold Email Templates (3 Versions)</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-slate-400 font-semibold">SECTION 5</span>
+                  <span>LinkedIn Connection Message Templates</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-slate-400 font-semibold">SECTION 6</span>
+                  <span>Follow-Up System (Day-by-Day Schedule)</span>
+                </div>
+                <div className="flex items-start gap-3 md:col-span-2">
+                  <span className="text-slate-400 font-semibold">SECTION 7</span>
+                  <span>100 Active HR Contacts Directory</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Section 1 */}
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="mb-16"
+          >
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm">
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
+                SECTION 1 — OFF-CAMPUS STRATEGY ROADMAP
+              </h2>
+              <p className="text-slate-600 mb-8">
+                This 7-step roadmap is the exact process used to convert an off-campus offer in March hiring season. Follow each step in
+                order.
+              </p>
+
+              <div className="space-y-8 text-slate-700">
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-2">STEP 1 — Build Your Profile Before You Reach Out</h3>
+                  <p className="text-slate-600 mb-2">Why this matters:</p>
+                  <p className="text-slate-700 mb-3">HRs check your LinkedIn before responding. A weak profile = no reply.</p>
+                  <p className="text-slate-600 mb-2">Action items:</p>
+                  <ul className="list-disc pl-5 space-y-1 text-slate-700">
+                    <li>Update your LinkedIn headline: [Your Role] | [Key Skill] | Open to Work</li>
+                    <li>Add a professional photo (not a selfie)</li>
+                    <li>Write a 3-line About section: Who you are, what you can do, what you want</li>
+                    <li>Pin your best project or achievement at the top</li>
+                    <li>Set your profile to OPEN TO WORK (visible to recruiters)</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-2">STEP 2 — Pick Your Target Companies (10 at a Time)</h3>
+                  <p className="text-slate-700 mb-2">Rule: Do not blast all 100 HRs at once.</p>
+                  <p className="text-slate-700 mb-3">Pick 10 companies per week. Research each one before reaching out.</p>
+                  <ul className="list-disc pl-5 space-y-1 text-slate-700">
+                    <li>Go to the company's LinkedIn page and check: 'Jobs' section</li>
+                    <li>Check if they have posted any jobs in the last 30 days</li>
+                    <li>Note the role and department you want to apply for</li>
+                    <li>Write down the HR name from this file who belongs to that company</li>
+                  </ul>
+                  <p className="text-slate-600 mt-3">
+                    Pro Tip: Prioritise companies where you have relevant skills or internship experience.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-2">STEP 3 — LinkedIn First, Then Call, Then Email</h3>
+                  <p className="text-slate-700 mb-3">This is the exact sequence that works best:</p>
+                  <div className="grid md:grid-cols-2 gap-2 text-slate-700">
+                    <p>Day 1 Send LinkedIn connection request with a short note</p>
+                    <p>Day 2-3 Wait for connection to be accepted</p>
+                    <p>Day 4 Send cold email to the HR</p>
+                    <p>Day 5-6 Wait for email reply</p>
+                    <p>Day 7 Make the cold call if no reply</p>
+                    <p>Day 10 Send one final follow-up message</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-2">STEP 4 — Prepare Your Pitch (30-Second Version)</h3>
+                  <p className="text-slate-700 mb-3">Before you call or message, prepare this exact pitch:</p>
+                  <blockquote className="border-l-4 border-slate-300 pl-4 italic text-slate-700">
+                    Hi, I am [Your Name], a [Your Degree] graduate from [Your College]. I have [X months/years] of experience in [Your
+                    Skill/Domain]. I noticed [Company Name] is hiring and I would love to explore if there is a fit. I have sent my resume
+                    to your email. Could you take 2 minutes to review it?
+                  </blockquote>
+                  <p className="text-slate-600 mt-3">Practice this until it sounds natural. Do NOT read it off a paper.</p>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-2">STEP 5 — Send Resume the Right Way</h3>
+                  <p className="text-slate-700 mb-2">Resume file name format:</p>
+                  <p className="text-slate-700 mb-2">
+                    FirstName_LastName_Role_Resume.pdf (Example: Rahul_Sharma_DataAnalyst_Resume.pdf)
+                  </p>
+                  <p className="text-slate-700 mb-2">Email subject line format:</p>
+                  <p className="text-slate-700 mb-3">Application for [Role] | [Your Name] | [College Name]</p>
+                  <ul className="list-disc pl-5 space-y-1 text-slate-700">
+                    <li>Keep resume to 1 page if you have less than 2 years of experience</li>
+                    <li>Use a clean, simple format — no heavy graphics</li>
+                    <li>Always send as PDF, never as Word (.doc)</li>
+                    <li>Tailor your resume for each company — change the top 3 bullet points</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-2">STEP 6 — Track Every Outreach</h3>
+                  <p className="text-slate-700 mb-3">Create a simple tracker in Excel or Notion with these columns:</p>
+                  <div className="grid md:grid-cols-2 gap-2 text-slate-700">
+                    <p>HR Name Name from this contact list</p>
+                    <p>Company Company name</p>
+                    <p>LinkedIn Sent Date you sent the connection request</p>
+                    <p>Email Sent Date you sent the cold email</p>
+                    <p>Call Made Date you called</p>
+                    <p>Response Yes / No / Follow up needed</p>
+                    <p>Status Applied / Interview / Rejected / Offer</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.section>
+
+          {/* Section 2 */}
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mb-16"
+          >
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm">
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
+                SECTION 2 — TIMING GUIDE
+              </h2>
+              <p className="text-slate-600 mb-8">
+                When you reach out matters as much as what you say. Here is the exact timing that gets the best response rates.
+              </p>
+
+              <div className="space-y-8 text-slate-700">
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-3">BEST DAYS TO REACH OUT</h3>
+                  <div className="space-y-2">
+                    <p><span className="font-semibold">Tuesday</span> BEST DAY — HRs are settled into the week. Highest open rates.</p>
+                    <p><span className="font-semibold">Wednesday</span> SECOND BEST — Good for follow-ups and calls.</p>
+                    <p><span className="font-semibold">Thursday</span> Good for final follow-ups before the weekend.</p>
+                    <p><span className="font-semibold">Monday</span> Avoid — HRs are catching up on backlog from the weekend.</p>
+                    <p><span className="font-semibold">Friday</span> Avoid — People are in wind-down mode. Low response rate.</p>
+                    <p><span className="font-semibold">Saturday / Sunday</span> Never reach out on weekends. It looks unprofessional.</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-3">BEST TIME WINDOWS</h3>
+                  <div className="space-y-2">
+                    <p><span className="font-semibold">9:00 AM – 10:30 AM</span> PRIME WINDOW for emails. HRs check inbox first thing in the morning.</p>
+                    <p><span className="font-semibold">11:00 AM – 12:00 PM</span> Good for cold calls. People are active before lunch.</p>
+                    <p><span className="font-semibold">2:00 PM – 3:30 PM</span> Second best window. Post-lunch, emails are checked again.</p>
+                    <p><span className="font-semibold">5:00 PM – 6:00 PM</span> LinkedIn messages work well here. People scroll LinkedIn after work.</p>
+                    <p><span className="font-semibold">After 7:00 PM</span> Avoid completely. Do not send professional messages at night.</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-3">MARCH SPECIFIC TIMING</h3>
+                  <p className="text-slate-700 mb-2">Why March is special:</p>
+                  <ul className="list-disc pl-5 space-y-1 text-slate-700">
+                    <li>Q1 hiring budgets are freshly approved — companies are ready to hire</li>
+                    <li>Most companies start onboarding new employees in April–May</li>
+                    <li>HRs are actively looking to fill positions in March</li>
+                  </ul>
+                  <p className="text-slate-700 mt-4 mb-2">Best weeks in March to be most active:</p>
+                  <ul className="list-disc pl-5 space-y-1 text-slate-700">
+                    <li>Week 1 (1st–7th): Send all LinkedIn requests and first emails</li>
+                    <li>Week 2 (8th–14th): Make follow-up calls for non-responders</li>
+                    <li>Week 3 (15th–21st): Send second round emails to new HRs</li>
+                    <li>Week 4 (22nd–31st): Final push — focus only on warm leads</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </motion.section>
+
+          {/* Section 3 */}
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.25 }}
+            className="mb-16"
+          >
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm">
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
+                SECTION 3 — COLD CALLING SCRIPT
+              </h2>
+              <p className="text-slate-600 mb-8">
+                Use this when the HR does not respond to email or LinkedIn. Keep the call under 3 minutes.
+              </p>
+
+              <div className="space-y-8 text-slate-700">
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-3">FULL SCRIPT — Step by Step</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="font-semibold text-slate-900 mb-2">OPENING (First 10 seconds):</p>
+                      <blockquote className="border-l-4 border-slate-300 pl-4 italic text-slate-700">
+                        Good morning / Good afternoon! May I speak with [HR Name]? [ Wait for confirmation ] Hi [HR Name], my name is
+                        [Your Name]. I am a [Your Degree] graduate from [Your College / University]. I hope I am not catching you at a bad
+                        time.
+                      </blockquote>
+                    </div>
+
+                    <div>
+                      <p className="font-semibold text-slate-900 mb-2">YOUR PITCH (15–20 seconds):</p>
+                      <blockquote className="border-l-4 border-slate-300 pl-4 italic text-slate-700">
+                        I came across your profile on LinkedIn and I can see that you handle recruitment at [Company Name]. I have
+                        [X months] of experience in [Skill/Domain] and I believe I could be a strong fit for your team. I have already
+                        sent my resume to your email — the subject line is [mention your email subject]. I was hoping you could take just
+                        2 minutes to review it when you get a chance.
+                      </blockquote>
+                    </div>
+
+                    <div>
+                      <p className="font-semibold text-slate-900 mb-2">IF THEY SAY "WE ARE NOT HIRING":</p>
+                      <blockquote className="border-l-4 border-slate-300 pl-4 italic text-slate-700">
+                        I completely understand. I would love to be kept in mind for any future openings. Is it okay if I stay connected
+                        with you on LinkedIn?
+                      </blockquote>
+                    </div>
+
+                    <div>
+                      <p className="font-semibold text-slate-900 mb-2">IF THEY SAY "SEND YOUR RESUME":</p>
+                      <blockquote className="border-l-4 border-slate-300 pl-4 italic text-slate-700">
+                        Of course! I have already sent it to [their email if you know it]. Could I confirm the best email address to send
+                        it to?
+                      </blockquote>
+                    </div>
+
+                    <div>
+                      <p className="font-semibold text-slate-900 mb-2">IF THEY SAY "CALL BACK LATER":</p>
+                      <blockquote className="border-l-4 border-slate-300 pl-4 italic text-slate-700">
+                        Absolutely, when would be the best time to call back? [ Note down the time they give and call EXACTLY then. ]
+                      </blockquote>
+                    </div>
+
+                    <div>
+                      <p className="font-semibold text-slate-900 mb-2">CLOSING:</p>
+                      <p className="text-slate-500 text-sm mb-2">OFF-CAMPUS JOB HUNT PLAYBOOK | March Hiring Season</p>
+                      <p className="text-slate-500 text-sm mb-2">Confidential — For Personal Use Only</p>
+                      <blockquote className="border-l-4 border-slate-300 pl-4 italic text-slate-700">
+                        Thank you so much for your time, [HR Name]. I really appreciate it. I will make sure my resume is in your inbox.
+                        Have a great day! [ Hang up politely. Never drag the call. ]
+                      </blockquote>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-3">SHORT SCRIPT — Under 60 Seconds</h3>
+                  <blockquote className="border-l-4 border-slate-300 pl-4 italic text-slate-700">
+                    Hi, is this [HR Name]? Great — I am [Your Name], a fresher from [College]. I have [X skill] experience and I sent you
+                    my resume today for [role or general application]. Could you spare 2 minutes to look at it? It would mean a lot. Thank
+                    you so much!
+                  </blockquote>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-3">CALLING TIPS</h3>
+                  <ul className="list-disc pl-5 space-y-1 text-slate-700">
+                    <li>Call from a quiet place. No background noise.</li>
+                    <li>Smile while you talk — it comes through in your voice.</li>
+                    <li>Do NOT use speakerphone. Use earphones.</li>
+                    <li>Keep a pen and paper ready to write down names, times, email IDs.</li>
+                    <li>If nervous, stand up while calling — it helps your voice sound confident.</li>
+                    <li>If they cut the call, do not call back immediately. Wait 2 days.</li>
+                    <li>Never call before 9 AM or after 6 PM.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </motion.section>
+
+          {/* Section 4 */}
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="mb-16"
+          >
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm">
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
+                SECTION 4 — COLD EMAIL TEMPLATES
+              </h2>
+              <p className="text-slate-600 mb-8">
+                These are 3 different email templates. Use Template 1 for most HRs. Use Template 2 for startups. Use Template 3 for
+                follow-up.
+              </p>
+
+              <div className="space-y-8 text-slate-700">
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-3">
+                    TEMPLATE 1 — Standard Cold Email (Works for Most Companies)
+                  </h3>
+                  <p className="text-slate-700 mb-2">
+                    <span className="font-semibold">Subject:</span> Application for [Role] | [Your Name] | [Your College]
+                  </p>
+                  <div className="border border-slate-200 rounded-xl p-4 bg-slate-50 text-slate-700 whitespace-pre-line">
+                    Dear [HR First Name],{"\n"}
+                    I hope this email finds you well.{"\n"}
+                    My name is [Your Name] and I am a [Your Degree] graduate from [College Name]. I am reaching out because I admire the
+                    work [Company Name] is doing in [mention one thing you know about the company — a product, recent news, or their
+                    mission].{"\n"}
+                    I have [X months/years] of experience in [Your Key Skill or Domain] and I believe my background aligns well with the
+                    roles your team typically hires for.{"\n"}
+                    I have attached my resume for your review. I would be grateful if you could take 2 minutes to go through it.{"\n"}
+                    If there are any current or upcoming openings that might be a fit, I would love to connect.{"\n"}
+                    Thank you for your time.{"\n"}
+                    Best regards,{"\n"}
+                    [Your Name]{"\n"}
+                    [Phone Number] | [LinkedIn Profile URL]
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-3">TEMPLATE 2 — Startup / Growth Company Email</h3>
+                  <p className="text-slate-700 mb-2">
+                    <span className="font-semibold">Subject:</span> Excited About [Company Name] — [Your Name] Reaching Out
+                  </p>
+                  <div className="border border-slate-200 rounded-xl p-4 bg-slate-50 text-slate-700 whitespace-pre-line">
+                    Hi [HR First Name],{"\n"}
+                    I have been following [Company Name] for a while now — [mention one specific thing: a product launch, funding news, or
+                    a value of theirs]. The work you are doing is genuinely exciting.{"\n"}
+                    I am [Your Name], a [Degree] graduate from [College]. I specialise in [Your Skill] and have worked on [brief mention of
+                    a project or internship].{"\n"}
+                    I know fast-growing companies like yours often need sharp, motivated people who can hit the ground running. I would
+                    love to be that person.{"\n"}
+                    Resume attached. Would love to chat if the timing is right.{"\n"}
+                    Warm regards,{"\n"}
+                    [Your Name]{"\n"}
+                    [Phone Number] | [LinkedIn Profile URL]
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-3">
+                    TEMPLATE 3 — Follow-Up Email (After No Reply for 5–7 Days)
+                  </h3>
+                  <p className="text-slate-700 mb-2">
+                    <span className="font-semibold">Subject:</span> Following Up — [Your Name] | [Role/Domain]
+                  </p>
+                  <div className="border border-slate-200 rounded-xl p-4 bg-slate-50 text-slate-700 whitespace-pre-line">
+                    Hi [HR First Name],{"\n"}
+                    I had sent you an email on [date] regarding an opportunity at [Company Name]. I wanted to follow up in case it got
+                    missed in your busy inbox.{"\n"}
+                    I remain very interested in joining [Company Name] and would love to know if there are any suitable openings. I am
+                    happy to share any additional information you may need.{"\n"}
+                    Thank you again for your time.{"\n"}
+                    Best,{"\n"}
+                    [Your Name]{"\n"}
+                    [Phone Number] | [LinkedIn Profile URL]
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-3">EMAIL TIPS</h3>
+                  <ul className="list-disc pl-5 space-y-1 text-slate-700">
+                    <li>Always personalise the first line — mention something real about the company.</li>
+                    <li>Subject line must be clear. Do NOT write 'Job Application' as subject. Use the format shown above.</li>
+                    <li>Keep the email under 150 words. HRs do not read long emails.</li>
+                    <li>Send at 9:00 AM – 10:00 AM on Tuesday or Wednesday for best open rates.</li>
+                    <li>Always attach your resume as a PDF. Name the file properly.</li>
+                    <li>Send from a professional email ID — firstname.lastname@gmail.com format</li>
+                    <li>Do NOT use: 'To Whom It May Concern', 'Dear Sir/Ma'am', or 'I humbly request'.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </motion.section>
+
+          {/* Section 5 */}
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.35 }}
+            className="mb-16"
+          >
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm">
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
+                SECTION 5 — LINKEDIN CONNECTION MESSAGES
+              </h2>
+              <p className="text-slate-600 mb-8">
+                LinkedIn has a 300-character limit on connection request notes. Keep these short and genuine.
+              </p>
+
+              <div className="space-y-8 text-slate-700">
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-3">MESSAGE 1 — General Connection Request</h3>
+                  <blockquote className="border-l-4 border-slate-300 pl-4 italic text-slate-700">
+                    Hi [Name], I came across your profile and noticed you work in HR at [Company]. I am a [Degree] fresher with a
+                    background in [Skill] and would love to connect. Looking forward to staying in touch!
+                  </blockquote>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-3">MESSAGE 2 — After They Accept Your Connection</h3>
+                  <blockquote className="border-l-4 border-slate-300 pl-4 italic text-slate-700">
+                    Hi [Name], thank you for connecting! I wanted to reach out because I am actively looking for opportunities in
+                    [Domain/Role] and [Company] has always been on my list. I have sent a brief email to your inbox. Would love your
+                    thoughts when you get a chance. Thank you!
+                  </blockquote>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-3">MESSAGE 3 — Referencing a Job Post</h3>
+                  <blockquote className="border-l-4 border-slate-300 pl-4 italic text-slate-700">
+                    Hi [Name], I saw [Company] recently posted a [Role] opening and I am very interested. I have [X] months of experience
+                    in [Skill] and would love to be considered. May I send my resume to you directly?
+                  </blockquote>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-3">MESSAGE 4 — Startup / Direct Approach</h3>
+                  <blockquote className="border-l-4 border-slate-300 pl-4 italic text-slate-700">
+                    Hi [Name], love what [Company] is building! I am a [Degree] grad with strong skills in [Skill] and I am looking to
+                    join a growing team. Would be great to connect and explore if there is a fit.
+                  </blockquote>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-3">LINKEDIN TIPS</h3>
+                  <ul className="list-disc pl-5 space-y-1 text-slate-700">
+                    <li>Do NOT send a blank connection request — always add a note.</li>
+                    <li>Do NOT send your resume in the very first message. Connect first, then follow up.</li>
+                    <li>Engage with 2–3 of their recent posts BEFORE sending a message. It helps.</li>
+                    <li>If they do not accept within 7 days, send a cold email instead.</li>
+                    <li>Keep your LinkedIn profile updated before you start sending requests.</li>
+                    <li>Post on LinkedIn 2–3 times a week during your job search — HRs notice active profiles.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </motion.section>
+
+          {/* Section 6 */}
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="mb-16"
+          >
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm">
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
+                SECTION 6 — FOLLOW-UP SYSTEM
+              </h2>
+              <p className="text-slate-600 mb-8">
+                Most people give up after the first outreach. That is the biggest mistake. Here is the exact follow-up schedule to use
+                for each HR contact.
+              </p>
+
+              <div className="space-y-8 text-slate-700">
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-3">14-DAY FOLLOW-UP SCHEDULE</h3>
+                  <div className="grid md:grid-cols-2 gap-2 text-slate-700">
+                    <p>Day 1 (Tuesday) Send LinkedIn connection request with a short note</p>
+                    <p>Day 3 (Thursday) HR accepted? Send a follow-up LinkedIn message (Template 2)</p>
+                    <p>Day 4 (Friday) Send cold email (Template 1) — 9:00 AM</p>
+                    <p>Day 7 (Tuesday) No email reply? Send follow-up email (Template 3)</p>
+                    <p>Day 9 (Thursday) Still no reply? Make the cold call using the script</p>
+                    <p>Day 12 (Sunday) Rest. Do not reach out on weekends.</p>
+                    <p>Day 14 (Tuesday) Send one final short message on LinkedIn or email. After this, move on.</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-3">WHAT TO SAY IN THE FINAL FOLLOW-UP</h3>
+                  <blockquote className="border-l-4 border-slate-300 pl-4 italic text-slate-700">
+                    Hi [Name], I know you must be very busy. This is my last follow-up regarding an opportunity at [Company]. If the timing
+                    is not right, I completely understand. I would love to reconnect in a few months. Thank you for your time!
+                  </blockquote>
+                  <p className="text-slate-600 mt-3">
+                    Why this works: Saying 'this is my last follow-up' often triggers a response because it signals that you are
+                    respectful of their time and not desperate.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-3">AFTER YOU GET A RESPONSE</h3>
+                  <div className="space-y-2 text-slate-700">
+                    <p><span className="font-semibold">They say "Send Resume"</span> Reply within 30 minutes. Attach PDF resume. Say thank you.</p>
+                    <p><span className="font-semibold">They say "We will keep you in mind"</span> Reply: "Thank you! I will follow up in 2 weeks if that is okay."</p>
+                    <p><span className="font-semibold">They share a JD</span> Apply immediately. Reply to confirm you have applied.</p>
+                    <p><span className="font-semibold">They ask for an interview</span> Confirm within 1 hour. Prepare thoroughly before going.</p>
+                    <p><span className="font-semibold">No reply even after Day 14</span> Mark as "cold lead". Revisit after 3–4 weeks.</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-3">WEEKLY TARGETS TO STAY ON TRACK</h3>
+                  <p className="text-slate-700 mb-2">Set these as your weekly goals:</p>
+                  <ul className="list-disc pl-5 space-y-1 text-slate-700">
+                    <li>Monday: Research 10 companies from the HR list</li>
+                    <li>Tuesday: Send 10 LinkedIn requests and 5 cold emails</li>
+                    <li>Wednesday: Follow up on all Day-4 emails from last week</li>
+                    <li>Thursday: Make cold calls for all non-responders from last week</li>
+                    <li>Friday: Update your tracker. Review what is working.</li>
+                  </ul>
+                  <div className="mt-3 space-y-1 text-slate-700">
+                    <p><span className="font-semibold">Target:</span> 10 outreaches per week = 40 contacts per month</p>
+                    <p><span className="font-semibold">Expected response rate:</span> 10–20% = 4 to 8 positive replies per month</p>
+                    <p><span className="font-semibold">Conversion to interview:</span> 30–50% of replies = 1 to 4 interviews per month</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.section>
 
           {/* Category Filter */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
+            transition={{ duration: 0.6, delay: 0.45 }}
             className="mb-12"
           >
             <div className="flex flex-wrap gap-3 justify-center">
