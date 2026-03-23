@@ -1,11 +1,4 @@
 import { Dispatch, SetStateAction, useCallback, useEffect, useState } from "react";
-import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
-import {
-  IconLayoutDashboard,
-  IconSettings,
-  IconUsers,
-  IconChartLine,
-} from "@tabler/icons-react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import HrEmailsTable from "./hr-emails-table";
@@ -59,37 +52,11 @@ const cleanApplicationPayload = (row: JobApplicationRow) => ({
 });
 
 export default function SidebarDemo() {
-  const links = [
-    {
-      label: "Dashboard",
-      href: "/login",
-      icon: (
-        <IconLayoutDashboard className="h-5 w-5 shrink-0 text-neutral-600" />
-      ),
-    },
-    {
-      label: "Users",
-      href: "/login",
-      icon: <IconUsers className="h-5 w-5 shrink-0 text-neutral-600" />,
-    },
-    {
-      label: "Reports",
-      href: "/login",
-      icon: <IconChartLine className="h-5 w-5 shrink-0 text-neutral-600" />,
-    },
-    {
-      label: "Settings",
-      href: "/login",
-      icon: <IconSettings className="h-5 w-5 shrink-0 text-neutral-600" />,
-    },
-  ];
-
-  const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<JobApplicationRow[]>([]);
 
   const getJobApplications = useCallback(async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/job/applications`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/applications`);
       const data = await response.json();
 
       if (!response.ok) {
@@ -113,37 +80,7 @@ export default function SidebarDemo() {
   }, [getJobApplications]);
 
   return (
-    <div
-      className={cn(
-        "mx-auto flex w-full max-w-7xl flex-1 flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50 md:flex-row",
-        "h-[60vh]"
-      )}
-    >
-      <Sidebar open={open} setOpen={setOpen}>
-        <SidebarBody className="justify-between gap-10 border-r border-neutral-200 bg-white">
-          <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
-            {open ? <Logo /> : <LogoIcon />}
-            <div className="mt-8 flex flex-col gap-2">
-              {links.map((link, idx) => (
-                <SidebarLink key={idx} link={link} />
-              ))}
-            </div>
-          </div>
-          <div>
-            <SidebarLink
-              link={{
-                label: "User",
-                href: "/login",
-                icon: (
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-300 text-[11px] font-semibold text-neutral-700">
-                    U
-                  </div>
-                ),
-              }}
-            />
-          </div>
-        </SidebarBody>
-      </Sidebar>
+    <div className="w-full">
       <Dashboard rows={rows} setRows={setRows} reloadRows={getJobApplications} />
     </div>
   );
@@ -195,24 +132,23 @@ const Dashboard = ({
   const draftCount = rows.filter((row) => row.isDraft).length;
 
   useEffect(() => {
-    const existingColumnIds = new Set(customColumns.map((column) => column._id));
-    const discoveredColumns: CustomColumn[] = [];
-
+    const allKeys = new Set<string>();
     rows.forEach((row) => {
       if (!row.custom || typeof row.custom !== "object") return;
-
-      Object.keys(row.custom).forEach((key) => {
-        if (!existingColumnIds.has(key)) {
-          existingColumnIds.add(key);
-          discoveredColumns.push({ _id: key, label: key });
-        }
-      });
+      Object.keys(row.custom).forEach((key) => allKeys.add(key));
     });
 
-    if (discoveredColumns.length > 0) {
-      setCustomColumns((prev) => [...prev, ...discoveredColumns]);
-    }
-  }, [rows, customColumns]);
+    if (allKeys.size === 0) return;
+
+    setCustomColumns((prev) => {
+      const existingIds = new Set(prev.map((c) => c._id));
+      const toAdd: CustomColumn[] = [];
+      allKeys.forEach((key) => {
+        if (!existingIds.has(key)) toAdd.push({ _id: key, label: key });
+      });
+      return toAdd.length > 0 ? [...prev, ...toAdd] : prev;
+    });
+  }, [rows]);
 
   const addRow = () => {
     const tempId = createId("draft");
@@ -255,7 +191,7 @@ const Dashboard = ({
 
     try {
       setSaveLoader(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/job/applications`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/applications`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -297,7 +233,7 @@ const Dashboard = ({
     );
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/job/applications`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/applications`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -350,7 +286,7 @@ const Dashboard = ({
         return;
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/job/application/delete`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/application/delete`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -387,7 +323,7 @@ const Dashboard = ({
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/job/application/status/update/${row._id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/application/status/update/${row._id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -468,7 +404,7 @@ const Dashboard = ({
 
     try {
       setSaveEditLoader(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/job/applications/${editForm._id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/applications/${editForm._id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

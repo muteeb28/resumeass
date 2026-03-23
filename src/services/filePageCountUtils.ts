@@ -1,18 +1,28 @@
-import * as pdfjsLib from 'pdfjs-dist';
+let pdfjsLib: typeof import('pdfjs-dist') | null = null;
 
-// Configure PDF.js worker - use local worker file from node_modules
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url
-).toString();
+async function getPdfJs() {
+  if (!pdfjsLib) {
+    pdfjsLib = await import('pdfjs-dist');
+    // Set worker URL only once, inside a function — never at module level.
+    // Module-level new URL(..., import.meta.url) pointing into node_modules
+    // causes webpack to add the worker file to its watch graph and triggers
+    // repeated HMR invalidation of node_modules.
+    pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+      'pdfjs-dist/build/pdf.worker.min.mjs',
+      import.meta.url
+    ).toString();
+  }
+  return pdfjsLib;
+}
 
 /**
  * Extract page count from a PDF file
  */
 export async function getPdfPageCount(file: File): Promise<number> {
   try {
+    const lib = await getPdfJs();
     const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const pdf = await lib.getDocument({ data: arrayBuffer }).promise;
     return pdf.numPages;
   } catch (error) {
     console.error('Failed to extract PDF page count:', error);

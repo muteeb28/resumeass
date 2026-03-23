@@ -1,3 +1,6 @@
+# Scraper disk cache
+.cache/
+
 # Logs
 logs
 *.log
@@ -36,3 +39,6 @@ server/cache
 
 # Claude
 .claude/
+
+# Local test scripts (may contain hardcoded API keys)
+scripts/

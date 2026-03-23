@@ -9,13 +9,6 @@ export const buildApiUrl = (path: string) => {
   return base.endsWith('/') ? `${base.slice(0, -1)}${normalizedPath}` : `${base}${normalizedPath}`;
 };
 
-
-
-// Debug logging for API configuration
-console.log(' API Configuration:');
-console.log('  NEXT_PUBLIC_API_URL from env:', process.env.NEXT_PUBLIC_API_URL);
-console.log('  Final API_BASE_URL:', getApiBaseUrl());
-
 export interface ResumeTemplate {
   id: string;
   name: string;

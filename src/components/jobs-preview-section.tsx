@@ -24,9 +24,17 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 const PLATFORM_COLORS: Record<string, string> = {
-  LinkedIn:         "bg-blue-500",
-  RemoteRocketship: "bg-rose-500",
-  Adzuna:           "bg-purple-500",
+  LinkedIn:           "bg-blue-500",
+  RemoteRocketship:   "bg-rose-500",
+  Adzuna:             "bg-purple-500",
+  RemoteOK:           "bg-orange-500",
+  Remotive:           "bg-green-500",
+  "Working Nomads":   "bg-cyan-500",
+  "We Work Remotely": "bg-indigo-500",
+  NoDesk:             "bg-yellow-500",
+  "Google Jobs":      "bg-red-500",
+  Jobspresso:         "bg-pink-500",
+  SimplyHired:        "bg-teal-500",
 };
 
 function CompanyInitials({ name }: { name: string }) {
@@ -188,7 +196,7 @@ export function JobsPreviewSection() {
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             <Link
-              href="/job-tracker"
+              href="/job-tracker?tab=jobs"
               className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-neutral-900 text-white text-sm font-semibold hover:bg-teal-600 transition-colors self-start sm:self-auto flex-shrink-0 group"
             >
               See All Jobs
@@ -198,8 +206,16 @@ export function JobsPreviewSection() {
         </motion.div>
 
         {/* Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={loading ? "loading" : "loaded"}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="contents"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {loading
               ? Array.from({ length: 6 }).map((_, i) => (
                   <Skeleton key={i} delay={i * 0.07} />
@@ -267,8 +283,9 @@ export function JobsPreviewSection() {
                     </motion.div>
                   );
                 })}
-          </AnimatePresence>
-        </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
 
         {/* Bottom CTA */}
         {!loading && jobs.length > 0 && (
@@ -279,7 +296,7 @@ export function JobsPreviewSection() {
             className="text-center mt-8"
           >
             <Link
-              href="/job-tracker"
+              href="/job-tracker?tab=jobs"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-teal-200 bg-teal-50 text-teal-700 text-sm font-semibold hover:bg-teal-600 hover:text-white hover:border-teal-600 transition-all duration-200 group"
             >
               <Sparkles size={14} />

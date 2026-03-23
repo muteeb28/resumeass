@@ -282,7 +282,7 @@ export function convertToPortfoliolyFormat(resume: ResumeJSON | ResumeJSONv2): R
         }
         return null;
       })
-      .filter((item: any): item is ResumeAward => item !== null);
+      .filter((item: ResumeAward | null): item is ResumeAward => item !== null);
 
     const rawVolunteer = Array.isArray(dynamicResume.volunteer) ? dynamicResume.volunteer : [];
     volunteer = rawVolunteer

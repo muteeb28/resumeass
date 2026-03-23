@@ -2,6 +2,7 @@
 @import "tailwindcss";
 @import "./styles/resume-optimizer.css";
 
+
 :root {
   --font-display: "Space Grotesk", "Segoe UI", sans-serif;
   --font-body: "Manrope", "Segoe UI", sans-serif;

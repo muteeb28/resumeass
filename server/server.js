@@ -1,4 +1,4 @@
-﻿import dotenv from 'dotenv';
+import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import crypto from 'crypto';
@@ -35,10 +35,33 @@ import { convertToPortfoliolyFormat } from './utils/portfoliolyConverter.js';
 // Import extraction pipelines
 import { extractFromPDF, extractFromMarkdown } from './services/geminiPDFExtractor.js';
 import { extractMarkdownFromPDF } from './services/mistralOcrClient.js';
+import {
+  analyzeWeakBullets,
+  rewriteBullet,
+  analyzeKeywords,
+  analyzeSkillsGap,
+  rewriteSummary,
+  generateReport as generateOptimizerReport,
+  extractResumeFromPDF,
+  analyzeResumeForATS,
+  analyzeResumeForATSStream,
+  optimizeResumeSimple,
+} from './services/resumeOptimizerService.js';
 
 // controllers
+import {
+  authProfile,
+  createUser,
+  getAccount,
+  login,
+  logout,
+  updateAccountBasic,
+  updateAccountCareer,
+  updateAccountPassword
+} from "./controller/user.controller.js";
 import { createOrder, verifyPayment } from "./controller/payment.controller.js";
 import { addDatafForHrIndiaLists, getHrIndianListDemo, contactus } from './controller/common.controller.js';
+import { createSupportRequest } from "./controller/support.controller.js";
 import { deleteJobApplication, editJobApplication, getJobApplications, setJobApplication, updateJobApplicationStatus } from './controller/job.controller.js';
 import { getAllPosts, getPostBySlug, getFeaturedPosts, getCategories, getPopularPosts } from "./controller/blog.controller.js";
 import { savePortfolio, getPortfolio, deletePortfolio } from "./controller/portfolio.controller.js";
@@ -97,8 +120,8 @@ const upload = multer({
 });
 
 // Middleware
-const corsOrigins = process.env.CORS_ORIGINS
-  ? process.env.CORS_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean)
+const corsOrigins = process.env.ORIGIN_URLS
+  ? process.env.ORIGIN_URLS.split(',').map((origin) => origin.trim()).filter(Boolean)
   : [];
 
 app.use(cors({
@@ -138,6 +161,22 @@ app.get('/api/health', (req, res) => {
 // common controller
 app.get("/api/hr/list/demo", getHrIndianListDemo);
 app.post('/api/contact-us', contactus);
+
+// user controller routes
+app.post("/api/user/create", createUser);
+app.post("/api/user/login", login);
+app.post("/api/user/logout", logout);
+app.get("/api/user/profile", protectRoute, authProfile);
+app.get("/api/account/profile", protectRoute, authProfile);
+app.get("/api/payment/charge", createOrder);
+app.post("/api/payment/verify", verifyPayment);
+app.get('/api/user/account', protectRoute, getAccount);
+app.put('/api/user/account/basic', protectRoute, updateAccountBasic);
+app.put('/api/user/account/career', protectRoute, updateAccountCareer);
+app.put('/api/user/account/password', protectRoute, updateAccountPassword);
+
+// support controller
+app.post('/api/user/support-request', protectRoute, createSupportRequest);
 
 // job controller routes
 app.get('/api/job/applications', getJobApplications);
@@ -1512,285 +1551,52 @@ app.post('/api/generate-job-resume', async (req, res) => {
   }
 });
 
-// Resume optimization endpoint with streaming progress
+// NEW: Simple streaming-like optimization endpoint for Resume Optimizer v2
+// This replaces the previous SSE-based endpoint for the new two-call flow.
 app.post('/api/optimize-resume-stream', upload.single('resume'), async (req, res) => {
-  process.stdout.write(' RECEIVED STREAMING REQUEST\n');
-  process.stdout.write(`Request body: ${JSON.stringify(req.body)}\n`);
-  process.stdout.write(`File: ${req.file ? req.file.originalname : 'No file'}\n`);
+  const file = req.file;
+  const { jobDescription } = req.body || {};
 
-  // Set up Server-Sent Events
-  res.writeHead(200, {
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
-    'Connection': 'keep-alive',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Cache-Control'
-  });
+  if (!file) {
+    return res.status(400).json({ success: false, error: 'Resume file is required' });
+  }
 
-  // Progress callback function
-  const sendProgress = (step, message, data = null) => {
-    const progressData = {
-      step,
-      message,
-      timestamp: new Date().toISOString(),
-      data
-    };
-    res.write(`data: ${JSON.stringify(progressData)}\n\n`);
+  // SSE setup
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  const send = (event, data) => {
+    res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+  };
+
+  const cleanup = () => {
+    try { if (file) fs.unlinkSync(file.path); } catch (_) {}
   };
 
   try {
-    const { targetRole, fileData, options, originalPageCount, parsedData } = req.body;
-    const file = req.file;
-    let parsedPayload = null;
-    const originalPageCountNumber = originalPageCount ? parseInt(originalPageCount, 10) : null;
-    const pageCountOverride = Number.isFinite(originalPageCountNumber) ? originalPageCountNumber : null;
+    console.log('[/api/optimize-resume-stream] Received file:', file.originalname, 'size:', file.size);
 
-    if (parsedData) {
-      try {
-        parsedPayload = typeof parsedData === 'string' ? JSON.parse(parsedData) : parsedData;
-      } catch (parseError) {
-        sendProgress('error', 'Invalid parsed data payload');
-        res.end();
-        return;
-      }
+    send('progress', { message: 'Extracting resume content...' });
+    const extractionResult = await extractTextFromFileWithStructure(file.path, file.mimetype);
+    const resumeText = extractionResult.text || '';
+    cleanup();
+
+    if (!resumeText.trim()) {
+      send('error', { message: 'Could not extract text from the uploaded file.' });
+      return res.end();
     }
 
-    if (parsedPayload) {
-      const pageCountHint = pageCountOverride
-        || parsedPayload?.formatInfo?.originalPageCount
-        || parsedPayload?.structure?.originalPageCount
-        || parsedPayload?.formatInfo?.estimatedPageCount
-        || parsedPayload?.structure?.estimatedPageCount
-        || 1;
-      const sparseCheck = isParsedPayloadSparse(parsedPayload, pageCountHint);
-      if (sparseCheck.isSparse && (file || fileData)) {
-        console.log('Parsed data looks sparse; falling back to full file analysis.', sparseCheck.stats);
-        sendProgress('parsing', 'Extracted data looks incomplete. Analyzing the full document instead...');
-        parsedPayload = null;
-      }
-    }
+    send('progress', { message: 'Optimizing resume with AI...' });
+    const result = await optimizeResumeSimple(resumeText, jobDescription || '');
 
-    // Validation
-    if (!file && !fileData && !parsedPayload) {
-      sendProgress('error', 'Either resume file or file data is required');
-      res.end();
-      return;
-    }
-
-    if (!targetRole) {
-      sendProgress('error', 'Target role is required');
-      res.end();
-      return;
-    }
-
-    sendProgress('start', `Starting resume optimization for ${targetRole}...`);
-
-    console.log(`Processing resume optimization for role: ${targetRole}`);
-    if (originalPageCount) {
-      console.log(` Original PDF page count: ${originalPageCount}`);
-    }
-    if (parsedPayload) {
-      console.log('Using parsed resume payload from client');
-      sendProgress('parsing', 'Using extracted resume data...');
-    } else if (file) {
-      console.log(`File: ${file.originalname}, Size: ${file.size} bytes`);
-      sendProgress('file-processing', `Processing file: ${file.originalname}...`);
-    } else {
-      console.log(`File: Direct text data, Size: ${fileData.length} characters`);
-      sendProgress('file-processing', 'Processing provided text data...');
-    }
-
-    // Enhanced text extraction with structure preservation
-    // Enhanced text extraction with structure preservation
-    let resumeText = '', fileStructure = null, resumeInput = null;
-
-    if (parsedPayload) {
-      resumeInput = '';
-      fileStructure = {
-        format: 'structured_data',
-        originalPageCount: Math.max(
-          pageCountOverride || 0,
-          parsedPayload?.formatInfo?.originalPageCount || 0,
-          parsedPayload?.structure?.originalPageCount || 0,
-          parsedPayload?.formatInfo?.estimatedPageCount || 0,
-          parsedPayload?.structure?.estimatedPageCount || 0,
-          1
-        )
-      };
-    } else if (fileData) {
-      // Direct text data provided
-      resumeText = fileData;
-      resumeInput = fileData;
-      fileStructure = {
-        format: 'direct_text',
-        originalPageCount: pageCountOverride || 1
-      };
-    } else {
-      // Extract from file
-      // FOR PDF: Prefer text extraction for speed, fall back to binary if needed
-      if (file.mimetype === 'application/pdf') {
-        const baseMinPdfChars = Number(process.env.PDF_TEXT_MIN_CHARS) || 400;
-        const minPdfCharsPerPage = Number(process.env.PDF_TEXT_MIN_CHARS_PER_PAGE) || 350;
-        let extractionResult = null;
-        let extractedText = '';
-
-        try {
-          sendProgress('extracting', `Extracting text from ${file.originalname} for faster optimization...`);
-          extractionResult = await extractTextFromFileWithStructure(file.path, file.mimetype);
-          fileStructure = extractionResult.structure;
-          extractedText = extractionResult.text || '';
-        } catch (e) {
-          console.warn('PDF text extraction failed, falling back to binary analysis:', e.message);
-        }
-
-        const extractedTextLength = extractedText.trim().length;
-        const pageCountHint = fileStructure?.originalPageCount || fileStructure?.estimatedPageCount || pageCountOverride || 1;
-        const minPdfChars = Math.max(baseMinPdfChars, minPdfCharsPerPage * pageCountHint);
-
-        if (extractedTextLength >= minPdfChars) {
-          try {
-            const parsedUltimate = parseResumeUltimate(extractedText);
-            const selection = parsedUltimate;
-            const parsedFromText = mergeParsedPayloads(
-              selection.payload || parsedUltimate,
-              parsedUltimate
-            );
-
-            if (parsedFromText) {
-              parsedFromText.structure = fileStructure;
-              if (!parsedFromText.formatInfo) {
-                parsedFromText.formatInfo = {};
-              }
-              if (!parsedFromText.formatInfo.originalPageCount) {
-                parsedFromText.formatInfo.originalPageCount = fileStructure?.originalPageCount || pageCountOverride || 1;
-              }
-              if (!parsedFromText.formatInfo.estimatedPageCount && fileStructure?.estimatedPageCount) {
-                parsedFromText.formatInfo.estimatedPageCount = fileStructure.estimatedPageCount;
-              }
-
-              const parsedCheck = isParsedPayloadSparse(
-                parsedFromText,
-                fileStructure?.originalPageCount || fileStructure?.estimatedPageCount || pageCountOverride || 1
-              );
-
-              if (!parsedCheck.isSparse) {
-                parsedPayload = parsedFromText;
-                resumeInput = '';
-                sendProgress('parsing', 'Using extracted text for structured optimization...');
-              } else {
-                resumeText = extractedText;
-                resumeInput = resumeText;
-                sendProgress('parsing', 'Using extracted text for optimization...');
-              }
-            }
-          } catch (parseError) {
-            console.warn('Parsing failed for PDF text, using raw text instead:', parseError.message);
-            resumeText = extractedText;
-            resumeInput = resumeText;
-            sendProgress('parsing', 'Using extracted text for optimization...');
-          }
-        }
-
-        if (!resumeInput && !parsedPayload) {
-          if (extractedTextLength > 0) {
-            sendProgress('parsing', 'Extracted text looks incomplete. Using visual PDF analysis instead...');
-          }
-          console.log(` [Enhanced Server] PDF detected - Using Gemini Multimodal (Binary) Processing`);
-          const buffer = fs.readFileSync(file.path);
-          resumeInput = {
-            buffer: buffer,
-            mimeType: file.mimetype
-          };
-          if (!fileStructure) {
-            fileStructure = { originalPageCount: pageCountOverride || 1 };
-          }
-        }
-      } else {
-        // FOR DOCX/Text: Use legacy extraction
-        sendProgress('extracting', `Extracting text from ${file.originalname} with structure preservation...`);
-        const extractionResult = await extractTextFromFileWithStructure(file.path, file.mimetype);
-        resumeText = extractionResult.text;
-        resumeInput = resumeText;
-        fileStructure = extractionResult.structure;
-      }
-
-      console.log(` [Enhanced Server] File pre-processing complete`);
-      if (fileStructure) {
-        console.log(`   - Format: ${fileStructure.format}`);
-        console.log(`   - Original pages: ${fileStructure.originalPageCount || fileStructure.estimatedPageCount}`);
-      }
-    }
-
-    if (!resumeInput && !parsedPayload) {
-      sendProgress('error', 'Could not process the uploaded file');
-      res.end();
-      return;
-    }
-
-    // Use original page count from PDF if available, otherwise from file structure
-    const actualPageCount = pageCountOverride ||
-      (fileStructure?.originalPageCount || fileStructure?.estimatedPageCount || 1);
-
-    if (parsedPayload) {
-      sendProgress('text-extracted', 'Using extracted resume data for optimization');
-    } else if (typeof resumeInput === 'string') {
-      sendProgress('text-extracted', `Extracted ${resumeInput.length} characters from ${actualPageCount}-page resume`);
-    } else {
-      sendProgress('text-extracted', `Prepared ${file.mimetype} for intelligent analysis (${formatFileSize(file.size)})`);
-    }
-
-    console.log(` [Enhanced Server] About to call optimizeResumeWithPagePreservation with STRICT page preservation...`);
-
-    // Optimize resume using ENHANCED AI with STRICT page preservation
-    const optimizationResult = await optimizeResumeWithPagePreservation(resumeInput, targetRole, {
-      ...options,
-      progressCallback: sendProgress,
-      originalPageCount: actualPageCount,
-      fileStructure: fileStructure,
-      parsedData: parsedPayload
-    });
-
-    console.log(` Server: optimizeResume completed successfully`);
-    console.log(` Server: Received ${optimizationResult.templates?.length || 0} templates`);
-
-    // Clean up uploaded file
-    if (file) {
-      try {
-        fs.unlinkSync(file.path);
-      } catch (cleanupError) {
-        console.warn('Warning: Could not delete uploaded file:', cleanupError.message);
-      }
-    }
-
-    // Send final result
-    sendProgress('completed', 'Resume optimization completed successfully!', {
-      templates: optimizationResult.templates,
-      improvements: optimizationResult.improvements,
-      stats: optimizationResult.stats,
-      keyChanges: optimizationResult.keyChanges,
-      targetRole: targetRole
-    });
-
+    send('complete', { data: result });
     res.end();
-
-  } catch (error) {
-    console.error(' Server: Resume optimization error caught:', error);
-    console.error(' Server: Error type:', typeof error);
-    console.error(' Server: Error message:', error.message);
-    console.error(' Server: Error stack:', error.stack);
-
-    sendProgress('error', error.message || 'Failed to optimize resume. Please try again.');
-
-    // Clean up uploaded file in case of error
-    if (req.file) {
-      try {
-        fs.unlinkSync(req.file.path);
-      } catch (cleanupError) {
-        console.warn('Warning: Could not delete uploaded file after error:', cleanupError.message);
-      }
-    }
-
-    console.log(' Server: Ending streaming response due to error');
+  } catch (err) {
+    console.error('[/api/optimize-resume-stream] Error:', err.message);
+    cleanup();
+    send('error', { message: err.message || 'Optimization failed' });
     res.end();
   }
 });
@@ -2584,6 +2390,163 @@ function formatFileSize(bytes) {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
+
+// ============================================================================
+// OPTIMIZER ENDPOINTS — /api/optimizer/*
+// ============================================================================
+
+// Pre-analysis endpoint for new optimizer flow
+app.post('/api/analyze-resume', upload.single('resume'), async (req, res) => {
+  req.setTimeout(120_000);
+  res.setTimeout(120_000);
+
+  const file = req.file;
+  const { jobDescription } = req.body || {};
+
+  if (!file) {
+    return res.status(400).json({ success: false, error: 'Resume file is required' });
+  }
+
+  // SSE setup — keeps connection alive while Gemini streams
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  const send = (event, data) => {
+    res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+  };
+
+  const cleanup = () => {
+    try { if (file) fs.unlinkSync(file.path); } catch (_) {}
+  };
+
+  try {
+    console.log('[/api/analyze-resume] Received file:', file.originalname, 'size:', file.size);
+
+    const extractionResult = await extractTextFromFileWithStructure(file.path, file.mimetype);
+    const resumeText = extractionResult.text || '';
+    cleanup();
+
+    if (!resumeText.trim()) {
+      send('error', { message: 'Could not extract text from the uploaded file. Please ensure it contains readable text.' });
+      return res.end();
+    }
+
+    const analysis = await analyzeResumeForATSStream(resumeText, jobDescription || '', (chunk) => {
+      send('chunk', { text: chunk });
+    });
+
+    send('result', { success: true, data: analysis });
+    res.end();
+  } catch (err) {
+    console.error('[/api/analyze-resume] Error:', err);
+    cleanup();
+    send('error', { message: err.message || 'Failed to analyze resume' });
+    res.end();
+  }
+});
+
+// PDF upload for optimizer landing — Gemini Vision reads PDF directly (OPTI_API_KEY)
+app.post('/api/optimizer/extract', upload.single('resume'), async (req, res) => {
+  try {
+    const file = req.file;
+    if (!file) return res.status(400).json({ success: false, error: 'No file uploaded' });
+
+    const { resumeJson, resumeText } = await extractResumeFromPDF(file.path);
+    try { fs.unlinkSync(file.path); } catch (_) {}
+
+    return res.json({ success: true, data: { resumeJson, resumeText } });
+  } catch (err) {
+    console.error('[optimizer/extract]', err.message);
+    try { if (req.file) fs.unlinkSync(req.file.path); } catch (_) {}
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/optimizer/analyze-bullets', async (req, res) => {
+  try {
+    const { resumeText, jobDescription } = req.body || {};
+    if (!resumeText || !jobDescription) {
+      return res.status(400).json({ success: false, error: 'resumeText and jobDescription are required' });
+    }
+    const data = await analyzeWeakBullets(resumeText, jobDescription);
+    return res.json({ success: true, data });
+  } catch (err) {
+    console.error('[optimizer/analyze-bullets]', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/optimizer/rewrite-bullet', async (req, res) => {
+  try {
+    const { original, answers, jobDescription } = req.body || {};
+    if (!original || !answers || !jobDescription) {
+      return res.status(400).json({ success: false, error: 'original, answers, and jobDescription are required' });
+    }
+    const data = await rewriteBullet(original, answers, jobDescription);
+    return res.json({ success: true, data });
+  } catch (err) {
+    console.error('[optimizer/rewrite-bullet]', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/optimizer/keywords', async (req, res) => {
+  try {
+    const { resumeText, jobDescription } = req.body || {};
+    if (!resumeText || !jobDescription) {
+      return res.status(400).json({ success: false, error: 'resumeText and jobDescription are required' });
+    }
+    const data = await analyzeKeywords(resumeText, jobDescription);
+    return res.json({ success: true, data });
+  } catch (err) {
+    console.error('[optimizer/keywords]', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/optimizer/skills', async (req, res) => {
+  try {
+    const { resumeText, jobDescription } = req.body || {};
+    if (!resumeText || !jobDescription) {
+      return res.status(400).json({ success: false, error: 'resumeText and jobDescription are required' });
+    }
+    const data = await analyzeSkillsGap(resumeText, jobDescription);
+    return res.json({ success: true, data });
+  } catch (err) {
+    console.error('[optimizer/skills]', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/optimizer/summary', async (req, res) => {
+  try {
+    const { resumeText, jobDescription } = req.body || {};
+    if (!resumeText || !jobDescription) {
+      return res.status(400).json({ success: false, error: 'resumeText and jobDescription are required' });
+    }
+    const data = await rewriteSummary(resumeText, jobDescription);
+    return res.json({ success: true, data });
+  } catch (err) {
+    console.error('[optimizer/summary]', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/optimizer/report', async (req, res) => {
+  try {
+    const { originalResumeText, currentResumeText, jobDescription, toolChanges } = req.body || {};
+    if (!originalResumeText || !currentResumeText || !jobDescription) {
+      return res.status(400).json({ success: false, error: 'originalResumeText, currentResumeText, and jobDescription are required' });
+    }
+    const data = await generateOptimizerReport(originalResumeText, currentResumeText, jobDescription, toolChanges || []);
+    return res.json({ success: true, data });
+  } catch (err) {
+    console.error('[optimizer/report]', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 // 404 handler
 app.use((req, res) => {

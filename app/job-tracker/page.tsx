@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { BackgroundRippleLayout } from "@/components/background-ripple-layout";
 import { Navbar } from "@/components/navbar";
 import SidebarDemo from "@/components/sidebar-demo";
@@ -9,8 +10,10 @@ import JobBoard from "@/components/job-board";
 
 type View = "jobs" | "tracker" | "emails";
 
-export default function JobTrackerRoute() {
-  const [view, setView] = useState<View>("jobs");
+function JobTrackerContent() {
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab") as View | null;
+  const [view, setView] = useState<View>(tabParam === "jobs" || tabParam === "emails" ? tabParam : "tracker");
 
   const tabs: { id: View; label: string }[] = [
     { id: "jobs", label: "Find Jobs" },
@@ -84,5 +87,13 @@ export default function JobTrackerRoute() {
         </div>
       </section>
     </BackgroundRippleLayout>
+  );
+}
+
+export default function JobTrackerRoute() {
+  return (
+    <Suspense>
+      <JobTrackerContent />
+    </Suspense>
   );
 }

@@ -10,7 +10,7 @@ export const protectRoute = async (req, res, next) => {
 		}
 
 		try {
-			const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
+			const decoded = jwt.verify(accessToken, process.env.TOKEN_SECRET);
 			const user = await redis.get(`session:${decoded.userId}`);
 
 			if (!user) {

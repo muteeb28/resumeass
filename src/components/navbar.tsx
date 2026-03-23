@@ -3,6 +3,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "../lib/utils";
 import { Button } from "./button";
+import { HoverBorderGradient } from "./ui/hover-border-gradient";
 import AuthModal from "./auth-modal";
 import { useUserStore } from "../stores/useUserStore";
 
@@ -76,6 +77,26 @@ export const Navbar = ({
                 ></span>
               </motion.a>
             ))}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 + navItems.length * 0.1 }}
+            >
+              <HoverBorderGradient
+                as="a"
+                href="https://levelup-8csx.vercel.app/courses"
+                target="_blank"
+                rel="noopener noreferrer"
+                containerClassName="rounded-full"
+                className={cn(
+                  "text-sm font-medium px-3 py-1",
+                  isLight ? "bg-white text-slate-700" : "bg-black text-slate-200"
+                )}
+                duration={2}
+              >
+                Courses
+              </HoverBorderGradient>
+            </motion.div>
           </div>
 
           {/* Desktop Action Buttons */}
@@ -209,6 +230,23 @@ export const Navbar = ({
                   </a>
                 ))}
                 <div className={cn("border-t pt-3 mt-3 space-y-2", isLight ? "border-slate-200" : "border-slate-700")}>
+                  <div className="px-3">
+                    <HoverBorderGradient
+                      as="a"
+                      href="https://levelup-8csx.vercel.app/courses"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      containerClassName="rounded-full w-full"
+                      className={cn(
+                        "text-sm font-medium px-3 py-1 w-full justify-center",
+                        isLight ? "bg-white text-slate-700" : "bg-black text-slate-200"
+                      )}
+                      duration={2}
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Courses
+                    </HoverBorderGradient>
+                  </div>
                   <a
                     href="contact-us"
                     className={cn(

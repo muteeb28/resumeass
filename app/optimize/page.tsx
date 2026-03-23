@@ -1,7 +1,7 @@
 "use client"
 
-import OptimizeResumePage from '@/components/optimize-resume-page'
+import OptimizerPage from "@/components/optimizer/OptimizerPage"
 
 export default function OptimizePage() {
-  return <OptimizeResumePage />
+  return <OptimizerPage />
 }

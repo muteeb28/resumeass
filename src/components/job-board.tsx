@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   MapPin,
@@ -33,10 +33,12 @@ const CATEGORIES = [
   { label: "Product Management", value: "associate product manager" },
   { label: "Project Management", value: "associate project manager" },
   { label: "DevOps", value: "devops engineer India" },
+  { label: "Mobile", value: "flutter OR react native OR mobile developer" },
   { label: "Network Support", value: "network support engineer India" },
   { label: "Marketing", value: "digital marketing India" },
   { label: "Sales", value: "sales executive India" },
   { label: "Design", value: "UI UX designer India" },
+  { label: "Gulf Jobs", value: "software engineer gulf" },
 ];
 
 const EXPERIENCE_LEVELS = [
@@ -53,13 +55,21 @@ const TYPE_BADGE_COLORS: Record<string, string> = {
 };
 
 const PLATFORM_DOT_COLORS: Record<string, string> = {
-  LinkedIn: "bg-blue-500",
-  RemoteRocketship: "bg-rose-500",
-  Naukri: "bg-orange-500",
-  "Google Jobs": "bg-teal-500",
-  Glassdoor: "bg-emerald-500",
-  Indeed: "bg-indigo-500",
-  Adzuna: "bg-purple-500",
+  LinkedIn:           "bg-blue-500",
+  RemoteRocketship:   "bg-rose-500",
+  Adzuna:             "bg-purple-500",
+  RemoteOK:           "bg-orange-500",
+  Remotive:           "bg-green-500",
+  "Working Nomads":   "bg-cyan-500",
+  "We Work Remotely": "bg-indigo-500",
+  NoDesk:             "bg-yellow-500",
+  "Google Jobs":      "bg-red-500",
+  Jobspresso:         "bg-pink-500",
+  SimplyHired:        "bg-teal-500",
+  Naukri:             "bg-amber-500",
+  NaukriGulf:         "bg-orange-600",
+  Glassdoor:          "bg-emerald-500",
+  Indeed:             "bg-sky-500",
 };
 
 function JobCardSkeleton() {
@@ -177,32 +187,69 @@ function JobCard({ job, index }: { job: Job; index: number }) {
   );
 }
 
+const LOCATION_FILTERS = [
+  { label: "Worldwide", value: "Worldwide" },
+  { label: "Remote", value: "Remote" },
+  { label: "India", value: "India" },
+  { label: "Gulf", value: "Gulf" },
+];
+
 export default function JobBoard() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState("all");
   const [experience, setExperience] = useState("all");
+  const [locationFilter, setLocationFilter] = useState("Worldwide");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [grandTotal, setGrandTotal] = useState<number | null>(null);
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Fetch unfiltered grand total once on mount for the hero badge
+  useEffect(() => {
+    fetch("/api/jobs?query=all&category=All+Roles&page=1&limit=1")
+      .then(r => r.json())
+      .then(d => setGrandTotal(d.total ?? null))
+      .catch(() => {});
+  }, []);
   const LIMIT = 9;
 
-  const buildQuery = useCallback(() => {
-    if (searchQuery.trim()) return searchQuery.trim();
+  // 300ms debounce on search input
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clear any pending debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  function handleSearchInput(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = e.target.value;
+    setSearchInput(val);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setSearchQuery(val), 300);
+  }
+
+  // Category query: always driven by the selected chip + experience level.
+  // User's typed searchQuery is sent as a separate AND-filter via searchText param.
+  const buildCategoryQuery = useCallback(() => {
     const cat = CATEGORIES.find((c) => c.value === category);
     let q = cat?.value ?? "all";
     if (experience === "intern") q = q === "all" ? "intern India" : `${q} intern`;
     else if (experience === "senior") q = q === "all" ? "senior software engineer India" : `senior ${q}`;
     return q;
-  }, [category, experience, searchQuery]);
+  }, [category, experience]);
 
   const fetchJobs = useCallback(async () => {
     setLoading(true);
     try {
-      const q = buildQuery();
+      const q = buildCategoryQuery();
+      const cat = CATEGORIES.find((c) => c.value === category);
+      const catLabel = cat?.label ?? "All Roles";
       const res = await fetch(
-        `/api/jobs?query=${encodeURIComponent(q)}&page=${page}&limit=${LIMIT}`
+        `/api/jobs?query=${encodeURIComponent(q)}&category=${encodeURIComponent(catLabel)}&searchText=${encodeURIComponent(searchQuery)}&locationFilter=${encodeURIComponent(locationFilter)}&page=${page}&limit=${LIMIT}`
       );
       const data = await res.json();
       setJobs(Array.isArray(data.jobs) ? data.jobs : []);
@@ -212,11 +259,11 @@ export default function JobBoard() {
     } finally {
       setLoading(false);
     }
-  }, [buildQuery, page]);
+  }, [buildCategoryQuery, category, searchQuery, locationFilter, page]);
 
   useEffect(() => {
     setPage(1);
-  }, [category, experience, searchQuery]);
+  }, [category, experience, searchQuery, locationFilter]);
 
   useEffect(() => {
     fetchJobs();
@@ -232,6 +279,7 @@ export default function JobBoard() {
   function clearFilters() {
     setCategory("all");
     setExperience("all");
+    setLocationFilter("Worldwide");
     setSearchInput("");
     setSearchQuery("");
     setPage(1);
@@ -240,14 +288,17 @@ export default function JobBoard() {
   return (
     <div className="w-full">
       {/* Page header */}
-      <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-8">
+      <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-500 mb-2">Find Jobs</p>
+          {/* Source badge — live count from aggregator */}
+          <span className="inline-block text-xs text-neutral-400 font-medium bg-neutral-100 border border-neutral-200 rounded-full px-3 py-1 mb-3">
+            {grandTotal !== null ? `${grandTotal.toLocaleString()} Jobs` : "16+ Sources"} • Updated Live
+          </span>
           <h1 className="text-3xl md:text-5xl font-bold text-neutral-900">
-            Discover your next role
+            Find Jobs Before Everyone Else
           </h1>
-          <p className="text-neutral-500 mt-3 max-w-2xl">
-            Live job listings from LinkedIn & RemoteRocketship — plus Google Jobs & Adzuna when your API key is set.
+          <p className="text-neutral-500 mt-2 max-w-2xl">
+            Freshest listings from 16+ job boards — including hidden roles never posted on LinkedIn or Naukri. Updated every few hours.
           </p>
         </div>
 
@@ -270,7 +321,7 @@ export default function JobBoard() {
         <input
           type="text"
           value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
+          onChange={handleSearchInput}
           placeholder="Search jobs, companies…"
           className="w-full pl-11 pr-28 py-3 rounded-xl border border-neutral-200 bg-white text-sm text-neutral-800 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition"
         />
@@ -301,22 +352,40 @@ export default function JobBoard() {
           ))}
         </div>
 
-        {/* Experience toggle */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-neutral-500 font-medium mr-1">Experience:</span>
-          {EXPERIENCE_LEVELS.map((lvl) => (
-            <button
-              key={lvl.value}
-              onClick={() => setExperience(lvl.value)}
-              className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all duration-150 ${
-                experience === lvl.value
-                  ? "bg-teal-600 text-white border-teal-600"
-                  : "bg-white text-neutral-600 border-neutral-200 hover:border-teal-300"
-              }`}
-            >
-              {lvl.label}
-            </button>
-          ))}
+        {/* Experience + Location toggles */}
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-neutral-500 font-medium mr-1">Experience:</span>
+            {EXPERIENCE_LEVELS.map((lvl) => (
+              <button
+                key={lvl.value}
+                onClick={() => setExperience(lvl.value)}
+                className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all duration-150 ${
+                  experience === lvl.value
+                    ? "bg-teal-600 text-white border-teal-600"
+                    : "bg-white text-neutral-600 border-neutral-200 hover:border-teal-300"
+                }`}
+              >
+                {lvl.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-neutral-500 font-medium mr-1">Location:</span>
+            {LOCATION_FILTERS.map((loc) => (
+              <button
+                key={loc.value}
+                onClick={() => setLocationFilter(loc.value)}
+                className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all duration-150 ${
+                  locationFilter === loc.value
+                    ? "bg-teal-600 text-white border-teal-600"
+                    : "bg-white text-neutral-600 border-neutral-200 hover:border-teal-300"
+                }`}
+              >
+                {loc.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
