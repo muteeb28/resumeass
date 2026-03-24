@@ -149,9 +149,6 @@ app.get('/api/health', (req, res) => {
 app.get("/api/hr/list/demo", getHrIndianListDemo);
 app.post('/api/contact-us', contactus);
 
-// support controller
-app.post('/api/user/support-request', protectRoute, createSupportRequest);
-
 // job controller routes
 app.get('/api/job/applications', getJobApplications);
 app.post("/api/job/applications", setJobApplication);
