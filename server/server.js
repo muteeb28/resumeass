@@ -52,7 +52,6 @@ import { addDatafForHrIndiaLists, getHrIndianListDemo, contactus } from './contr
 import { deleteJobApplication, editJobApplication, getJobApplications, setJobApplication, updateJobApplicationStatus } from './controller/job.controller.js';
 import { getAllPosts, getPostBySlug, getFeaturedPosts, getCategories, getPopularPosts } from "./controller/blog.controller.js";
 import { savePortfolio, getPortfolio, deletePortfolio } from "./controller/portfolio.controller.js";
-import { protectRoute } from "./middleware/auth.middleware.js";
 
 // jobflix controller paths
 import { getPrepareData } from "./controller/jobflix/prepare.controller.js";
