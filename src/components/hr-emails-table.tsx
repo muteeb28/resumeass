@@ -280,7 +280,7 @@ export default function HrEmailsTable({
     useEffect(() => {
       const getHrContacts = async () => {
         try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/hr/list/demo`);
+          const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/hr/list/demo`);
           const data = await response.json();
           console.log('this is the response from the server: ', data.list);
           setHrContacts(data.list);
