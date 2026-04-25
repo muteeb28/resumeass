@@ -53,11 +53,6 @@ import { deleteJobApplication, editJobApplication, getJobApplications, setJobApp
 import { getAllPosts, getPostBySlug, getFeaturedPosts, getCategories, getPopularPosts } from "./controller/blog.controller.js";
 import { savePortfolio, getPortfolio, deletePortfolio } from "./controller/portfolio.controller.js";
 
-// jobflix controller paths
-import { getPrepareData } from "./controller/jobflix/prepare.controller.js";
-import { getCourses, getCourseBySlug } from "./controller/jobflix/course.controller.js";
-import { getJavaLesson } from "./controller/jobflix/lesson.controller.js";
-
 const app = express();
 const PORT = process.env.PORT || 3007;
 
@@ -174,12 +169,6 @@ app.get("/api/blog/posts/:slug", getPostBySlug);
 app.get("/api/blog/featured", getFeaturedPosts);
 app.get("/api/blog/categories", getCategories);
 app.get("/api/blog/popular", getPopularPosts);
-
-// jobflix routes
-app.get("/api/prepare", getPrepareData);
-app.get("/api/courses", getCourses);
-app.get('/api/courses/:courseSlug', getCourseBySlug);
-app.get('/api/courses/java/lessons/:slug', getJavaLesson);
 
 // ============================================================================
 // SAFETY NET: Normalize parser response to clean ResumeJSON

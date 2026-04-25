@@ -152,15 +152,6 @@ export const Navbar = ({
                 </Button>
               )
             }
-            <Button
-              size="sm"
-              onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_AUTH_CLIENT_URL}/signup`}
-              className={cn(
-                isLight ? "bg-slate-900 text-white hover:bg-slate-800 shadow-none" : ""
-              )}
-            >
-              Get Started
-            </Button>
           </motion.div>
 
           {/* Mobile Menu Button */}
