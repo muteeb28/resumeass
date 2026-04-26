@@ -52,6 +52,7 @@ import { addDatafForHrIndiaLists, getHrIndianListDemo, contactus } from './contr
 import { deleteJobApplication, editJobApplication, getJobApplications, setJobApplication, updateJobApplicationStatus } from './controller/job.controller.js';
 import { getAllPosts, getPostBySlug, getFeaturedPosts, getCategories, getPopularPosts } from "./controller/blog.controller.js";
 import { savePortfolio, getPortfolio, deletePortfolio } from "./controller/portfolio.controller.js";
+import { isLoggedIn } from './middleware/auth.middleware.js';
 
 const app = express();
 const PORT = process.env.PORT || 3007;
@@ -149,11 +150,11 @@ app.get("/api/hr/list/demo", getHrIndianListDemo);
 app.post('/api/contact-us', contactus);
 
 // job controller routes
-app.get('/api/job/applications', getJobApplications);
-app.post("/api/job/applications", setJobApplication);
-app.put("/api/job/applications/:jobId", editJobApplication);
-app.put('/api/job/application/status/update/:jobId', updateJobApplicationStatus);
-app.post("/api/job/application/delete", deleteJobApplication);
+app.get('/api/job/applications',isLoggedIn, getJobApplications);
+app.post("/api/job/applications", isLoggedIn, setJobApplication);
+app.put("/api/job/applications/:jobId", isLoggedIn, editJobApplication);
+app.put('/api/job/application/status/update/:jobId', isLoggedIn, updateJobApplicationStatus);
+app.post("/api/job/application/delete", isLoggedIn, deleteJobApplication);
 
 // common controller paths
 // app.post('/api/import/hr-indian-lists', addDatafForHrIndiaLists);

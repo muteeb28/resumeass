@@ -6,7 +6,7 @@ import HrEmailsTable from "./hr-emails-table";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, ExternalLink, MoreHorizontal } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import {
@@ -41,7 +41,6 @@ type JobApplicationRow = {
   contact: string;
   date: string;
   stage: string;
-  // New Fields
   salary: string;
   location: string;
   priority: string;
@@ -98,7 +97,9 @@ export default function SidebarDemo() {
 
   const getJobApplications = useCallback(async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/applications`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/applications`, {
+        credentials: 'include',
+      });
       const data = await response.json();
 
       if (!response.ok) {
@@ -183,6 +184,7 @@ const Dashboard = ({
       setSaveLoader(true);
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/applications`, {
         method: "POST",
+        credentials: 'include',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           applications: draftRows.map(cleanApplicationPayload),
@@ -210,6 +212,7 @@ const Dashboard = ({
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/applications`, {
         method: "POST",
+        credentials: 'include',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ application: cleanApplicationPayload(row) }),
       });
@@ -234,6 +237,7 @@ const Dashboard = ({
     try {
       await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/application/delete`, {
         method: "POST",
+        credentials: 'include',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: row._id }),
       });
@@ -254,6 +258,7 @@ const Dashboard = ({
     try {
       await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/application/status/update/${row._id}`, {
         method: "PUT",
+        credentials: 'include',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
@@ -277,34 +282,54 @@ const Dashboard = ({
     if (editForm) setEditForm({ ...editForm, [field]: value });
   };
 
+  /**
+   * PARTIAL UPDATE LOGIC
+   */
   const saveEditedRow = async () => {
-    if (!editForm || !editForm.title.trim()) return;
+    if (!editForm || !editForm.title.trim() || !editingRow) return;
 
     if (editForm.isDraft) {
       const rowKey = getRowKey(editForm);
-      setRows((prev) =>
-        prev.map((entry) => (getRowKey(entry) === rowKey ? { ...editForm } : entry))
-      );
+      setRows((prev) => prev.map((entry) => (getRowKey(entry) === rowKey ? { ...editForm } : entry)));
+      closeEditModal();
+      return;
+    }
+
+    // Identify only changed fields
+    const changedFields: Partial<JobApplicationRow> = {};
+    (Object.keys(editForm) as Array<keyof JobApplicationRow>).forEach((key) => {
+      if (editForm[key] !== editingRow[key]) {
+        (changedFields as any)[key] = editForm[key];
+      }
+    });
+
+    if (Object.keys(changedFields).length === 0) {
       closeEditModal();
       return;
     }
 
     try {
       setSaveEditLoader(true);
-      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/applications/${editForm._id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/applications/${editForm._id}`, {
         method: "PUT",
+        credentials: 'include',
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ application: cleanApplicationPayload(editForm) }),
+        body: JSON.stringify({ application: changedFields }),
       });
+
+      if (!response.ok) throw new Error();
+      
       setRows((prev) => prev.map((row) => (row._id === editForm._id ? { ...editForm } : row)));
       closeEditModal();
-      toast.success("Updated.");
+      toast.success("Updated successfully.");
     } catch (error) {
       toast.error("Update failed.");
     } finally {
       setSaveEditLoader(false);
     }
   };
+
+  const hasChanges = JSON.stringify(editForm) !== JSON.stringify(editingRow);
 
   return (
     <div className="flex flex-1">
@@ -313,7 +338,7 @@ const Dashboard = ({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between border-b pb-4">
             <div>
               <p className="text-[10px] uppercase tracking-[0.3em] text-neutral-400 font-bold">Workspace</p>
-              <p className="text-lg font-semibold text-neutral-900">Job Tracker Preview</p>
+              <p className="text-lg font-semibold text-neutral-900">Job Tracker</p>
             </div>
             <div className="flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 p-1">
               <button
@@ -443,13 +468,10 @@ const Dashboard = ({
                         <h3 className="text-xl font-bold text-neutral-900 tracking-tight">Edit Application</h3>
                         <p className="text-sm text-neutral-500">Refine details for {editForm.company || "New Application"}</p>
                       </div>
-                      <button onClick={closeEditModal} className="text-neutral-400 hover:text-neutral-600">
-                         ✕
-                      </button>
+                      <button onClick={closeEditModal} className="text-neutral-400 hover:text-neutral-600">✕</button>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* COMPANY & TITLE */}
                       <div className="space-y-1.5">
                         <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Company</label>
                         <Input value={editForm.company} onChange={(e) => handleEditChange("company", e.target.value)} placeholder="e.g. Google" />
@@ -460,7 +482,6 @@ const Dashboard = ({
                         <Input value={editForm.title} onChange={(e) => handleEditChange("title", e.target.value)} placeholder="e.g. Senior Developer" />
                       </div>
 
-                      {/* LINKS & SALARY */}
                       <div className="space-y-1.5">
                         <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Posting Link</label>
                         <Input value={editForm.link} onChange={(e) => handleEditChange("link", e.target.value)} placeholder="https://linkedin.com/..." />
@@ -471,7 +492,6 @@ const Dashboard = ({
                         <Input value={editForm.salary} onChange={(e) => handleEditChange("salary", e.target.value)} placeholder="e.g. $140k - $160k" />
                       </div>
 
-                      {/* DATE & STAGE */}
                       <div className="space-y-1.5 flex flex-col">
                         <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Applied Date</label>
                         <Popover>
@@ -501,7 +521,6 @@ const Dashboard = ({
                         </Select>
                       </div>
 
-                      {/* LOCATION & PRIORITY */}
                       <div className="space-y-1.5">
                         <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Location</label>
                         <Input value={editForm.location} onChange={(e) => handleEditChange("location", e.target.value)} placeholder="Remote / Hybrid / City" />
@@ -519,7 +538,6 @@ const Dashboard = ({
                         </Select>
                       </div>
 
-                      {/* REFERRAL & CONTACT */}
                       <div className="space-y-1.5">
                         <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Referral Status</label>
                         <Select value={editForm.referral} onValueChange={(val) => handleEditChange("referral", val)}>
@@ -537,7 +555,6 @@ const Dashboard = ({
                         <Input value={editForm.contact} onChange={(e) => handleEditChange("contact", e.target.value)} placeholder="Recruiter name or email" />
                       </div>
 
-                      {/* NOTES */}
                       <div className="space-y-1.5 md:col-span-2">
                         <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Internal Notes</label>
                         <textarea
@@ -551,7 +568,7 @@ const Dashboard = ({
 
                     <div className="mt-8 flex justify-end gap-3 border-t pt-5">
                       <Button variant="ghost" onClick={closeEditModal} className="text-neutral-500">Cancel</Button>
-                      <Button onClick={saveEditedRow} disabled={saveEditLoader} className="bg-blue-600 hover:bg-blue-700 text-white px-8">
+                      <Button onClick={saveEditedRow} disabled={saveEditLoader || !hasChanges} className="bg-blue-600 hover:bg-blue-700 text-white px-8">
                         {saveEditLoader ? "Saving..." : "Save Changes"}
                       </Button>
                     </div>

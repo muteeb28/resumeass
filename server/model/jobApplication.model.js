@@ -44,10 +44,18 @@ const jobApplicationSchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
-    custom: {
-      type: mongoose.Schema.Types.Mixed,
-      default: null,
+    location: {
+      type: String,
+      trim: true,
     },
+    salary: {
+      type: String,
+      trim: true,
+    },
+    priority: {
+      type: String,
+      trim: true,
+    }
   },
   { timestamps: true }
 );

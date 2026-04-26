@@ -1,6 +1,7 @@
 import JobApplication from "../model/jobApplication.model.js";
 
 const normalizeApplication = (app, userId) => ({
+  userId: userId,
   company: app.company || "",
   title: app.title || "",
   status: app.status || "Applied",
@@ -14,7 +15,6 @@ const normalizeApplication = (app, userId) => ({
   priority: app.priority || "Medium",
   referral: app.referral || "none",
   notes: app.notes || "",
-  custom: app.custom || null,
 });
 
 const mapWithId = (doc) => {
@@ -23,18 +23,10 @@ const mapWithId = (doc) => {
   return obj;
 };
 
-const mapWithId = (doc) => {
-  const obj = doc?.toObject ? doc.toObject() : doc;
-  return {
-    ...obj,
-    id: String(obj._id),
-  };
-};
-
 export const getJobApplications = async (req, res) => {
   try {
     // 1. Get the user ID from the request (authenticated user)
-    const userId = req.user?.id; 
+    const userId = req.user?._id; 
 
     if (!userId) {
       return res.status(401).json({
@@ -75,7 +67,7 @@ export const setJobApplication = async (req, res) => {
 
     // Handle Single Application Save (usually from the "Save" button on a specific row)
     if (singleApplication && typeof singleApplication === "object") {
-      const applicationData = normalizeApplication(singleApplication, req.user.id);
+      const applicationData = normalizeApplication(singleApplication, req.user._id);
 
       if (!applicationData.title.trim()) {
         return res.status(400).json({
@@ -143,8 +135,8 @@ export const editJobApplication = async (req, res) => {
   try {
     const { jobId } = req.params;
     const applicationData = req.body?.application;
+    console.log('the jobid: ', jobId);
 
-    // 1. Validation
     if (!applicationData || !jobId) {
       return res.status(400).json({
         success: false,
@@ -152,25 +144,44 @@ export const editJobApplication = async (req, res) => {
       });
     }
 
-    // 2. Normalize (This grabs company, title, status, link, contact, date, stage, 
-    // AND the new fields: salary, location, priority, referral, notes)
-    const normalizedApp = normalizeApplication(applicationData);
+    /**
+     * 1. Dynamic Update Construction
+     * We iterate over the allowed fields and only add them to the update object
+     * if they exist in the request body.
+     */
+    const allowedFields = [
+      "company", "title", "status", "link", "contact", 
+      "date", "stage", "salary", "location", 
+      "priority", "referral", "notes"
+    ];
 
-    if (!normalizedApp.title.trim()) {
+    const updateFields = {};
+    
+    allowedFields.forEach((field) => {
+      if (applicationData[field] !== undefined) {
+        // We use undefined check so that empty strings ("") or nulls 
+        // can still be saved if the user intentionally cleared a field.
+        updateFields[field] = applicationData[field];
+      }
+    });
+
+    // Validation: Title is required if it's being updated
+    if (updateFields.hasOwnProperty("title") && !updateFields.title.trim()) {
       return res.status(400).json({
         success: false,
-        message: "Job title is required to update an application.",
+        message: "Job title cannot be empty.",
       });
     }
 
-    // 3. Update Database
-    const updatedApp = await JobApplication.findByIdAndUpdate(
-      jobId,
-      { $set: normalizedApp }, // Use $set with the normalized object to include all fields
+    // 2. Perform the Partial Update
+    const updatedApp = await JobApplication.updateOne(
+      {_id: jobId}, // findByIdAndUpdate accepts the ID directly as the first arg
+      { $set: updateFields }, 
       { new: true, runValidators: true }
     );
+    console.log(updatedApp);
 
-    if (!updatedApp) {
+    if (updatedApp.modifiedCount === 0) {
       return res.status(404).json({
         success: false,
         message: "Application not found.",
@@ -180,13 +191,11 @@ export const editJobApplication = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Application updated successfully!",
-      application: mapWithId(updatedApp),
     });
 
   } catch (error) {
     console.error("Error from the editJobApplication controller:", error);
 
-    // Handle Duplicate Key Error
     if (error?.code === 11000) {
       return res.status(409).json({
         success: false,
