@@ -71,7 +71,7 @@ export const useUserStore = create<UserStore>((set) => ({
 
 	logout: async () => {
 		try {
-			const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_URL}/user/logout`, {
+			const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_URL}/auth/logout`, {
 				method: "POST",
 				credentials: "include", // include cookies if your auth uses them
 				headers: {
