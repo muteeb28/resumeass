@@ -18,6 +18,7 @@ export const Navbar = ({
   const [showAuth, setShowAuth] = useState(false);
   const { user, logout } = useUserStore();
   const isLight = tone === "light";
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navItems = [
     { name: "Job Tracker", href: "/job-tracker" },
@@ -186,6 +187,68 @@ export const Navbar = ({
                 )}
               </svg>
             </button>
+            {
+              user && (
+                <div className="relative">
+                  {/* 1. Added onClick to toggle and changed aria-expanded */}
+                  <button
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className={cn(
+                      "flex items-center justify-center w-9 h-9 rounded-full text-white text-sm font-medium transition-transform active:scale-95",
+                      isLight ? "bg-slate-900" : "bg-gradient-to-br from-purple-500 to-blue-500"
+                    )}
+                    aria-haspopup="true"
+                    aria-expanded={isMenuOpen}
+                  >
+                    {user?.email ? user?.email?.split("@")[0].slice(0, 2).toUpperCase() : "?"}
+                  </button>
+
+                  {/* 2. Replaced group-hover classes with state-based conditional classes */}
+                  <div 
+                    className={cn(
+                      "absolute right-0 mt-2 w-40 rounded-md shadow-lg transform transition-all duration-150 z-50 border",
+                      isLight ? "bg-white border-neutral-200" : "bg-slate-800 border-slate-700",
+                      // Control visibility via state
+                      isMenuOpen 
+                        ? "opacity-100 visible translate-y-0" 
+                        : "opacity-0 invisible translate-y-1"
+                    )}
+                  >
+                    <a 
+                      href={`${process.env.NEXT_PUBLIC_AUTH_CLIENT_URL}/my-account/dashboard/me`} 
+                      className={cn("block px-4 py-2 text-sm", isLight ? "text-neutral-700 hover:bg-neutral-100" : "text-slate-200 hover:bg-slate-700")}
+                      onClick={() => setIsMenuOpen(false)} // Close on click
+                    >
+                      Profile
+                    </a>
+                    <a 
+                      href={`${process.env.NEXT_PUBLIC_AUTH_CLIENT_URL}/my-account/dashboard/me`} 
+                      className={cn("block px-4 py-2 text-sm", isLight ? "text-neutral-700 hover:bg-neutral-100" : "text-slate-200 hover:bg-slate-700")}
+                      onClick={() => setIsMenuOpen(false)} // Close on click
+                    >
+                      Orders
+                    </a>
+                    <button 
+                      onClick={async () => { 
+                        setIsMenuOpen(false); 
+                        await logout(); 
+                      }} 
+                      className={cn("w-full text-left px-4 py-2 text-sm", isLight ? "text-neutral-700 hover:bg-neutral-100" : "text-slate-200 hover:bg-slate-700")}
+                    >
+                      Logout
+                    </button>
+                  </div>
+
+                  {/* 3. Invisible backdrop to close menu when clicking outside */}
+                  {isMenuOpen && (
+                    <div 
+                      className="fixed inset-0 z-40 h-full w-full" 
+                      onClick={() => setIsMenuOpen(false)} 
+                    />
+                  )}
+                </div>
+              )
+            }
           </div>
         </div>
 
@@ -251,33 +314,21 @@ export const Navbar = ({
                     Contact Us
                   </a>
                   <div className="px-3 space-y-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={cn(
-                        "w-full",
-                        isLight ? "text-slate-700 hover:text-slate-900 hover:bg-slate-100" : ""
-                      )}
-                      onClick={() => {
-                        setIsOpen(false);
-                        window.location.href = "/login";
-                      }}
-                    >
-                      Login
-                    </Button>
-                    <Button
-                      size="sm"
-                      className={cn(
-                        "w-full",
-                        isLight ? "bg-slate-900 text-white hover:bg-slate-800" : ""
-                      )}
-                      onClick={() => {
-                        setIsOpen(false);
-                        window.location.href = "/signup";
-                      }}
-                    >
-                      Get Started
-                    </Button>
+                    {
+                      !user && (
+                        <Button
+                          size="sm"
+                          className={cn(
+                            "w-full",
+                            isLight ? "bg-slate-900 text-white hover:bg-slate-800" : ""
+                          )}
+                          onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_AUTH_CLIENT_URL}/login`}
+                        >
+                          Login
+                        </Button>
+
+                      )
+                    }
                   </div>
                 </div>
               </div>
