@@ -1,12 +1,35 @@
+"use client";
+
 import { Dispatch, SetStateAction, useCallback, useEffect, useState } from "react";
-import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import HrEmailsTable from "./hr-emails-table";
 import toast from "react-hot-toast";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon, ExternalLink, MoreHorizontal } from "lucide-react";
+import { format } from "date-fns";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
+/**
+ * TYPES
+ */
 type ApplicationStatus = "Offer" | "Rejected" | "Interview" | "Applied";
-type EditableField = "company" | "title" | "link" | "contact" | "date" | "stage";
-type CustomColumn = { _id: string; label: string };
+
+type EditableField = 
+  | "company" | "title" | "link" | "contact" | "date" | "stage"
+  | "salary" | "location" | "priority" | "referral" | "notes";
 
 type JobApplicationRow = {
   _id?: string;
@@ -18,11 +41,19 @@ type JobApplicationRow = {
   contact: string;
   date: string;
   stage: string;
-  custom: Record<string, string>;
+  // New Fields
+  salary: string;
+  location: string;
+  priority: string;
+  referral: string;
+  notes: string;
   isDraft?: boolean;
   isSaving?: boolean;
 };
 
+/**
+ * HELPERS
+ */
 const createId = (prefix: string) =>
   `${prefix}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
 
@@ -36,21 +67,32 @@ const normalizeFetchedRow = (row: any): JobApplicationRow => ({
   link: row?.link || "",
   contact: row?.contact || "",
   date: row?.date || "",
-  stage: row?.stage || "",
-  custom: row?.custom && typeof row.custom === "object" ? row.custom : {},
+  stage: row?.stage || "Initial Screening",
+  salary: row?.salary || "",
+  location: row?.location || "",
+  priority: row?.priority || "Medium",
+  referral: row?.referral || "none",
+  notes: row?.notes || "",
 });
 
 const cleanApplicationPayload = (row: JobApplicationRow) => ({
-  company: row.company || "",
-  title: row.title || "",
-  status: row.status || "Applied",
-  link: row.link || "",
-  contact: row.contact || "",
-  date: row.date || "",
-  stage: row.stage || "",
-  custom: row.custom || {},
+  company: row.company,
+  title: row.title,
+  status: row.status,
+  link: row.link,
+  contact: row.contact,
+  date: row.date,
+  stage: row.stage,
+  salary: row.salary,
+  location: row.location,
+  priority: row.priority,
+  referral: row.referral,
+  notes: row.notes,
 });
 
+/**
+ * MAIN COMPONENT
+ */
 export default function SidebarDemo() {
   const [rows, setRows] = useState<JobApplicationRow[]>([]);
 
@@ -70,7 +112,7 @@ export default function SidebarDemo() {
         setRows([]);
       }
     } catch (error) {
-      console.log("some error occured while fetching job applications", error);
+      console.error("Error fetching job applications", error);
       toast.error("Unable to fetch job applications.");
     }
   }, []);
@@ -86,35 +128,6 @@ export default function SidebarDemo() {
   );
 }
 
-export const Logo = () => {
-  return (
-    <a
-      href="#"
-      className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-neutral-900"
-    >
-      <div className="h-5 w-6 shrink-0 rounded-bl-sm rounded-br-lg rounded-tl-lg rounded-tr-sm bg-neutral-900" />
-      <motion.span
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="whitespace-pre font-medium text-neutral-900"
-      >
-        ResumeAssist AI
-      </motion.span>
-    </a>
-  );
-};
-
-export const LogoIcon = () => {
-  return (
-    <a
-      href="#"
-      className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-neutral-900"
-    >
-      <div className="h-5 w-6 shrink-0 rounded-bl-sm rounded-br-lg rounded-tl-lg rounded-tr-sm bg-neutral-900" />
-    </a>
-  );
-};
-
 const Dashboard = ({
   rows,
   setRows,
@@ -125,38 +138,15 @@ const Dashboard = ({
   reloadRows: () => Promise<void>;
 }) => {
   const [view, setView] = useState<"tracker" | "emails">("tracker");
-  const [customColumns, setCustomColumns] = useState<CustomColumn[]>([]);
   const [saveLoader, setSaveLoader] = useState(false);
   const [saveEditLoader, setSaveEditLoader] = useState(false);
+  const [editingRow, setEditingRow] = useState<JobApplicationRow | null>(null);
+  const [editForm, setEditForm] = useState<JobApplicationRow | null>(null);
 
   const draftCount = rows.filter((row) => row.isDraft).length;
 
-  useEffect(() => {
-    const allKeys = new Set<string>();
-    rows.forEach((row) => {
-      if (!row.custom || typeof row.custom !== "object") return;
-      Object.keys(row.custom).forEach((key) => allKeys.add(key));
-    });
-
-    if (allKeys.size === 0) return;
-
-    setCustomColumns((prev) => {
-      const existingIds = new Set(prev.map((c) => c._id));
-      const toAdd: CustomColumn[] = [];
-      allKeys.forEach((key) => {
-        if (!existingIds.has(key)) toAdd.push({ _id: key, label: key });
-      });
-      return toAdd.length > 0 ? [...prev, ...toAdd] : prev;
-    });
-  }, [rows]);
-
   const addRow = () => {
     const tempId = createId("draft");
-    const custom = customColumns.reduce<Record<string, string>>((acc, column) => {
-      acc[column._id] = "";
-      return acc;
-    }, {});
-
     const newRow: JobApplicationRow = {
       tempId,
       _id: tempId,
@@ -165,9 +155,13 @@ const Dashboard = ({
       status: "Applied",
       link: "",
       contact: "",
-      date: "",
-      stage: "",
-      custom,
+      date: new Date().toISOString(),
+      stage: "Initial Screening",
+      salary: "",
+      location: "",
+      priority: "Medium",
+      referral: "none",
+      notes: "",
       isDraft: true,
     };
 
@@ -177,11 +171,7 @@ const Dashboard = ({
 
   const saveDraftRows = async () => {
     const draftRows = rows.filter((row) => row.isDraft);
-
-    if (draftRows.length === 0) {
-      toast.error("No draft rows found.");
-      return;
-    }
+    if (draftRows.length === 0) return;
 
     const invalidDraft = draftRows.find((row) => !row.title.trim());
     if (invalidDraft) {
@@ -193,24 +183,16 @@ const Dashboard = ({
       setSaveLoader(true);
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/applications`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           applications: draftRows.map(cleanApplicationPayload),
         }),
       });
 
-      const data = await response.json();
-      if (!response.ok) {
-        toast.error(data.message || "Failed to save new rows.");
-        return;
-      }
-
+      if (!response.ok) throw new Error();
       await reloadRows();
       toast.success(`${draftRows.length} application(s) saved.`);
     } catch (error) {
-      console.error("Error saving applications:", error);
       toast.error("Failed to save applications.");
     } finally {
       setSaveLoader(false);
@@ -218,151 +200,72 @@ const Dashboard = ({
   };
 
   const saveSingleDraft = async (row: JobApplicationRow) => {
-    if (!row.isDraft) return;
-
-    if (!row.title.trim()) {
-      toast.error("Title is required before saving.");
-      return;
-    }
+    if (!row.isDraft || !row.title.trim()) return;
 
     const rowKey = getRowKey(row);
     setRows((prev) =>
-      prev.map((entry) =>
-        getRowKey(entry) === rowKey ? { ...entry, isSaving: true } : entry
-      )
+      prev.map((entry) => (getRowKey(entry) === rowKey ? { ...entry, isSaving: true } : entry))
     );
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/applications`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          application: cleanApplicationPayload(row),
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ application: cleanApplicationPayload(row) }),
       });
 
-      const data = await response.json();
-      if (!response.ok) {
-        toast.error(data.message || "Failed to save row.");
-        return;
-      }
-
-      if (data.application) {
-        const savedRow = normalizeFetchedRow(data.application);
-        setRows((prev) =>
-          prev.map((entry) =>
-            getRowKey(entry) === rowKey ? savedRow : entry
-          )
-        );
-      } else {
-        await reloadRows();
-      }
-
-      toast.success("Application saved successfully.");
+      if (!response.ok) throw new Error();
+      await reloadRows();
+      toast.success("Application saved.");
     } catch (error) {
-      console.error("Error saving row:", error);
       toast.error("Failed to save row.");
     } finally {
       setRows((prev) =>
-        prev.map((entry) =>
-          getRowKey(entry) === rowKey ? { ...entry, isSaving: false } : entry
-        )
+        prev.map((entry) => (getRowKey(entry) === rowKey ? { ...entry, isSaving: false } : entry))
       );
     }
   };
 
   const deleteRow = async (row: JobApplicationRow) => {
+    if (row.isDraft) {
+      setRows((prev) => prev.filter((entry) => getRowKey(entry) !== getRowKey(row)));
+      return;
+    }
     try {
-      if (row.isDraft) {
-        setRows((prev) => prev.filter((entry) => getRowKey(entry) !== getRowKey(row)));
-        toast.success("Draft removed.");
-        return;
-      }
-
-      if (!row._id) {
-        toast.error("Unable to delete row.");
-        return;
-      }
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/application/delete`, {
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/application/delete`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: row._id }),
       });
-
-      const result = await response.json();
-      if (!response.ok) {
-        toast.error(result.message || "Failed to delete application.");
-        return;
-      }
-
       setRows((prev) => prev.filter((entry) => entry._id !== row._id));
-      toast.success("Application deleted successfully.");
-    } catch (error: any) {
-      toast.error("Failed to delete application. Try again later.", error);
+      toast.success("Deleted.");
+    } catch (error) {
+      toast.error("Delete failed.");
     }
   };
 
   const updateRowStatus = async (row: JobApplicationRow, status: ApplicationStatus) => {
     if (row.isDraft) {
       setRows((prev) =>
-        prev.map((entry) =>
-          getRowKey(entry) === getRowKey(row) ? { ...entry, status } : entry
-        )
+        prev.map((entry) => (getRowKey(entry) === getRowKey(row) ? { ...entry, status } : entry))
       );
       return;
     }
-
-    if (!row._id) {
-      toast.error("Unable to update row status.");
-      return;
-    }
-
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/application/status/update/${row._id}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/application/status/update/${row._id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
-
-      const result = await response.json();
-      if (!response.ok) {
-        toast.error(result.message || "Failed to update application.");
-        return;
-      }
-
-      setRows((prev) =>
-        prev.map((entry) => (entry._id === row._id ? { ...entry, status } : entry))
-      );
-      toast.success("Application status updated.");
-    } catch (error: any) {
-      toast.error("Failed to update application. Try again later.", error);
+      setRows((prev) => prev.map((entry) => (entry._id === row._id ? { ...entry, status } : entry)));
+    } catch (error) {
+      toast.error("Status update failed.");
     }
   };
-
-  const addColumn = () => {
-    const _id = createId("column");
-    setCustomColumns((prev) => [...prev, { _id, label: "New Column" }]);
-    setRows((prev) =>
-      prev.map((row) => ({
-        ...row,
-        custom: { ...(row.custom || {}), [_id]: "" },
-      }))
-    );
-  };
-
-  const [editingRow, setEditingRow] = useState<JobApplicationRow | null>(null);
-  const [editForm, setEditForm] = useState<JobApplicationRow | null>(null);
 
   const openEditModal = (row: JobApplicationRow) => {
     setEditingRow(row);
-    setEditForm({ ...row, custom: { ...(row.custom || {}) } });
+    setEditForm({ ...row });
   };
 
   const closeEditModal = () => {
@@ -371,64 +274,33 @@ const Dashboard = ({
   };
 
   const handleEditChange = (field: EditableField, value: string) => {
-    if (!editForm) return;
-    setEditForm({ ...editForm, [field]: value });
-  };
-
-  const handleEditCustomChange = (columnId: string, value: string) => {
-    if (!editForm) return;
-    setEditForm({ ...editForm, custom: { ...editForm.custom, [columnId]: value } });
+    if (editForm) setEditForm({ ...editForm, [field]: value });
   };
 
   const saveEditedRow = async () => {
-    if (!editForm) return;
-
-    if (!editForm.title.trim()) {
-      toast.error("Title is required.");
-      return;
-    }
+    if (!editForm || !editForm.title.trim()) return;
 
     if (editForm.isDraft) {
       const rowKey = getRowKey(editForm);
       setRows((prev) =>
-        prev.map((entry) =>
-          getRowKey(entry) === rowKey
-            ? { ...editForm, isDraft: true, isSaving: false }
-            : entry
-        )
+        prev.map((entry) => (getRowKey(entry) === rowKey ? { ...editForm } : entry))
       );
       closeEditModal();
-      toast.success("Draft updated. Click Save on the row or Save Drafts.");
       return;
     }
 
     try {
       setSaveEditLoader(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/applications/${editForm._id}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/applications/${editForm._id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          application: cleanApplicationPayload(editForm),
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ application: cleanApplicationPayload(editForm) }),
       });
-
-      const result = await response.json();
-      if (!response.ok) {
-        toast.error(result.message || "Failed to update application.");
-        return;
-      }
-
-      toast.success("Application updated successfully.");
-      setRows((prev) =>
-        prev.map((row) =>
-          row._id === editForm._id ? { ...editForm, isDraft: false } : row
-        )
-      );
+      setRows((prev) => prev.map((row) => (row._id === editForm._id ? { ...editForm } : row)));
       closeEditModal();
-    } catch (error: any) {
-      toast.error("Failed to update application. Try again later.", error);
+      toast.success("Updated.");
+    } catch (error) {
+      toast.error("Update failed.");
     } finally {
       setSaveEditLoader(false);
     }
@@ -437,44 +309,27 @@ const Dashboard = ({
   return (
     <div className="flex flex-1">
       <div className="flex h-full w-full flex-1 flex-col gap-6 bg-neutral-50 p-4 md:p-6">
-        <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-[0_1px_0_rgba(0,0,0,0.04)]">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between border-b pb-4">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.3em] text-neutral-400">Workspace</p>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-neutral-400 font-bold">Workspace</p>
               <p className="text-lg font-semibold text-neutral-900">Job Tracker Preview</p>
             </div>
             <div className="flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 p-1">
-              <div className="px-2 py-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    window.location.href = "/login";
-                  }}
-                  className="cursor-pointer rounded-full border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-400"
-                >
-                  Unlock 1,800 HR profiles
-                </button>
-              </div>
               <button
-                type="button"
                 onClick={() => setView("tracker")}
                 className={cn(
                   "rounded-full px-4 py-1.5 text-[11px] font-semibold transition",
-                  view === "tracker"
-                    ? "bg-neutral-900 text-white shadow"
-                    : "text-neutral-500 hover:text-neutral-900"
+                  view === "tracker" ? "bg-neutral-900 text-white shadow" : "text-neutral-500 hover:text-neutral-700"
                 )}
               >
                 Job Tracker UI
               </button>
               <button
-                type="button"
                 onClick={() => setView("emails")}
                 className={cn(
                   "rounded-full px-4 py-1.5 text-[11px] font-semibold transition",
-                  view === "emails"
-                    ? "bg-neutral-900 text-white shadow"
-                    : "text-neutral-500 hover:text-neutral-900"
+                  view === "emails" ? "bg-neutral-900 text-white shadow" : "text-neutral-500 hover:text-neutral-700"
                 )}
               >
                 HR Emails
@@ -484,97 +339,63 @@ const Dashboard = ({
 
           {view === "tracker" ? (
             <>
-              <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-neutral-900">Job Applications Tracker</p>
-                  <p className="text-xs text-neutral-500">
-                    Add rows quickly, edit in modal, and save each row instantly or in bulk.
-                  </p>
+                  <p className="text-sm font-semibold text-neutral-900">Active Applications</p>
+                  <p className="text-xs text-neutral-500">Managing {rows.length} total applications.</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button
-                    type="button"
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={saveDraftRows}
                     disabled={saveLoader || draftCount === 0}
-                    className="inline-flex h-8 items-center rounded-md border border-blue-700 bg-blue-600 px-2.5 text-[11px] font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:border-blue-100 disabled:bg-blue-100"
+                    className="text-[11px] h-8 border-blue-200 text-blue-700 bg-blue-50/50 hover:bg-blue-50"
                   >
                     {saveLoader ? "Saving..." : `Save Drafts (${draftCount})`}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={addRow}
-                    className="inline-flex h-8 items-center rounded-md border border-neutral-200 bg-white px-2.5 text-[11px] font-semibold text-neutral-700 transition hover:border-neutral-300"
-                  >
+                  </Button>
+                  <Button size="sm" onClick={addRow} className="text-[11px] h-8 bg-neutral-900 text-white">
                     Add Row
-                  </button>
-                  <button
-                    type="button"
-                    onClick={addColumn}
-                    className="inline-flex h-8 items-center rounded-md border border-neutral-200 bg-white px-2.5 text-[11px] font-semibold text-neutral-700 transition hover:border-neutral-300"
-                  >
-                    Add Column
-                  </button>
+                  </Button>
                 </div>
               </div>
 
-              <div className="mt-4 overflow-x-auto rounded-lg border border-neutral-200">
-                <table className="min-w-[720px] w-full text-left text-xs">
-                  <thead className="bg-neutral-900 text-white">
+              <div className="mt-4 overflow-x-auto rounded-lg border border-neutral-200 shadow-sm">
+                <table className="w-full min-w-[1000px] text-left text-xs">
+                  <thead className="bg-neutral-50 border-b border-neutral-200 text-neutral-500">
                     <tr>
-                      <th className="px-3 py-2 font-semibold">Company</th>
-                      <th className="px-3 py-2 font-semibold">Title</th>
-                      <th className="px-3 py-2 font-semibold">Status</th>
-                      <th className="px-3 py-2 font-semibold">Job Posting Link</th>
-                      <th className="px-3 py-2 font-semibold">Contact</th>
-                      <th className="px-3 py-2 font-semibold">Application Date</th>
-                      <th className="px-3 py-2 font-semibold">Interview Stage</th>
-                      {customColumns.map((column) => (
-                        <th key={column._id} className="px-3 py-2 font-semibold">
-                          {column.label}
-                        </th>
-                      ))}
-                      <th className="px-3 py-2 font-semibold">Actions</th>
+                      <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Company</th>
+                      <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Title</th>
+                      <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Status</th>
+                      <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Priority</th>
+                      <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Location</th>
+                      <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Applied Date</th>
+                      <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Stage</th>
+                      <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Actions</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="bg-white divide-y divide-neutral-100">
                     {rows.length === 0 ? (
                       <tr>
-                        <td
-                          className="px-3 py-4 text-center text-sm font-medium text-gray-600"
-                          colSpan={8 + customColumns.length}
-                        >
-                          Start tracking your jobs. Click "Add Row" to create a new application.
+                        <td className="px-4 py-10 text-center text-neutral-400" colSpan={8}>
+                          No applications found. Click "Add Row" to start.
                         </td>
                       </tr>
                     ) : (
                       rows.map((row) => (
-                        <tr
-                          key={getRowKey(row)}
-                          className={cn(
-                            "border-b border-neutral-200 last:border-b-0",
-                            row.isDraft ? "bg-amber-50/50" : "bg-white"
-                          )}
-                        >
-                          <td className="px-3 py-2 text-neutral-900">
-                            <div className="text-xs font-medium text-neutral-900">{row.company || "-"}</div>
-                          </td>
-                          <td className="px-3 py-2 text-neutral-900">
+                        <tr key={getRowKey(row)} className={cn("hover:bg-neutral-50/50 transition-colors", row.isDraft && "bg-amber-50/30")}>
+                          <td className="px-4 py-3 font-medium text-neutral-900">{row.company || "-"}</td>
+                          <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
-                              <span className="text-xs text-neutral-900">{row.title || "-"}</span>
-                              {row.isDraft ? (
-                                <span className="rounded-full border border-amber-300 bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
-                                  Draft
-                                </span>
-                              ) : null}
+                              {row.title || "-"}
+                              {row.isDraft && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9px] text-amber-700 font-bold uppercase">Draft</span>}
                             </div>
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-4 py-3">
                             <select
                               value={row.status}
-                              onChange={(event) =>
-                                updateRowStatus(row, event.target.value as ApplicationStatus)
-                              }
-                              className="cursor-pointer rounded-full border-2 px-2 py-1 text-[11px] font-semibold text-black focus:outline-none"
+                              onChange={(e) => updateRowStatus(row, e.target.value as ApplicationStatus)}
+                              className="rounded-full border border-neutral-200 bg-white px-2 py-1 text-[10px] font-semibold"
                             >
                               <option value="Applied">Applied</option>
                               <option value="Interview">Interview</option>
@@ -582,61 +403,29 @@ const Dashboard = ({
                               <option value="Rejected">Rejected</option>
                             </select>
                           </td>
-                          <td className="px-3 py-2 text-neutral-600">
-                            {row.link ? (
-                              <a
-                                className="text-xs text-blue-600 hover:underline"
-                                href={row.link.startsWith("http") ? row.link : `https://${row.link}`}
-                                target="_blank"
-                                rel="noreferrer"
-                              >
-                                {row.link}
-                              </a>
-                            ) : (
-                              <div className="text-xs text-neutral-400">-</div>
-                            )}
+                          <td className="px-4 py-3">
+                            <span className={cn(
+                              "px-2 py-0.5 rounded text-[10px] font-bold",
+                              row.priority === "High" ? "bg-red-50 text-red-600 border border-red-100" :
+                              row.priority === "Medium" ? "bg-blue-50 text-blue-600 border border-blue-100" :
+                              "bg-neutral-50 text-neutral-500 border border-neutral-200"
+                            )}>
+                              {row.priority}
+                            </span>
                           </td>
-                          <td className="px-3 py-2 text-neutral-700">
-                            <div className="text-xs text-neutral-700">{row.contact || "-"}</div>
+                          <td className="px-4 py-3 text-neutral-500">{row.location || "-"}</td>
+                          <td className="px-4 py-3 text-neutral-500">
+                            {row.date ? format(new Date(row.date), "MMM dd, yyyy") : "-"}
                           </td>
-                          <td className="px-3 py-2 text-neutral-700">
-                            <div className="text-xs text-neutral-700">{row.date || "-"}</div>
-                          </td>
-                          <td className="px-3 py-2 text-neutral-700">
-                            <div className="text-xs text-neutral-700">{row.stage || "-"}</div>
-                          </td>
-                          {customColumns.map((column) => (
-                            <td key={column._id} className="px-3 py-2 text-neutral-700">
-                              <div className="text-xs text-neutral-700">
-                                {(row.custom && row.custom[column._id]) || "-"}
-                              </div>
-                            </td>
-                          ))}
-                          <td className="flex gap-3 px-3 py-2">
-                            {row.isDraft ? (
-                              <button
-                                type="button"
-                                onClick={() => saveSingleDraft(row)}
-                                disabled={!!row.isSaving}
-                                className="mt-2 cursor-pointer text-[11px] font-semibold text-emerald-700 transition hover:text-emerald-900 disabled:cursor-not-allowed disabled:text-emerald-400"
-                              >
-                                {row.isSaving ? "Saving..." : "Save"}
-                              </button>
-                            ) : null}
-                            <button
-                              type="button"
-                              onClick={() => openEditModal(row)}
-                              className="mt-2 cursor-pointer text-[11px] font-semibold text-neutral-600 hover:text-neutral-900"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => deleteRow(row)}
-                              className="mt-2 cursor-pointer text-[11px] font-semibold text-red-500 transition hover:text-red-900"
-                            >
-                              Delete
-                            </button>
+                          <td className="px-4 py-3 text-neutral-500 font-medium">{row.stage || "-"}</td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-3">
+                              {row.isDraft && (
+                                <button onClick={() => saveSingleDraft(row)} className="text-emerald-600 font-bold hover:text-emerald-700">Save</button>
+                              )}
+                              <button onClick={() => openEditModal(row)} className="text-neutral-500 hover:text-neutral-900">Edit</button>
+                              <button onClick={() => deleteRow(row)} className="text-red-400 hover:text-red-600">Delete</button>
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -645,109 +434,133 @@ const Dashboard = ({
                 </table>
               </div>
 
+              {/* EDIT MODAL */}
               {editingRow && editForm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center">
-                  <div className="absolute inset-0 bg-black/50" onClick={closeEditModal} />
-                  <div className="relative z-10 w-full max-w-2xl rounded-lg bg-white p-6">
-                    <h3 className="mb-4 text-lg font-semibold text-neutral-900">
-                      {editForm.isDraft ? "Edit Draft Application" : "Edit Application"}
-                    </h3>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-[2px]">
+                  <div className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
+                    <div className="mb-6 flex justify-between items-start">
                       <div>
-                        <label className="mb-1 block text-xs font-medium text-neutral-700">Company</label>
-                        <input
-                          value={editForm.company || ""}
-                          onChange={(e) => handleEditChange("company", e.target.value)}
-                          className="w-full rounded border border-neutral-200 p-2 text-sm text-black"
-                          placeholder="Acme Inc"
-                        />
+                        <h3 className="text-xl font-bold text-neutral-900 tracking-tight">Edit Application</h3>
+                        <p className="text-sm text-neutral-500">Refine details for {editForm.company || "New Application"}</p>
                       </div>
-                      <div>
-                        <label className="mb-1 block text-xs font-medium text-neutral-700">Title *</label>
-                        <input
-                          value={editForm.title || ""}
-                          onChange={(e) => handleEditChange("title", e.target.value)}
-                          className="w-full rounded border border-neutral-200 p-2 text-sm text-black"
-                          placeholder="Frontend Engineer"
-                        />
+                      <button onClick={closeEditModal} className="text-neutral-400 hover:text-neutral-600">
+                         ✕
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* COMPANY & TITLE */}
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Company</label>
+                        <Input value={editForm.company} onChange={(e) => handleEditChange("company", e.target.value)} placeholder="e.g. Google" />
                       </div>
-                      <div>
-                        <label className="mb-1 block text-xs font-medium text-neutral-700">Link</label>
-                        <input
-                          value={editForm.link || ""}
-                          onChange={(e) => handleEditChange("link", e.target.value)}
-                          className="w-full rounded border border-neutral-200 p-2 text-sm text-black"
-                          placeholder="https://..."
-                        />
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Job Title</label>
+                        <Input value={editForm.title} onChange={(e) => handleEditChange("title", e.target.value)} placeholder="e.g. Senior Developer" />
                       </div>
-                      <div>
-                        <label className="mb-1 block text-xs font-medium text-neutral-700">Contact</label>
-                        <input
-                          value={editForm.contact || ""}
-                          onChange={(e) => handleEditChange("contact", e.target.value)}
-                          className="w-full rounded border border-neutral-200 p-2 text-sm text-black"
-                          placeholder="Recruiter name or email"
-                        />
+
+                      {/* LINKS & SALARY */}
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Posting Link</label>
+                        <Input value={editForm.link} onChange={(e) => handleEditChange("link", e.target.value)} placeholder="https://linkedin.com/..." />
                       </div>
-                      <div>
-                        <label className="mb-1 block text-xs font-medium text-neutral-700">Date</label>
-                        <input
-                          value={editForm.date || ""}
-                          onChange={(e) => handleEditChange("date", e.target.value)}
-                          className="w-full rounded border border-neutral-200 p-2 text-sm text-black"
-                          placeholder="2026-03-01"
-                        />
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Salary Range</label>
+                        <Input value={editForm.salary} onChange={(e) => handleEditChange("salary", e.target.value)} placeholder="e.g. $140k - $160k" />
                       </div>
-                      <div>
-                        <label className="mb-1 block text-xs font-medium text-neutral-700">Stage</label>
-                        <input
-                          value={editForm.stage || ""}
-                          onChange={(e) => handleEditChange("stage", e.target.value)}
-                          className="w-full rounded border border-neutral-200 p-2 text-sm text-black"
-                          placeholder="Phone screen"
+
+                      {/* DATE & STAGE */}
+                      <div className="space-y-1.5 flex flex-col">
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Applied Date</label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !editForm.date && "text-muted-foreground")}>
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {editForm.date ? format(new Date(editForm.date), "PPP") : <span>Pick a date</span>}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar mode="single" selected={editForm.date ? new Date(editForm.date) : undefined} onSelect={(d) => handleEditChange("date", d ? d.toISOString() : "")} initialFocus />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Interview Stage</label>
+                        <Select value={editForm.stage} onValueChange={(val) => handleEditChange("stage", val)}>
+                          <SelectTrigger><SelectValue placeholder="Select Stage" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Initial Screening">Initial Screening</SelectItem>
+                            <SelectItem value="Technical Round">Technical Round</SelectItem>
+                            <SelectItem value="Managerial Round">Managerial Round</SelectItem>
+                            <SelectItem value="Culture Fit">Culture Fit</SelectItem>
+                            <SelectItem value="Final Round">Final Round</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* LOCATION & PRIORITY */}
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Location</label>
+                        <Input value={editForm.location} onChange={(e) => handleEditChange("location", e.target.value)} placeholder="Remote / Hybrid / City" />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Priority</label>
+                        <Select value={editForm.priority} onValueChange={(val) => handleEditChange("priority", val)}>
+                          <SelectTrigger><SelectValue placeholder="Select Priority" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="High">High 🔥</SelectItem>
+                            <SelectItem value="Medium">Medium ⚡</SelectItem>
+                            <SelectItem value="Low">Low 🧊</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* REFERRAL & CONTACT */}
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Referral Status</label>
+                        <Select value={editForm.referral} onValueChange={(val) => handleEditChange("referral", val)}>
+                          <SelectTrigger><SelectValue placeholder="Referral status?" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Cold Applied</SelectItem>
+                            <SelectItem value="requested">Requested</SelectItem>
+                            <SelectItem value="secured">Referral Secured</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Point of Contact</label>
+                        <Input value={editForm.contact} onChange={(e) => handleEditChange("contact", e.target.value)} placeholder="Recruiter name or email" />
+                      </div>
+
+                      {/* NOTES */}
+                      <div className="space-y-1.5 md:col-span-2">
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Internal Notes</label>
+                        <textarea
+                          value={editForm.notes}
+                          onChange={(e) => handleEditChange("notes", e.target.value)}
+                          placeholder="Tech stack, red flags, follow-up reminders..."
+                          className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         />
                       </div>
                     </div>
-                    {customColumns.length > 0 && (
-                      <div className="mt-4">
-                        <h4 className="mb-2 text-sm font-medium text-neutral-800">Custom fields</h4>
-                        <div className="grid gap-3">
-                          {customColumns.map((col) => (
-                            <div key={col._id}>
-                              <label className="mb-1 block text-xs font-medium text-neutral-700">{col.label}</label>
-                              <input
-                                value={(editForm.custom && editForm.custom[col._id]) || ""}
-                                onChange={(e) => handleEditCustomChange(col._id, e.target.value)}
-                                className="w-full rounded border border-neutral-200 p-2 text-sm text-black"
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    <div className="mt-6 flex justify-end gap-3">
-                      <button
-                        onClick={closeEditModal}
-                        className="cursor-pointer rounded-md border border-neutral-200 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-800 hover:text-white"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={saveEditedRow}
-                        disabled={saveEditLoader}
-                        className="cursor-pointer rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-200"
-                      >
-                        {saveEditLoader ? "Saving..." : editForm.isDraft ? "Save Draft" : "Save"}
-                      </button>
+
+                    <div className="mt-8 flex justify-end gap-3 border-t pt-5">
+                      <Button variant="ghost" onClick={closeEditModal} className="text-neutral-500">Cancel</Button>
+                      <Button onClick={saveEditedRow} disabled={saveEditLoader} className="bg-blue-600 hover:bg-blue-700 text-white px-8">
+                        {saveEditLoader ? "Saving..." : "Save Changes"}
+                      </Button>
                     </div>
                   </div>
                 </div>
               )}
             </>
           ) : (
-            <div className="mt-4">
-              <HrEmailsTable className="border-neutral-200 shadow-none" tableClassName="max-h-[320px]" />
-            </div>
+            <HrEmailsTable className="mt-4" />
           )}
         </div>
       </div>
