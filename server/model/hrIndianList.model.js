@@ -24,6 +24,11 @@ const hrIndianListSchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
+    type: {
+      type: String,
+      enum: ["regular", "premium"],
+      default: "regular",
+    }
   },
   { timestamps: true }
 );
