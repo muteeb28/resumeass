@@ -80,7 +80,6 @@ export const useUserStore = create<UserStore>((set) => ({
 			});
 			const data = await response.json();
 			set({user: null});
-			window.location.href = data.next;
 		} catch (error: any) {
 			toast.error(error.response?.data?.message || "An error occurred during logout");
 		}
