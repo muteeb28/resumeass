@@ -114,7 +114,6 @@ export default function SidebarDemo() {
       }
     } catch (error) {
       console.error("Error fetching job applications", error);
-      toast.error("Unable to fetch job applications.");
     }
   }, []);
 
