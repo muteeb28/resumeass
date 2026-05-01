@@ -48,11 +48,11 @@ import {
   optimizeResumeSimple,
 } from './services/resumeOptimizerService.js';
 
-import { addDatafForHrIndiaLists, getHrIndianListDemo, contactus } from './controller/common.controller.js';
+import { addDatafForHrIndiaLists, getHrIndianListDemo, contactus, bulkInsertPremiumHrList } from './controller/common.controller.js';
 import { deleteJobApplication, editJobApplication, getJobApplications, setJobApplication, updateJobApplicationStatus } from './controller/job.controller.js';
 import { getAllPosts, getPostBySlug, getFeaturedPosts, getCategories, getPopularPosts } from "./controller/blog.controller.js";
 import { savePortfolio, getPortfolio, deletePortfolio } from "./controller/portfolio.controller.js";
-import { isLoggedIn } from './middleware/auth.middleware.js';
+import { adminRoute, isLoggedIn } from './middleware/auth.middleware.js';
 
 const app = express();
 const PORT = process.env.PORT || 3007;
@@ -146,8 +146,9 @@ app.get('/api/health', (req, res) => {
 });
 
 // common controller
-app.get("/api/hr/list/demo", getHrIndianListDemo);
+app.get("/api/hr/list/demo", isLoggedIn, adminRoute, getHrIndianListDemo);
 app.post('/api/contact-us', contactus);
+app.post('/api/hr/list/premium/demo', isLoggedIn, adminRoute, bulkInsertPremiumHrList);
 
 // job controller routes
 app.get('/api/job/applications',isLoggedIn, getJobApplications);

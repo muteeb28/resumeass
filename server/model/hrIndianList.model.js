@@ -28,7 +28,9 @@ const hrIndianListSchema = new mongoose.Schema(
       type: String,
       enum: ["regular", "premium"],
       default: "regular",
-    }
+    },
+    phone: { type: String, default: "", trim: true },
+    linkedIn: { type: String, default: "", trim: true },
   },
   { timestamps: true }
 );

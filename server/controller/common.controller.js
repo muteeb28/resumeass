@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import HrIndianList from "../model/hrIndianList.model.js";
 import ContactUs from "../model/contactus.models.js";
+import { hrIndianPremiumListDemo } from "../assets/data/hrContactDetailsDemo.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -68,9 +69,47 @@ export const addDatafForHrIndiaLists = async (req, res) => {
   }
 };
 
+export const bulkInsertPremiumHrList = async (req, res) => {
+  try {
+    const hrData = hrIndianPremiumListDemo;
+    if (!Array.isArray(hrData) || hrData.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide an array of HR data objects.",
+      });
+    }
+
+    const result = await HrIndianList.insertMany(hrData, { ordered: false });
+
+    return res.status(201).json({
+      success: true,
+      message: `${result.length} records inserted successfully.`,
+      data: result,
+    });
+
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(207).json({
+        success: true,
+        message: "Some records were skipped due to duplicate emails, others were saved.",
+        insertedCount: error.result?.nInserted || 0,
+        duplicates: error.writeErrors?.length || 0,
+      });
+    }
+
+    // 4. Handle other potential errors (Validation, Connection, etc.)
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
 export const getHrIndianListDemo = async (req, res) => {
   try {
-    const data = await HrIndianList.find({}).limit(10).lean();
+    // const data = await HrIndianList.find({}).limit(10).lean();
+    const data = hrIndianPremiumListDemo.slice(0, 10);
 
     return res.status(200).json({
       success: true,

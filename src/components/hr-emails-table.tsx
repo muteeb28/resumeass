@@ -13,10 +13,11 @@ interface HrEmailsTableProps {
   updateAt: string,
   status: string,
   website: string,
-  linkedin: string,
+  linkedIn: string,
   social: string,
   twitter: string,
   location: string,
+  phone: string,
 }
 
 const renderCell = (value: string) => {
@@ -142,6 +143,7 @@ export default function HrEmailsTable({
               <th className="px-3 py-2 font-semibold">Company Name</th>
               <th className="px-3 py-2 font-semibold">Status</th>
               <th className="px-3 py-2 font-semibold">Company Email</th>
+              <th className="px-3 py-2 font-semibold">Phone Number</th>
               <th className="px-3 py-2 font-semibold">Company Website</th>
               <th className="px-3 py-2 font-semibold">Company Linkedin</th>
               <th className="px-3 py-2 font-semibold">Company Social</th>
@@ -191,8 +193,9 @@ export default function HrEmailsTable({
                     </span>
                   </td>
                   <td className="px-3 py-2">{renderCell(row.email)}</td>
+                  <td className="px-3 py-2">{renderCell(row.phone || '-')}</td>
+                  <td className="px-3 py-2">{renderCell(row.linkedIn || '-')}</td>
                   <td className="px-3 py-2">{renderCell(row.website || '-')}</td>
-                  <td className="px-3 py-2">{renderCell(row.linkedin || '-')}</td>
                   <td className="px-3 py-2">{renderCell(row.social || '-')}</td>
                   <td className="px-3 py-2">{renderCell(row.twitter || '-')}</td>
                   <td className="px-3 py-2">{renderCell(row.location || '-')}</td>
