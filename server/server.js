@@ -146,7 +146,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // common controller
-app.get("/api/hr/list/demo", isLoggedIn, adminRoute, getHrIndianListDemo);
+app.get("/api/hr/list/demo", getHrIndianListDemo);
 app.post('/api/contact-us', contactus);
 app.post('/api/hr/list/premium/demo', isLoggedIn, adminRoute, bulkInsertPremiumHrList);
 
