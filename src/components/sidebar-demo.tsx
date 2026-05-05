@@ -148,12 +148,6 @@ export default function SidebarDemo() {
         credentials: 'include',
       });
       const data = await response.json();
-
-      if (!response.ok) {
-        toast.error(data.message || "Failed to load job applications.");
-        return;
-      }
-
       if (Array.isArray(data.applications)) {
         setRows(data.applications.map(normalizeFetchedRow));
       } else {
