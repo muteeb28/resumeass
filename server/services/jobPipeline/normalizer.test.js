@@ -193,3 +193,90 @@ describe('normalizeJob — remoteok-india category mapping', () => {
     expect(result.categories).toBeUndefined();
   });
 });
+
+// ─── normalizeJob — linkedin-india category mapping ───────────────────────────
+
+function makeLinkedInIndiaRaw(overrides = {}) {
+  return {
+    sourceId:      'linkedin-india-9876543210',
+    sourceJobId:   '9876543210',
+    title:         'Software Engineer',
+    company:       'Google India',
+    location:      'Bengaluru, Karnataka, India',
+    url:           'https://www.linkedin.com/jobs/view/9876543210',
+    remote:        false,
+    tags:          [],
+    source:        'linkedin-india',
+    sourceLabel:   'LinkedIn India',
+    sourcePostedAt: new Date(NOW_MS - 3 * 60 * 60 * 1000),
+    ...overrides,
+  };
+}
+
+describe('normalizeJob — linkedin-india category mapping', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(NOW_MS);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('maps Software Engineer to IT/Software', () => {
+    const result = normalizeJob(makeLinkedInIndiaRaw({ title: 'Software Engineer' }));
+    expect(result).not.toBeNull();
+    expect(result.categories).toContain('IT/Software');
+  });
+
+  it('maps Software Engineer Intern to Internship and IT/Software', () => {
+    const result = normalizeJob(makeLinkedInIndiaRaw({ title: 'Software Engineer Intern' }));
+    expect(result).not.toBeNull();
+    expect(result.categories).toContain('Internship');
+    expect(result.categories).toContain('IT/Software');
+  });
+
+  it('maps Entry Level Developer to Fresher and IT/Software', () => {
+    const result = normalizeJob(makeLinkedInIndiaRaw({ title: 'Entry Level Developer' }));
+    expect(result).not.toBeNull();
+    expect(result.categories).toContain('Fresher');
+    expect(result.categories).toContain('IT/Software');
+  });
+
+  it('maps Remote Software Engineer to Remote', () => {
+    const result = normalizeJob(makeLinkedInIndiaRaw({ title: 'Software Engineer', location: 'Remote', remote: true }));
+    expect(result).not.toBeNull();
+    expect(result.categories).toContain('Remote');
+  });
+
+  it('does not produce an empty categories array — always returns at least one category for typical titles', () => {
+    const result = normalizeJob(makeLinkedInIndiaRaw({ title: 'Frontend Developer' }));
+    expect(result).not.toBeNull();
+    expect(Array.isArray(result.categories)).toBe(true);
+    expect(result.categories.length).toBeGreaterThan(0);
+  });
+
+  it('passes the 48h freshness gate for a 3-hour-old job', () => {
+    expect(normalizeJob(makeLinkedInIndiaRaw())).not.toBeNull();
+  });
+
+  it('rejects a linkedin-india job older than 48h', () => {
+    const raw = makeLinkedInIndiaRaw({ sourcePostedAt: new Date(NOW_MS - 49 * 60 * 60 * 1000) });
+    expect(normalizeJob(raw)).toBeNull();
+  });
+
+  it('rejects a linkedin-india job with null sourcePostedAt', () => {
+    expect(normalizeJob(makeLinkedInIndiaRaw({ sourcePostedAt: null }))).toBeNull();
+  });
+});
+
+// ─── Job schema — categories field ───────────────────────────────────────────
+
+describe('Job schema — categories field', () => {
+  it('schema includes categories as an array path (not dropped by strict mode)', async () => {
+    const { default: Job } = await import('../../models/Job.model.js');
+    const catPath = Job.schema.path('categories');
+    expect(catPath, 'Job schema must define categories: [String] so Mongoose does not drop it on bulkWrite').toBeDefined();
+    expect(catPath.instance).toBe('Array');
+  });
+});

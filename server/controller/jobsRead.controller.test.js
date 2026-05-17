@@ -295,4 +295,82 @@ describe('getJobs — source=india', () => {
     expect(titles).toContain('Software Engineer');
     expect(titles).toContain('Backend Developer');
   });
+
+  it('category=IT/Software returns linkedin-india jobs whose categories[] includes IT/Software', async () => {
+    const liJob = {
+      sourceId:    'linkedin-india-9876543210',
+      title:       'Software Engineer',
+      company:     'Google India',
+      location:    'Bengaluru, Karnataka, India',
+      sourceLabel: 'LinkedIn India',
+      jobType:     'Full-time',
+      url:         'https://www.linkedin.com/jobs/view/9876543210',
+      source:      'linkedin-india',
+      categories:  ['IT/Software', 'Full Time'],
+      postedAt:    new Date(NOW_MS - 3 * 60 * 60 * 1000),
+    };
+    mockFind.mockReturnValue(makeChainedFind([liJob]));
+    mockCountDocuments.mockResolvedValue(1);
+
+    const req = makeReq({ source: 'india', category: 'IT/Software', page: '1', limit: '50' });
+    const res = makeRes();
+    await getJobs(req, res);
+
+    const [response] = res.json.mock.calls;
+    expect(response[0].total).toBe(1);
+    expect(response[0].jobs[0].source).toBe('linkedin-india');
+    expect(response[0].jobs[0].categories).toContain('IT/Software');
+  });
+
+  it('category=Internship returns linkedin-india jobs whose categories[] includes Internship', async () => {
+    const liJob = {
+      sourceId:    'linkedin-india-1111111111',
+      title:       'Software Engineer Intern',
+      company:     'Flipkart',
+      location:    'Bengaluru, Karnataka, India',
+      sourceLabel: 'LinkedIn India',
+      jobType:     'Internship',
+      url:         'https://www.linkedin.com/jobs/view/1111111111',
+      source:      'linkedin-india',
+      categories:  ['Internship', 'IT/Software'],
+      postedAt:    new Date(NOW_MS - 5 * 60 * 60 * 1000),
+    };
+    mockFind.mockReturnValue(makeChainedFind([liJob]));
+    mockCountDocuments.mockResolvedValue(1);
+
+    const req = makeReq({ source: 'india', category: 'Internship', page: '1', limit: '50' });
+    const res = makeRes();
+    await getJobs(req, res);
+
+    const [response] = res.json.mock.calls;
+    expect(response[0].total).toBe(1);
+    expect(response[0].jobs[0].source).toBe('linkedin-india');
+    expect(response[0].jobs[0].categories).toContain('Internship');
+  });
+
+  it('category=Fresher returns linkedin-india jobs whose categories[] includes Fresher', async () => {
+    const liJob = {
+      sourceId:    'linkedin-india-2222222222',
+      title:       'Entry Level Developer',
+      company:     'Infosys',
+      location:    'Hyderabad, India',
+      sourceLabel: 'LinkedIn India',
+      jobType:     'Full-time',
+      url:         'https://www.linkedin.com/jobs/view/2222222222',
+      source:      'linkedin-india',
+      categories:  ['Fresher', 'IT/Software'],
+      postedAt:    new Date(NOW_MS - 2 * 60 * 60 * 1000),
+    };
+    mockFind.mockReturnValue(makeChainedFind([liJob]));
+    mockCountDocuments.mockResolvedValue(1);
+
+    const req = makeReq({ source: 'india', category: 'Fresher', page: '1', limit: '50' });
+    const res = makeRes();
+    await getJobs(req, res);
+
+    const [response] = res.json.mock.calls;
+    expect(response[0].total).toBe(1);
+    expect(response[0].jobs[0].source).toBe('linkedin-india');
+    expect(response[0].jobs[0].categories).toContain('Fresher');
+  });
 });

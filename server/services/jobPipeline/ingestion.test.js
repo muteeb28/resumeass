@@ -1028,4 +1028,41 @@ describe('LinkedIn India ingestion', () => {
       expect(filter.source).not.toBe('linkedin-india');
     }
   });
+
+  it('includes categories[] in the bulkWrite $set for a linkedin-india Software Engineer (IT/Software)', async () => {
+    mockTalentdFetch.mockResolvedValue([]);
+    mockRemoteOkIndiaFetch.mockResolvedValue([]);
+    mockLinkedInIndiaFetch.mockResolvedValue([makeLinkedInIndiaRawJob({ title: 'Software Engineer' })]);
+    mockBulkWrite.mockResolvedValue({ upsertedCount: 1, modifiedCount: 0 });
+
+    await modLinkedIn.runIngestion();
+
+    const op = mockBulkWrite.mock.calls[0][0][0];
+    expect(op.updateOne.update.$set.categories).toBeDefined();
+    expect(op.updateOne.update.$set.categories).toContain('IT/Software');
+  });
+
+  it('includes categories[] with Internship for a linkedin-india intern title', async () => {
+    mockTalentdFetch.mockResolvedValue([]);
+    mockRemoteOkIndiaFetch.mockResolvedValue([]);
+    mockLinkedInIndiaFetch.mockResolvedValue([makeLinkedInIndiaRawJob({ title: 'Software Engineer Intern' })]);
+    mockBulkWrite.mockResolvedValue({ upsertedCount: 1, modifiedCount: 0 });
+
+    await modLinkedIn.runIngestion();
+
+    const op = mockBulkWrite.mock.calls[0][0][0];
+    expect(op.updateOne.update.$set.categories).toContain('Internship');
+  });
+
+  it('includes categories[] with Fresher for a linkedin-india entry-level title', async () => {
+    mockTalentdFetch.mockResolvedValue([]);
+    mockRemoteOkIndiaFetch.mockResolvedValue([]);
+    mockLinkedInIndiaFetch.mockResolvedValue([makeLinkedInIndiaRawJob({ title: 'Entry Level Developer' })]);
+    mockBulkWrite.mockResolvedValue({ upsertedCount: 1, modifiedCount: 0 });
+
+    await modLinkedIn.runIngestion();
+
+    const op = mockBulkWrite.mock.calls[0][0][0];
+    expect(op.updateOne.update.$set.categories).toContain('Fresher');
+  });
 });

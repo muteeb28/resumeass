@@ -1,3 +1,5 @@
+
+
 import mongoose from 'mongoose';
 
 const JobSchema = new mongoose.Schema(
@@ -50,8 +52,7 @@ const JobSchema = new mongoose.Schema(
 JobSchema.index({ postedAt: -1 });
 JobSchema.index({ source: 1, sourceJobId: 1 }, { unique: true, sparse: true });
 JobSchema.index({ roleType: 1, postedAt: -1 });
-JobSchema.index({ source: 1, category:   1, isActive: 1 });
-JobSchema.index({ source: 1, categories: 1, postedAt: -1 }); // supports category-filtered Talentd queries with sort
+JobSchema.index({ source: 1, category: 1, isActive: 1 });
 
 const Job = mongoose.models?.Job ?? mongoose.model('Job', JobSchema);
 export default Job;
