@@ -28,13 +28,16 @@ const SEARCH_TERMS = [
 
 /**
  * Extracts the LinkedIn numeric job ID from a job URL.
- * e.g. https://www.linkedin.com/jobs/view/3987654321?trk=xyz → '3987654321'
+ * Handles both formats:
+ *   https://www.linkedin.com/jobs/view/3987654321?trk=xyz  (pure numeric)
+ *   https://in.linkedin.com/jobs/view/job-title-at-co-40842613  (slug ending in ID)
  */
 export function extractJobId(url) {
   if (!url || typeof url !== 'string') return null;
   try {
     const u = new URL(url);
-    const m = u.pathname.match(/\/jobs\/view\/(\d+)/);
+    // Match a /jobs/view/ path — ID is the trailing run of 6+ digits (optionally after a slug)
+    const m = u.pathname.match(/\/jobs\/view\/(?:[^/?]*?-)?(\d{6,})\/?$/);
     return m ? m[1] : null;
   } catch {
     return null;

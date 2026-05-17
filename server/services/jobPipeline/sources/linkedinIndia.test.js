@@ -38,6 +38,10 @@ describe('linkedinIndia — extractJobId', () => {
     expect(extractJobId('https://www.linkedin.com/jobs/view/1234567890')).toBe('1234567890');
   });
 
+  it('extracts job id from India subdomain slug URL (in.linkedin.com format)', () => {
+    expect(extractJobId('https://in.linkedin.com/jobs/view/software-engineer-at-google-40842613')).toBe('40842613');
+  });
+
   it('returns null for non-LinkedIn URLs', () => {
     expect(extractJobId('https://example.com/jobs/123')).toBe(null);
   });
@@ -196,8 +200,8 @@ describe('linkedinIndia — parseListingHtml', () => {
 
   it('returns multiple jobs when the page has multiple valid cards', () => {
     const html = makePageHtml([
-      { title: 'Job A', href: 'https://www.linkedin.com/jobs/view/111' },
-      { title: 'Job B', href: 'https://www.linkedin.com/jobs/view/222' },
+      { title: 'Job A', href: 'https://www.linkedin.com/jobs/view/1000000111' },
+      { title: 'Job B', href: 'https://www.linkedin.com/jobs/view/1000000222' },
     ]);
     expect(parseListingHtml(html)).toHaveLength(2);
   });
