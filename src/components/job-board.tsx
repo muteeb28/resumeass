@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   MapPin,
-  Briefcase,
   ExternalLink,
   RefreshCw,
   ChevronLeft,
@@ -13,6 +12,7 @@ import {
   Clock,
 } from "lucide-react";
 
+// ─── Types ────────────────────────────────────────────────────────────────────
 interface Job {
   id: string;
   title: string;
@@ -22,56 +22,48 @@ interface Job {
   postedDate: string;
   url: string;
   type: string;
+  salary?: string;
+  tags?: string[];
+  category?: string;
 }
 
-const CATEGORIES = [
-  { label: "All Roles", value: "all" },
-  { label: "Software Engineering", value: "software engineer India" },
-  { label: "Frontend", value: "frontend developer India" },
-  { label: "Backend", value: "backend developer India" },
-  { label: "Data Science", value: "data scientist India" },
-  { label: "Product Management", value: "associate product manager" },
-  { label: "Project Management", value: "associate project manager" },
-  { label: "DevOps", value: "devops engineer India" },
-  { label: "Mobile", value: "flutter OR react native OR mobile developer" },
-  { label: "Network Support", value: "network support engineer India" },
-  { label: "Marketing", value: "digital marketing India" },
-  { label: "Sales", value: "sales executive India" },
-  { label: "Design", value: "UI UX designer India" },
-  { label: "Gulf Jobs", value: "software engineer gulf" },
-];
+// "" = "All" (no category filter sent to API)
+type CategoryValue =
+  | ""
+  | "Fresher"
+  | "Internship"
+  | "Remote"
+  | "IT/Software"
+  | "Core Engineering"
+  | "Batch 2026"
+  | "Batch 2025"
+  | "Full Time"
+  | "Design"
+  | "Sales & Marketing";
 
-const EXPERIENCE_LEVELS = [
-  { label: "All Levels", value: "all" },
-  { label: "Fresher / Intern", value: "intern" },
-  { label: "Experienced", value: "senior" },
+// ─── Constants ────────────────────────────────────────────────────────────────
+const TALENTD_CATEGORIES: { label: string; value: CategoryValue }[] = [
+  { label: "All",               value: "" },
+  { label: "Fresher",           value: "Fresher" },
+  { label: "Internship",        value: "Internship" },
+  { label: "Remote",            value: "Remote" },
+  { label: "IT / Software",     value: "IT/Software" },
+  { label: "Core Engineering",  value: "Core Engineering" },
+  { label: "Batch 2026",        value: "Batch 2026" },
+  { label: "Batch 2025",        value: "Batch 2025" },
+  { label: "Full Time",         value: "Full Time" },
+  { label: "Design",            value: "Design" },
+  { label: "Sales & Marketing", value: "Sales & Marketing" },
 ];
 
 const TYPE_BADGE_COLORS: Record<string, string> = {
   "Full-time": "bg-emerald-50 text-emerald-700 border-emerald-200",
-  Internship: "bg-violet-50 text-violet-700 border-violet-200",
-  Contract: "bg-amber-50 text-amber-700 border-amber-200",
+  Internship:  "bg-violet-50 text-violet-700 border-violet-200",
+  Contract:    "bg-amber-50 text-amber-700 border-amber-200",
   "Part-time": "bg-sky-50 text-sky-700 border-sky-200",
 };
 
-const PLATFORM_DOT_COLORS: Record<string, string> = {
-  LinkedIn:           "bg-blue-500",
-  RemoteRocketship:   "bg-rose-500",
-  Adzuna:             "bg-purple-500",
-  RemoteOK:           "bg-orange-500",
-  Remotive:           "bg-green-500",
-  "Working Nomads":   "bg-cyan-500",
-  "We Work Remotely": "bg-indigo-500",
-  NoDesk:             "bg-yellow-500",
-  "Google Jobs":      "bg-red-500",
-  Jobspresso:         "bg-pink-500",
-  SimplyHired:        "bg-teal-500",
-  Naukri:             "bg-amber-500",
-  NaukriGulf:         "bg-orange-600",
-  Glassdoor:          "bg-emerald-500",
-  Indeed:             "bg-sky-500",
-};
-
+// ─── Sub-components ───────────────────────────────────────────────────────────
 function JobCardSkeleton() {
   return (
     <div className="bg-white border border-neutral-200 rounded-2xl p-6 animate-pulse">
@@ -114,18 +106,14 @@ function CompanyInitials({ name }: { name: string }) {
   const idx = name.charCodeAt(0) % colors.length;
 
   return (
-    <div
-      className={`w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${colors[idx]}`}
-    >
+    <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${colors[idx]}`}>
       {initials || "?"}
     </div>
   );
 }
 
 function JobCard({ job, index }: { job: Job; index: number }) {
-  const badgeClass =
-    TYPE_BADGE_COLORS[job.type] ?? "bg-neutral-100 text-neutral-600 border-neutral-200";
-  const dotColor = PLATFORM_DOT_COLORS[job.platform] ?? "bg-neutral-400";
+  const badgeClass = TYPE_BADGE_COLORS[job.type] ?? "bg-neutral-100 text-neutral-600 border-neutral-200";
 
   return (
     <motion.div
@@ -133,10 +121,10 @@ function JobCard({ job, index }: { job: Job; index: number }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
-      className="group bg-white border border-neutral-200 rounded-2xl p-6 hover:border-teal-300 hover:shadow-lg hover:shadow-teal-500/5 transition-all duration-200 flex flex-col"
+      className="group bg-white border border-neutral-200 rounded-2xl p-5 hover:border-teal-300 hover:shadow-lg hover:shadow-teal-500/5 transition-all duration-200 flex flex-col gap-3"
     >
-      {/* Header */}
-      <div className="flex items-start justify-between gap-2 mb-3">
+      {/* Header: logo + title + type badge */}
+      <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-3 min-w-0">
           <CompanyInitials name={job.company} />
           <div className="min-w-0">
@@ -146,15 +134,21 @@ function JobCard({ job, index }: { job: Job; index: number }) {
             <p className="text-xs text-neutral-500 mt-0.5 truncate">{job.company}</p>
           </div>
         </div>
-        <span
-          className={`flex-shrink-0 text-xs font-medium px-2.5 py-1 rounded-full border ${badgeClass}`}
-        >
+        <span className={`flex-shrink-0 text-xs font-medium px-2.5 py-1 rounded-full border ${badgeClass}`}>
           {job.type}
         </span>
       </div>
 
-      {/* Meta */}
-      <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-500 mb-4">
+      {/* CTC / Salary */}
+      {job.salary && (
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm font-semibold text-emerald-600">{job.salary}</span>
+          <span className="text-xs text-neutral-400">per annum</span>
+        </div>
+      )}
+
+      {/* Meta: location and time only */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-neutral-500">
         {job.location && (
           <span className="flex items-center gap-1">
             <MapPin size={11} />
@@ -165,14 +159,21 @@ function JobCard({ job, index }: { job: Job; index: number }) {
           <Clock size={11} />
           {job.postedDate}
         </span>
-        <span className="flex items-center gap-1.5">
-          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dotColor}`} />
-          {job.platform}
-        </span>
       </div>
 
-      {/* Apply */}
-      <div className="mt-auto">
+      {/* Skill tags */}
+      {job.tags && job.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {job.tags.slice(0, 4).map((tag) => (
+            <span key={tag} className="text-xs px-2 py-0.5 rounded-md bg-neutral-100 text-neutral-600 border border-neutral-200">
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Apply button */}
+      <div className="mt-auto pt-1">
         <a
           href={job.url}
           target="_blank"
@@ -187,43 +188,23 @@ function JobCard({ job, index }: { job: Job; index: number }) {
   );
 }
 
-const LOCATION_FILTERS = [
-  { label: "Worldwide", value: "Worldwide" },
-  { label: "Remote", value: "Remote" },
-  { label: "India", value: "India" },
-  { label: "Gulf", value: "Gulf" },
-];
+// ─── Main component ───────────────────────────────────────────────────────────
+const LIMIT = 9;
 
 export default function JobBoard() {
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobs, setJobs]       = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
-  const [category, setCategory] = useState("all");
-  const [experience, setExperience] = useState("all");
-  const [locationFilter, setLocationFilter] = useState("Worldwide");
-  const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
-  const [grandTotal, setGrandTotal] = useState<number | null>(null);
-  const [searchInput, setSearchInput] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [disabled, setDisabled] = useState(false);
+  // "" = All (no category filter). Default is All so users see every fresh job.
+  const [category, setCategory] = useState<CategoryValue>("");
+  const [page, setPage]         = useState(1);
+  const [total, setTotal]       = useState(0);
+  const [searchInput, setSearchInput]   = useState("");
+  const [searchQuery, setSearchQuery]   = useState("");
 
-  // Fetch unfiltered grand total once on mount for the hero badge
-  useEffect(() => {
-    fetch("/api/jobs?query=all&category=All+Roles&page=1&limit=1")
-      .then(r => r.json())
-      .then(d => setGrandTotal(d.total ?? null))
-      .catch(() => {});
-  }, []);
-  const LIMIT = 9;
-
-  // 300ms debounce on search input
+  // Debounce search input 300 ms
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Clear any pending debounce timer on unmount
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, []);
+  useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
 
   function handleSearchInput(e: React.ChangeEvent<HTMLInputElement>) {
     const val = e.target.value;
@@ -232,26 +213,22 @@ export default function JobBoard() {
     debounceRef.current = setTimeout(() => setSearchQuery(val), 300);
   }
 
-  // Category query: always driven by the selected chip + experience level.
-  // User's typed searchQuery is sent as a separate AND-filter via searchText param.
-  const buildCategoryQuery = useCallback(() => {
-    const cat = CATEGORIES.find((c) => c.value === category);
-    let q = cat?.value ?? "all";
-    if (experience === "intern") q = q === "all" ? "intern India" : `${q} intern`;
-    else if (experience === "senior") q = q === "all" ? "senior software engineer India" : `senior ${q}`;
-    return q;
-  }, [category, experience]);
-
   const fetchJobs = useCallback(async () => {
+    if (disabled) return;
     setLoading(true);
     try {
-      const q = buildCategoryQuery();
-      const cat = CATEGORIES.find((c) => c.value === category);
-      const catLabel = cat?.label ?? "All Roles";
-      const res = await fetch(
-        `/api/jobs?query=${encodeURIComponent(q)}&category=${encodeURIComponent(catLabel)}&searchText=${encodeURIComponent(searchQuery)}&locationFilter=${encodeURIComponent(locationFilter)}&page=${page}&limit=${LIMIT}`
-      );
+      const params = new URLSearchParams({
+        source:     "india",
+        searchText: searchQuery,
+        page:       String(page),
+        limit:      String(LIMIT),
+      });
+      // Omit category entirely when All is selected so the API applies no category filter.
+      if (category) params.set("category", category);
+
+      const res  = await fetch(`/api/jobs?${params}`);
       const data = await res.json();
+      if (data.disabled) { setDisabled(true); setJobs([]); return; }
       setJobs(Array.isArray(data.jobs) ? data.jobs : []);
       setTotal(data.total ?? 0);
     } catch {
@@ -259,15 +236,12 @@ export default function JobBoard() {
     } finally {
       setLoading(false);
     }
-  }, [buildCategoryQuery, category, searchQuery, locationFilter, page]);
+  }, [category, searchQuery, page, disabled]);
 
-  useEffect(() => {
-    setPage(1);
-  }, [category, experience, searchQuery, locationFilter]);
+  // Reset to page 1 whenever category or search changes
+  useEffect(() => { setPage(1); }, [category, searchQuery]);
 
-  useEffect(() => {
-    fetchJobs();
-  }, [fetchJobs]);
+  useEffect(() => { fetchJobs(); }, [fetchJobs]);
 
   const totalPages = Math.ceil(total / LIMIT);
 
@@ -277,28 +251,42 @@ export default function JobBoard() {
   }
 
   function clearFilters() {
-    setCategory("all");
-    setExperience("all");
-    setLocationFilter("Worldwide");
+    setCategory("");
     setSearchInput("");
     setSearchQuery("");
     setPage(1);
   }
 
+  // Human-readable label for the current filter
+  const filterLabel = category === "" ? "fresh" : category;
+
+  if (disabled) {
+    return (
+      <div className="w-full flex flex-col items-center justify-center py-32 text-center gap-4">
+        <div className="text-4xl">🔧</div>
+        <h2 className="text-xl font-semibold text-neutral-800">Job Discovery Temporarily Disabled</h2>
+        <p className="text-neutral-500 max-w-md">
+          Job discovery is temporarily disabled while we rebuild this feature. Check back soon.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full">
-      {/* Page header */}
+      {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
         <div>
-          {/* Source badge — live count from aggregator */}
           <span className="inline-block text-xs text-neutral-400 font-medium bg-neutral-100 border border-neutral-200 rounded-full px-3 py-1 mb-3">
-            {grandTotal !== null ? `${grandTotal.toLocaleString()} Jobs` : "16+ Sources"} • Updated Live
+            {!loading && total > 0
+              ? `${total.toLocaleString()} ${filterLabel} jobs`
+              : "Jobs in India"} • Updated regularly
           </span>
           <h1 className="text-3xl md:text-5xl font-bold text-neutral-900">
-            Find Jobs Before Everyone Else
+            Fresh Jobs in India
           </h1>
           <p className="text-neutral-500 mt-2 max-w-2xl">
-            Freshest listings from 16+ job boards — including hidden roles never posted on LinkedIn or Naukri. Updated every few hours.
+            Latest listings updated regularly — freshers, interns, and full-time roles.
           </p>
         </div>
 
@@ -312,12 +300,9 @@ export default function JobBoard() {
         </button>
       </div>
 
-      {/* Search bar */}
+      {/* Search */}
       <form onSubmit={handleSearch} className="relative mb-6">
-        <Search
-          size={16}
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400"
-        />
+        <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400" />
         <input
           type="text"
           value={searchInput}
@@ -333,67 +318,27 @@ export default function JobBoard() {
         </button>
       </form>
 
-      {/* Filters */}
-      <div className="space-y-3 mb-8">
-        {/* Category pills */}
-        <div className="flex flex-wrap gap-2">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat.value}
-              onClick={() => setCategory(cat.value)}
-              className={`px-4 py-1.5 rounded-full text-xs font-semibold border transition-all duration-150 ${
-                category === cat.value
-                  ? "bg-neutral-900 text-white border-neutral-900"
-                  : "bg-white text-neutral-600 border-neutral-200 hover:border-neutral-400"
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Experience + Location toggles */}
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-neutral-500 font-medium mr-1">Experience:</span>
-            {EXPERIENCE_LEVELS.map((lvl) => (
-              <button
-                key={lvl.value}
-                onClick={() => setExperience(lvl.value)}
-                className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all duration-150 ${
-                  experience === lvl.value
-                    ? "bg-teal-600 text-white border-teal-600"
-                    : "bg-white text-neutral-600 border-neutral-200 hover:border-teal-300"
-                }`}
-              >
-                {lvl.label}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-neutral-500 font-medium mr-1">Location:</span>
-            {LOCATION_FILTERS.map((loc) => (
-              <button
-                key={loc.value}
-                onClick={() => setLocationFilter(loc.value)}
-                className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all duration-150 ${
-                  locationFilter === loc.value
-                    ? "bg-teal-600 text-white border-teal-600"
-                    : "bg-white text-neutral-600 border-neutral-200 hover:border-teal-300"
-                }`}
-              >
-                {loc.label}
-              </button>
-            ))}
-          </div>
-        </div>
+      {/* Category chips */}
+      <div className="flex flex-wrap gap-2 mb-6">
+        {TALENTD_CATEGORIES.map((c) => (
+          <button
+            key={c.value === "" ? "__all__" : c.value}
+            onClick={() => setCategory(c.value)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-150 ${
+              category === c.value
+                ? "bg-teal-600 text-white border-teal-600"
+                : "bg-white text-neutral-600 border-neutral-200 hover:border-teal-300 hover:text-teal-600"
+            }`}
+          >
+            {c.label}
+          </button>
+        ))}
       </div>
 
       {/* Results count */}
       {!loading && total > 0 && (
         <p className="text-xs text-neutral-400 mb-4">
-          Showing {Math.min((page - 1) * LIMIT + 1, total)}–{Math.min(page * LIMIT, total)} of{" "}
-          {total} roles
+          {total} {filterLabel} jobs
         </p>
       )}
 
@@ -407,9 +352,7 @@ export default function JobBoard() {
             exit={{ opacity: 0 }}
             className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
           >
-            {Array.from({ length: LIMIT }).map((_, i) => (
-              <JobCardSkeleton key={i} />
-            ))}
+            {Array.from({ length: LIMIT }).map((_, i) => <JobCardSkeleton key={i} />)}
           </motion.div>
         ) : jobs.length > 0 ? (
           <motion.div
@@ -419,9 +362,7 @@ export default function JobBoard() {
             exit={{ opacity: 0 }}
             className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
           >
-            {jobs.map((job, i) => (
-              <JobCard key={job.id} job={job} index={i} />
-            ))}
+            {jobs.map((job, i) => <JobCard key={job.id} job={job} index={i} />)}
           </motion.div>
         ) : (
           <motion.div
@@ -431,12 +372,11 @@ export default function JobBoard() {
             exit={{ opacity: 0 }}
             className="text-center py-20"
           >
-            <p className="text-neutral-400 text-lg mb-2">No roles found.</p>
-            <button
-              onClick={clearFilters}
-              className="text-sm text-teal-600 hover:underline"
-            >
-              Clear filters
+            <p className="text-neutral-400 text-lg mb-2">
+              No {filterLabel} jobs in the database yet. Try refreshing or check back after the next ingestion run.
+            </p>
+            <button onClick={clearFilters} className="text-sm text-teal-600 hover:underline">
+              Reset filters
             </button>
           </motion.div>
         )}
@@ -452,9 +392,7 @@ export default function JobBoard() {
           >
             <ChevronLeft size={16} />
           </button>
-          <span className="text-sm text-neutral-500">
-            Page {page} of {totalPages}
-          </span>
+          <span className="text-sm text-neutral-500">Page {page} of {totalPages}</span>
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}

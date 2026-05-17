@@ -1,26 +1,23 @@
-/**
- * Resume Optimizer Service — 6 Gemini AI functions for the 5-tool coaching workspace.
- * All functions use responseSchema for guaranteed valid JSON.
- * Model: gemini-2.5-flash, temperature: 0, thinkingBudget: 0.
- */
-
 import fs from 'fs';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const pdfParse = require('pdf-parse');
 
 const TIMEOUT_MS = 90_000;
-const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const MODEL = process.env.NVIDIA_MODEL || 'openai/gpt-oss-20b';
 
-function getGenAI() {
-  const apiKey = process.env.OPTI_API_KEY;
-  if (!apiKey) throw new Error('OPTI_API_KEY is not configured');
-  return new GoogleGenerativeAI(apiKey);
+function getOpenAI() {
+  const apiKey = process.env.NVIDIA_API_KEY;
+  if (!apiKey) throw new Error('NVIDIA_API_KEY is not configured');
+  return new OpenAI({ apiKey, baseURL: 'https://integrate.api.nvidia.com/v1' });
 }
 
 function withTimeout(promise, ms = TIMEOUT_MS) {
   return Promise.race([
     promise,
     new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Gemini optimizer timeout')), ms)
+      setTimeout(() => reject(new Error('NVIDIA optimizer timeout')), ms)
     ),
   ]);
 }
@@ -30,9 +27,16 @@ async function withRetry(fn, retries = 3, delayMs = 5000) {
     try {
       return await fn();
     } catch (err) {
-      const is503 = err?.message?.includes('503') || err?.message?.includes('Service Unavailable') || err?.message?.includes('high demand');
-      if (is503 && attempt < retries) {
-        console.warn(`[Gemini] 503 on attempt ${attempt}/${retries}, retrying in ${delayMs}ms...`);
+      const isRetriable =
+        err?.status === 429 ||
+        err?.status >= 500 ||
+        err?.message?.includes('timeout') ||
+        err?.code === 'ECONNRESET' ||
+        err?.cause?.code === 'ECONNRESET' ||
+        err?.cause?.cause?.code === 'ECONNRESET' ||
+        err?.message?.includes('terminated');
+      if (isRetriable && attempt < retries) {
+        console.warn(`[NVIDIA] Error ${err?.status || err?.code || err?.message} on attempt ${attempt}/${retries}, retrying in ${delayMs}ms...`);
         await new Promise(res => setTimeout(res, delayMs * attempt));
         continue;
       }
@@ -41,229 +45,40 @@ async function withRetry(fn, retries = 3, delayMs = 5000) {
   }
 }
 
-async function callGemini(schema, prompt, timeoutMs = TIMEOUT_MS) {
+async function callOpenAI(prompt, timeoutMs = TIMEOUT_MS) {
   return withRetry(async () => {
-    const genAI = getGenAI();
-    const model = genAI.getGenerativeModel({
-      model: MODEL,
-      generationConfig: {
-        temperature: 0,
-        responseMimeType: 'application/json',
-        responseSchema: schema,
-        thinkingConfig: { thinkingBudget: 0 },
-      },
+    const openai = getOpenAI();
+
+    const result = await new Promise(async (resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('NVIDIA optimizer timeout')), timeoutMs);
+      try {
+        const stream = await openai.chat.completions.create({
+          model: MODEL,
+          temperature: 0,
+          messages: [{ role: 'user', content: prompt }],
+          response_format: { type: 'json_object' },
+          stream: true,
+        });
+        let accumulated = '';
+        for await (const chunk of stream) {
+          const text = chunk.choices[0]?.delta?.content || '';
+          if (text) accumulated += text;
+        }
+        clearTimeout(timer);
+        if (!accumulated) reject(new Error('NVIDIA returned empty response'));
+        else resolve(accumulated);
+      } catch (err) {
+        clearTimeout(timer);
+        reject(err);
+      }
     });
-    const result = await withTimeout(model.generateContent(prompt), timeoutMs);
-    const content = result.response.text();
-    if (!content) throw new Error('Gemini returned empty response');
-    return JSON.parse(content);
+
+    return JSON.parse(result);
   });
 }
 
-// ── Schemas ───────────────────────────────────────────────────────────────────
-
-const WEAK_BULLETS_SCHEMA = {
-  type: 'object',
-  properties: {
-    weak_bullets: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          id:               { type: 'string' },
-          original:         { type: 'string' },
-          section:          { type: 'string' },
-          weakness_reason:  { type: 'string' },
-          questions: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                id:          { type: 'string' },
-                question:    { type: 'string' },
-                placeholder: { type: 'string' },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-};
-
-const REWRITE_BULLET_SCHEMA = {
-  type: 'object',
-  properties: {
-    rewritten:   { type: 'string' },
-    explanation: { type: 'string' },
-  },
-};
-
-const KEYWORDS_SCHEMA = {
-  type: 'object',
-  properties: {
-    ats_score_before:  { type: 'number' },
-    matched_keywords:  { type: 'array', items: { type: 'string' } },
-    missing_keywords: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          keyword:         { type: 'string' },
-          importance:      { type: 'string' },
-          target_bullet:   { type: 'string' },
-          rewritten_bullet: { type: 'string' },
-          reason:          { type: 'string' },
-        },
-      },
-    },
-  },
-};
-
-const SKILLS_GAP_SCHEMA = {
-  type: 'object',
-  properties: {
-    skills_you_have: { type: 'array', items: { type: 'string' } },
-    buried_skills: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          skill:      { type: 'string' },
-          found_in:   { type: 'string' },
-          suggestion: { type: 'string' },
-        },
-      },
-    },
-    missing_skills: { type: 'array', items: { type: 'string' } },
-  },
-};
-
-const SUMMARY_SCHEMA = {
-  type: 'object',
-  properties: {
-    rewritten_summary: { type: 'string' },
-    formula_used:      { type: 'string' },
-  },
-};
-
-const REPORT_SCHEMA = {
-  type: 'object',
-  properties: {
-    ats_score_after: { type: 'number' },
-    changes: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          section:  { type: 'string' },
-          original: { type: 'string' },
-          improved: { type: 'string' },
-          tool:     { type: 'string' },
-          reason:   { type: 'string' },
-        },
-      },
-    },
-  },
-};
-
-// Pre-analysis schema for new optimizer flow
-const PRE_ANALYSIS_SCHEMA = {
-  type: 'object',
-  properties: {
-    ats_score_before: { type: 'number' },
-    current_keywords: {
-      type: 'array',
-      items: { type: 'string' },
-    },
-    weak_sections: {
-      type: 'array',
-      items: { type: 'string' },
-    },
-  },
-};
-
-// Optimization schema for new optimizer flow
-const SIMPLE_OPTIMIZE_SCHEMA = {
-  type: 'object',
-  properties: {
-    optimized_resume: {
-      type: 'object',
-      properties: {
-        name: { type: 'string' },
-        contact: {
-          type: 'object',
-          properties: {
-            email:    { type: 'string' },
-            phone:    { type: 'string' },
-            linkedin: { type: 'string' },
-            location: { type: 'string' },
-          },
-        },
-        summary: { type: 'string' },
-        experience: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              company: { type: 'string' },
-              title:   { type: 'string' },
-              dates:   { type: 'string' },
-              bullets: {
-                type: 'array',
-                items: { type: 'string' },
-              },
-            },
-          },
-        },
-        education: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              institution: { type: 'string' },
-              degree:      { type: 'string' },
-              dates:       { type: 'string' },
-            },
-          },
-        },
-        skills: {
-          type: 'array',
-          items: { type: 'string' },
-        },
-      },
-    },
-    changelog: {
-      type: 'object',
-      properties: {
-        ats_score_after: { type: 'number' },
-        keywords_added: {
-          type: 'array',
-          items: { type: 'string' },
-        },
-        keywords_missing: {
-          type: 'array',
-          items: { type: 'string' },
-        },
-        sections_modified: {
-          type: 'array',
-          items: { type: 'string' },
-        },
-        top_changes: {
-          type: 'array',
-          items: { type: 'string' },
-        },
-      },
-    },
-  },
-};
-
 // ── Public functions ──────────────────────────────────────────────────────────
 
-/**
- * Find 3–5 bullets that describe responsibilities not achievements.
- * For each, generate 2–3 targeted questions to extract metrics/outcomes.
- */
 export async function analyzeWeakBullets(resumeText, jobDescription) {
   const prompt = `You are a senior resume coach. Analyze this resume and job description.
 
@@ -281,12 +96,9 @@ ${resumeText}
 JOB DESCRIPTION:
 ${jobDescription}`;
 
-  return callGemini(WEAK_BULLETS_SCHEMA, prompt);
+  return callOpenAI(prompt);
 }
 
-/**
- * Using the candidate's answers, rewrite a single bullet as an achievement.
- */
 export async function rewriteBullet(original, answers, jobDescription) {
   const answersText = Object.entries(answers)
     .map(([q, a]) => `Q: ${q}\nA: ${a}`)
@@ -307,12 +119,9 @@ ${answersText}
 JOB DESCRIPTION KEYWORDS (incorporate naturally):
 ${jobDescription.slice(0, 800)}`;
 
-  return callGemini(REWRITE_BULLET_SCHEMA, prompt);
+  return callOpenAI(prompt);
 }
 
-/**
- * Analyze ATS keyword gap between resume and job description.
- */
 export async function analyzeKeywords(resumeText, jobDescription) {
   const prompt = `You are an ATS (Applicant Tracking System) expert. Analyze the resume against the job description.
 
@@ -333,12 +142,9 @@ ${resumeText}
 JOB DESCRIPTION:
 ${jobDescription}`;
 
-  return callGemini(KEYWORDS_SCHEMA, prompt);
+  return callOpenAI(prompt);
 }
 
-/**
- * Analyze skills gap between resume and job description.
- */
 export async function analyzeSkillsGap(resumeText, jobDescription) {
   const prompt = `You are a technical recruiter. Analyze the skills in this resume against the job description.
 
@@ -359,12 +165,9 @@ ${resumeText}
 JOB DESCRIPTION:
 ${jobDescription}`;
 
-  return callGemini(SKILLS_GAP_SCHEMA, prompt);
+  return callOpenAI(prompt);
 }
 
-/**
- * Rewrite the candidate's professional summary for the target role.
- */
 export async function rewriteSummary(resumeText, jobDescription) {
   const prompt = `You are a professional resume writer. Rewrite this candidate's professional summary
 to be highly targeted for the job description below.
@@ -385,12 +188,9 @@ ${resumeText}
 JOB DESCRIPTION:
 ${jobDescription}`;
 
-  return callGemini(SUMMARY_SCHEMA, prompt);
+  return callOpenAI(prompt);
 }
 
-/**
- * Generate a before/after report with ATS score improvement.
- */
 export async function generateReport(originalResume, currentResume, jobDescription, toolChanges) {
   const changesText = Array.isArray(toolChanges) && toolChanges.length > 0
     ? toolChanges.map(c => `[${c.tool}] ${c.section}: "${c.original}" → "${c.improved}"`).join('\n')
@@ -418,25 +218,20 @@ ${jobDescription}
 CHANGES MADE:
 ${changesText}`;
 
-  return callGemini(REPORT_SCHEMA, prompt);
+  return callOpenAI(prompt);
 }
 
-/**
- * New pre-analysis call for the simplified optimizer flow.
- * JD is optional; when missing, optimize for general ATS best practices.
- */
 export async function analyzeResumeForATS(resumeText, jobDescription) {
   const jd = jobDescription && jobDescription.trim()
     ? jobDescription
     : "No job description provided. Analyze for general ATS best practices for the candidate's field.";
 
-  const prompt = `You are an ATS (Applicant Tracking System) expert.
+  const prompt = `You are an ATS (Applicant Tracking System) expert. Analyze this resume.
 
-Analyze this resume for ATS compatibility against the job description (or general best practices if none).
-Return ONLY valid JSON with:
-- ats_score_before: integer 0-100
-- current_keywords: array of unique, important ATS keywords you detect in the resume
-- weak_sections: array of section names that need the most improvement (e.g., "summary", "experience", "skills").
+Return JSON with exactly these fields:
+- ats_score_before: integer 0-100 reflecting current ATS compatibility
+- current_keywords: array of up to 20 ATS keywords already present in the resume (short strings like "Python", "REST API", "Docker")
+- weak_sections: array of 3 to 5 SECTION NAMES that need improvement, chosen from: "Summary", "Experience bullets", "Skills", "Education", "Projects", "Certifications", "Contact". Do NOT list keywords here — only section names.
 
 RESUME:
 ${resumeText}
@@ -444,7 +239,7 @@ ${resumeText}
 JOB DESCRIPTION OR CONTEXT:
 ${jd}`;
 
-  return callGemini(PRE_ANALYSIS_SCHEMA, prompt);
+  return callOpenAI(prompt);
 }
 
 export async function analyzeResumeForATSStream(resumeText, jobDescription, onChunk) {
@@ -452,13 +247,12 @@ export async function analyzeResumeForATSStream(resumeText, jobDescription, onCh
     ? jobDescription
     : "No job description provided. Analyze for general ATS best practices for the candidate's field.";
 
-  const prompt = `You are an ATS (Applicant Tracking System) expert.
+  const prompt = `You are an ATS (Applicant Tracking System) expert. Analyze this resume.
 
-Analyze this resume for ATS compatibility against the job description (or general best practices if none).
-Return ONLY valid JSON with:
-- ats_score_before: integer 0-100
-- current_keywords: array of unique, important ATS keywords you detect in the resume
-- weak_sections: array of section names that need the most improvement (e.g., "summary", "experience", "skills").
+Return JSON with exactly these fields:
+- ats_score_before: integer 0-100 reflecting current ATS compatibility
+- current_keywords: array of up to 20 ATS keywords already present in the resume (short strings like "Python", "REST API", "Docker")
+- weak_sections: array of 3 to 5 SECTION NAMES that need improvement, chosen from: "Summary", "Experience bullets", "Skills", "Education", "Projects", "Certifications", "Contact". Do NOT list keywords here — only section names.
 
 RESUME:
 ${resumeText}
@@ -467,35 +261,37 @@ JOB DESCRIPTION OR CONTEXT:
 ${jd}`;
 
   return withRetry(async () => {
-    const genAI = getGenAI();
-    const model = genAI.getGenerativeModel({
-      model: MODEL,
-      generationConfig: {
-        temperature: 0,
-        responseMimeType: 'application/json',
-        responseSchema: PRE_ANALYSIS_SCHEMA,
-        thinkingConfig: { thinkingBudget: 0 },
-      },
-    });
+    const openai = getOpenAI();
 
-    const streamResult = await withTimeout(model.generateContentStream(prompt), 120_000);
-    let accumulated = '';
-    for await (const chunk of streamResult.stream) {
-      const text = chunk.text();
-      if (text) {
-        accumulated += text;
-        onChunk(text);
+    return new Promise(async (resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('NVIDIA optimizer timeout')), 120_000);
+      try {
+        const stream = await openai.chat.completions.create({
+          model: MODEL,
+          temperature: 0,
+          messages: [{ role: 'user', content: prompt }],
+          response_format: { type: 'json_object' },
+          stream: true,
+        });
+        let accumulated = '';
+        for await (const chunk of stream) {
+          const text = chunk.choices[0]?.delta?.content || '';
+          if (text) {
+            accumulated += text;
+            onChunk(text);
+          }
+        }
+        clearTimeout(timer);
+        if (!accumulated) reject(new Error('NVIDIA returned empty response'));
+        else resolve(JSON.parse(accumulated));
+      } catch (err) {
+        clearTimeout(timer);
+        reject(err);
       }
-    }
-    if (!accumulated) throw new Error('Gemini returned empty response');
-    return JSON.parse(accumulated);
+    });
   });
 }
 
-/**
- * New single-call optimizer for the simplified optimizer flow.
- * Follows the "MASTER PROMPT FOR CALL 2" specification.
- */
 export async function optimizeResumeSimple(resumeText, jobDescription) {
   const hasJD = !!(jobDescription && jobDescription.trim());
   const jd = hasJD
@@ -512,37 +308,26 @@ Rules:
 - Skills: extracted from the job description or inferred from experience — no fabrication
 - Projects: preserve all projects from the resume; rewrite bullets as achievements; keep original name, description, link, github, and tech stack intact
 
-Return ONLY valid JSON exactly matching this schema:
+Return ONLY a raw JSON object (no markdown, no code blocks) with EXACTLY this structure:
 {
   "optimized_resume": {
-    "name": "",
-    "contact": { "email": "", "phone": "", "linkedin": "", "location": "" },
-    "summary": "",
-    "experience": [
-      { "company": "", "title": "", "dates": "", "bullets": [] }
-    ],
-    "education": [
-      { "institution": "", "degree": "", "dates": "" }
-    ],
-    "skills": [],
-    "projects": [
-      { "name": "", "description": "", "bullets": [], "link": "", "github": "", "tech": [] }
-    ]
+    "name": "string",
+    "contact": { "email": "string", "phone": "string", "linkedin": "string", "location": "string" },
+    "summary": "string",
+    "experience": [{ "company": "string", "title": "string", "dates": "string", "bullets": ["string"] }],
+    "education": [{ "institution": "string", "degree": "string", "dates": "string" }],
+    "skills": ["string"],
+    "projects": [{ "name": "string", "description": "string", "bullets": ["string"], "link": "string", "github": "string", "tech": ["string"] }]
   },
   "changelog": {
-    "ats_score_after": 0-100,
-    "keywords_added": [],
-    "keywords_missing": [],
-    "sections_modified": [],
-    "top_changes": [],
-    "bullet_changes": [
-      { "section": "Company name or section label", "original": "original bullet text", "improved": "rewritten bullet text" }
-    ]
+    "ats_score_after": 0,
+    "keywords_added": ["string"],
+    "keywords_missing": ["string"],
+    "sections_modified": ["string"],
+    "top_changes": ["string"],
+    "bullet_changes": [{ "section": "string", "original": "string", "improved": "string" }]
   }
 }
-
-- bullet_changes: include one entry per bullet that was meaningfully rewritten (max 10). "section" is the company name or section it belongs to.
-Do not include any markdown or explanation text.
 
 RESUME:
 ${resumeText}
@@ -550,150 +335,44 @@ ${resumeText}
 JOB DESCRIPTION (may be empty):
 ${jd}`;
 
-  // Use JSON mode without responseSchema — schema enforcement causes slow response for large outputs
-  return withRetry(async () => {
-    const genAI = getGenAI();
-    const model = genAI.getGenerativeModel({
-      model: MODEL,
-      generationConfig: {
-        temperature: 0,
-        responseMimeType: 'application/json',
-      },
-    });
-    const result = await withTimeout(model.generateContent(prompt), 180_000);
-    const content = result.response.text();
-    if (!content) throw new Error('Gemini returned empty response');
-    return JSON.parse(content);
-  }, 3, 8000);
+  return callOpenAI(prompt, 180_000);
 }
 
-// ── PDF extraction via Gemini Vision (uses OPTI_API_KEY) ──────────────────────
-
-const PDF_RESUME_SCHEMA = {
-  type: 'object',
-  properties: {
-    basics: {
-      type: 'object',
-      properties: {
-        name:     { type: 'string' },
-        title:    { type: 'string' },
-        email:    { type: 'string' },
-        phone:    { type: 'string' },
-        location: { type: 'string' },
-        summary:  { type: 'string' },
-        links:    { type: 'array', items: { type: 'string' } },
-      },
-    },
-    experience: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          company:  { type: 'string' },
-          role:     { type: 'string' },
-          location: { type: 'string' },
-          dates:    { type: 'string' },
-          bullets:  { type: 'array', items: { type: 'string' } },
-          tech:     { type: 'array', items: { type: 'string' } },
-        },
-      },
-    },
-    education: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          school:   { type: 'string' },
-          degree:   { type: 'string' },
-          location: { type: 'string' },
-          dates:    { type: 'string' },
-          details:  { type: 'array', items: { type: 'string' } },
-        },
-      },
-    },
-    projects: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          name:        { type: 'string' },
-          description: { type: 'string' },
-          bullets:     { type: 'array', items: { type: 'string' } },
-          tech:        { type: 'array', items: { type: 'string' } },
-          link:        { type: 'string' },
-          github:      { type: 'string' },
-        },
-      },
-    },
-    skills: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          name:  { type: 'string' },
-          items: { type: 'array', items: { type: 'string' } },
-        },
-      },
-    },
-    certifications: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          name:   { type: 'string' },
-          issuer: { type: 'string' },
-          date:   { type: 'string' },
-        },
-      },
-    },
-    achievements: { type: 'array', items: { type: 'string' } },
-  },
-};
-
-/**
- * Extract structured resume data from a PDF using Gemini Vision (OPTI_API_KEY).
- * Returns { resumeJson, resumeText } where resumeText is a plain-text serialization
- * suitable for passing to the AI optimizer tools.
- */
 export async function extractResumeFromPDF(filePath) {
   const pdfBuffer = fs.readFileSync(filePath);
-  const base64Data = pdfBuffer.toString('base64');
+  
+  console.log(`[OptimizerExtract] Sending PDF (${Math.round(pdfBuffer.length / 1024)}KB) to pdf-parse...`);
+  const pdfData = await pdfParse(pdfBuffer);
+  const pdfText = pdfData.text;
 
-  const genAI = getGenAI();
-  const model = genAI.getGenerativeModel({
-    model: MODEL,
-    generationConfig: {
-      temperature: 0,
-      responseMimeType: 'application/json',
-      responseSchema: PDF_RESUME_SCHEMA,
-    },
-  });
-
-  const prompt = `You are a resume parser. Extract ALL structured data from this resume PDF.
+  const prompt = `You are a resume parser. Extract ALL structured data from this resume text.
 Extract basics (name, title, email, phone, location, summary, links), experience, education,
 projects, skills, certifications, and achievements. Do NOT invent data — only extract what is visible.
-For dates always include both start and end. For experience extract all bullet points exactly as written.`;
+For dates always include both start and end. For experience extract all bullet points exactly as written.
 
-  console.log(`[OptimizerExtract] Sending PDF (${Math.round(pdfBuffer.length / 1024)}KB) to Gemini Vision...`);
+RESUME TEXT:
+${pdfText}`;
 
-  const result = await withTimeout(
-    model.generateContent([
-      { inlineData: { mimeType: 'application/pdf', data: base64Data } },
-      { text: prompt },
-    ]),
-    120_000
-  );
+  return withRetry(async () => {
+    const openai = getOpenAI();
+    const result = await withTimeout(
+      openai.chat.completions.create({
+        model: MODEL,
+        temperature: 0,
+        messages: [{ role: 'user', content: prompt }],
+        response_format: { type: 'json_object' }
+      }),
+      120_000
+    );
 
-  const content = result.response.text();
-  if (!content) throw new Error('Gemini Vision returned empty response');
+    const content = result.choices[0]?.message?.content;
+    if (!content) throw new Error('NVIDIA returned empty response');
+    const resumeJson = JSON.parse(content);
+    console.log('[OptimizerExtract] NVIDIA extraction complete');
 
-  const resumeJson = JSON.parse(content);
-  console.log('[OptimizerExtract] Gemini Vision extraction complete');
-
-  // Serialize to plain text for AI tools
-  const resumeText = serializeResumeJsonToText(resumeJson);
-
-  return { resumeJson, resumeText };
+    const resumeTextSerialized = serializeResumeJsonToText(resumeJson);
+    return { resumeJson, resumeText: resumeTextSerialized };
+  });
 }
 
 function serializeResumeJsonToText(r) {
@@ -704,10 +383,10 @@ function serializeResumeJsonToText(r) {
   if (b.email)    lines.push(b.email);
   if (b.phone)    lines.push(b.phone);
   if (b.location) lines.push(b.location);
-  if (b.summary)  lines.push(`\nSummary\n${b.summary}`);
+  if (b.summary)  lines.push(`\\nSummary\\n${b.summary}`);
 
   if (r.experience?.length) {
-    lines.push('\nExperience');
+    lines.push('\\nExperience');
     r.experience.forEach(exp => {
       lines.push(`${exp.role || ''} at ${exp.company || ''} (${exp.dates || ''})`);
       if (exp.location) lines.push(exp.location);
@@ -715,18 +394,18 @@ function serializeResumeJsonToText(r) {
     });
   }
   if (r.education?.length) {
-    lines.push('\nEducation');
+    lines.push('\\nEducation');
     r.education.forEach(edu => {
       lines.push(`${edu.degree || ''} — ${edu.school || ''} (${edu.dates || ''})`);
       (edu.details || []).forEach(d => lines.push(d));
     });
   }
   if (r.skills?.length) {
-    lines.push('\nSkills');
+    lines.push('\\nSkills');
     r.skills.forEach(cat => lines.push(`${cat.name}: ${(cat.items || []).join(', ')}`));
   }
   if (r.projects?.length) {
-    lines.push('\nProjects');
+    lines.push('\\nProjects');
     r.projects.forEach(p => {
       lines.push(`${p.name || ''}: ${p.description || ''}`);
       (p.bullets || []).forEach(b => lines.push(`- ${b}`));
@@ -734,12 +413,12 @@ function serializeResumeJsonToText(r) {
     });
   }
   if (r.certifications?.length) {
-    lines.push('\nCertifications');
+    lines.push('\\nCertifications');
     r.certifications.forEach(c => lines.push(`${c.name} — ${c.issuer || ''} (${c.date || ''})`));
   }
   if (r.achievements?.length) {
-    lines.push('\nAchievements');
+    lines.push('\\nAchievements');
     r.achievements.forEach(a => lines.push(`- ${a}`));
   }
-  return lines.join('\n');
+  return lines.join('\\n');
 }

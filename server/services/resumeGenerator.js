@@ -1,270 +1,172 @@
-import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-let cachedClient = null;
-let cachedConfig = null;
+const TIMEOUT_MS = 120_000;
 
-const getClientConfig = () => {
-  const apiKey = (process.env.DEEPSEEK_API_KEY || '').trim();
-  const baseURL = (process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com').trim();
-  const model = (process.env.DEEPSEEK_MODEL || 'deepseek-chat').trim();
-  return { apiKey, baseURL, model };
-};
+function getGenAI() {
+  const apiKey = process.env.CREATE_API_KEY;
+  if (!apiKey) throw new Error('CREATE_API_KEY is not configured');
+  return new GoogleGenerativeAI(apiKey);
+}
 
-const getDeepseekClient = () => {
-  const config = getClientConfig();
-  if (!config.apiKey) {
-    return { client: null, config, error: new Error('DEEPSEEK_API_KEY is required') };
+function getModel() {
+  return process.env.CREATE_MODEL || 'gemini-2.5-flash';
+}
+
+async function withRetry(fn, retries = 3, delayMs = 4000) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      const isRetriable =
+        err?.status === 429 ||
+        err?.status >= 500 ||
+        err?.message?.includes('timeout') ||
+        err?.message?.includes('ECONNRESET') ||
+        err?.message?.includes('terminated');
+      if (isRetriable && attempt < retries) {
+        console.warn(`[CREATE] Attempt ${attempt}/${retries} failed (${err?.status || err?.message}), retrying in ${delayMs * attempt}ms...`);
+        await new Promise(res => setTimeout(res, delayMs * attempt));
+        continue;
+      }
+      throw err;
+    }
   }
+}
 
-  const needsRefresh = !cachedClient
-    || !cachedConfig
-    || cachedConfig.apiKey !== config.apiKey
-    || cachedConfig.baseURL !== config.baseURL;
-
-  if (needsRefresh) {
-    cachedClient = new OpenAI({
-      apiKey: config.apiKey,
-      baseURL: config.baseURL
+async function callGemini(prompt) {
+  return withRetry(async () => {
+    const genAI = getGenAI();
+    const model = genAI.getGenerativeModel({
+      model: getModel(),
+      generationConfig: { responseMimeType: 'application/json' },
     });
-    cachedConfig = { apiKey: config.apiKey, baseURL: config.baseURL };
-  }
 
-  return { client: cachedClient, config, error: null };
-};
+    return new Promise(async (resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('CREATE timeout')), TIMEOUT_MS);
+      try {
+        const result = await model.generateContent(prompt);
+        clearTimeout(timer);
+        const text = result.response.text();
+        if (!text) reject(new Error('Gemini returned empty response'));
+        else resolve(text);
+      } catch (err) {
+        clearTimeout(timer);
+        reject(err);
+      }
+    });
+  });
+}
 
 const normalizeString = (value) => (typeof value === 'string' ? value.trim() : '');
 
 const buildResumePrompt = (jobDescription, templateId, userData) => {
   const hasUserData = userData && userData.personalDetails;
 
-  const userSummary = hasUserData ? `
+  const userSection = hasUserData ? `
 USER'S CURRENT INFORMATION:
-Personal Details:
-- Name: ${normalizeString(userData.personalDetails.fullName)}
-- Email: ${normalizeString(userData.personalDetails.email)}
-- Phone: ${normalizeString(userData.personalDetails.phone)}
-- Location: ${normalizeString(userData.personalDetails.location)}
-- LinkedIn: ${normalizeString(userData.personalDetails.linkedin)}
-- Website: ${normalizeString(userData.personalDetails.website)}
-- Current Summary: ${normalizeString(userData.personalDetails.summary)}
+Name: ${normalizeString(userData.personalDetails.fullName)}
+Email: ${normalizeString(userData.personalDetails.email)}
+Phone: ${normalizeString(userData.personalDetails.phone)}
+Location: ${normalizeString(userData.personalDetails.location)}
+LinkedIn: ${normalizeString(userData.personalDetails.linkedin)}
+Website: ${normalizeString(userData.personalDetails.website)}
+Summary: ${normalizeString(userData.personalDetails.summary)}
 
 Work Experience:
-${(userData.experiences || []).map((exp, i) => `
-${i + 1}. ${normalizeString(exp.jobTitle)} at ${normalizeString(exp.company)} (${normalizeString(exp.startDate)} - ${exp.current ? 'Present' : normalizeString(exp.endDate)})
+${(userData.experiences || []).map((exp, i) => `${i + 1}. ${normalizeString(exp.jobTitle)} at ${normalizeString(exp.company)} (${normalizeString(exp.startDate)} - ${exp.current ? 'Present' : normalizeString(exp.endDate)})
    Location: ${normalizeString(exp.location)}
-   Description: ${normalizeString(exp.description)}
-`).join('')}
+   Description: ${normalizeString(exp.description)}`).join('\n')}
 
 Education:
-${(userData.education || []).map((edu, i) => `
-${i + 1}. ${normalizeString(edu.degree)} from ${normalizeString(edu.school)} (${normalizeString(edu.graduationDate)})
-   Location: ${normalizeString(edu.location)}
-   GPA: ${normalizeString(edu.gpa) || 'Not provided'}
-`).join('')}
+${(userData.education || []).map((edu, i) => `${i + 1}. ${normalizeString(edu.degree)} from ${normalizeString(edu.school)} (${normalizeString(edu.graduationDate)})`).join('\n')}
 
 Skills: ${normalizeString(userData.skills)}
 
-CUSTOMIZATION INSTRUCTIONS:
-1. ANALYZE the job description to identify:
-   - Required technical skills and tools
-   - Preferred soft skills and qualities
-   - Key responsibilities and requirements
-   - Industry keywords and terminology
-   - Company culture and values
-
-2. TRANSFORM the user's content by:
-   - Rewriting their professional summary to mirror the job requirements
-   - Enhancing their work experience descriptions to highlight relevant achievements
-   - Reorganizing and expanding their skills to match job requirements
-   - Adding industry-specific keywords naturally throughout
-   - Quantifying achievements with realistic numbers where missing
-   - Using action verbs that match the job posting tone
-
-3. PRIORITIZE content that matches the job description while keeping all factual information accurate.
+INSTRUCTIONS: Rewrite the user's content to match the job description. Enhance bullets with quantified achievements, embed JD keywords naturally, and rewrite the summary to mirror the role.
 ` : `
-RESUME CREATION INSTRUCTIONS:
-Since no user data is provided, create a professional resume template that perfectly matches the job requirements:
-
-1. ANALYZE the job description to identify:
-   - Required technical skills and tools
-   - Preferred soft skills and qualities
-   - Key responsibilities and requirements
-   - Industry keywords and terminology
-   - Experience level and qualifications needed
-
-2. CREATE compelling resume content that includes:
-   - A professional summary that mirrors the job requirements
-   - Relevant work experience that demonstrates the required skills
-   - Education background appropriate for the role
-   - Technical and soft skills that match the job posting
-   - Projects and achievements that align with job responsibilities
-
-3. ENSURE the resume is:
-   - ATS-optimized with relevant keywords
-   - Professionally written with strong action verbs
-   - Quantified with realistic metrics and achievements
-   - Tailored specifically to this job opportunity
+INSTRUCTIONS: No user data provided. Create a professional resume perfectly tailored to the job description with realistic fictional details.
 `;
 
-  return `
-You are an expert resume writer who specializes in creating professional resumes that match specific job requirements. Analyze the job description below and create a compelling, ATS-optimized resume.
+  return `You are an expert ATS resume writer. Analyze the job description and produce a resume optimized for it.
 
 TARGET JOB DESCRIPTION:
 ${jobDescription}
 
-${userSummary}
-
 Template Style: ${templateId}
+${userSection}
 
-Please provide the resume data in the following JSON format:
+Rules:
+- Rewrite every bullet as: [Action Verb] + [Task] + [Quantified Result]
+- Embed the top keywords from the job description naturally
+- Summary: 2-3 sentences, third person, mirroring the JD
+- Do not fabricate companies, schools, or dates if user data is provided
+- Keep all factual information accurate
+
+Return a JSON object with EXACTLY this structure:
 {
   "personalInfo": {
-    "name": "Professional Name",
-    "email": "email@example.com",
-    "phone": "(555) 123-4567",
-    "location": "City, State",
-    "linkedIn": "linkedin.com/in/profile",
-    "portfolio": "portfolio-url.com"
+    "name": "string",
+    "email": "string",
+    "phone": "string",
+    "location": "string",
+    "linkedIn": "string",
+    "portfolio": "string"
   },
-  "summary": "Compelling 2-3 sentence professional summary that highlights relevant experience and matches the job requirements",
+  "summary": "string",
   "experience": [
     {
-      "company": "Company Name",
-      "position": "Job Title",
-      "duration": "MM/YYYY - MM/YYYY",
-      "description": [
-        "- Achievement-focused bullet point with quantified results",
-        "- Another accomplishment that demonstrates relevant skills",
-        "- Third bullet showing impact and value delivered"
-      ]
+      "company": "string",
+      "position": "string",
+      "duration": "string",
+      "description": ["string"]
     }
   ],
   "education": [
     {
-      "institution": "University Name",
-      "degree": "Bachelor of Science in Computer Science",
-      "graduation": "YYYY",
-      "gpa": "3.8"
+      "institution": "string",
+      "degree": "string",
+      "graduation": "string",
+      "gpa": "string"
     }
   ],
   "skills": {
-    "technical": ["Skills that directly match the job requirements", "Tools mentioned in job posting", "Technologies from job description"],
-    "soft": ["Soft skills specifically mentioned in job posting", "Leadership qualities requested", "Communication skills emphasized"]
+    "technical": ["string"],
+    "soft": ["string"]
   },
   "projects": [
     {
-      "name": "Project Name",
-      "description": "Brief description of the project and its impact",
-      "technologies": ["Tech1", "Tech2", "Tech3"]
+      "name": "string",
+      "description": "string",
+      "technologies": ["string"]
     }
   ],
-  "certifications": ["Certification 1", "Certification 2"]
-}
-
-CRITICAL REQUIREMENTS:
-1. Skills Section Transformation:
-   - Extract exact technical skills, tools, and software mentioned in the job description
-   - Include programming languages, frameworks, and technologies from the job posting
-   - Add relevant certifications or qualifications mentioned in requirements
-   - Prioritize skills that appear multiple times in the job description
-
-2. Experience Description Enhancement:
-   - Rewrite job descriptions to emphasize achievements that match job requirements
-   - Include industry-specific terminology from the job posting
-   - Add quantified achievements that align with job responsibilities
-   - Use action verbs that mirror the job description language
-
-3. Professional Summary Customization:
-   - Mirror the exact qualifications and experience requirements
-   - Include key phrases and keywords from the job posting
-   - Highlight years of experience that match their requirements
-   - Emphasize personality traits and soft skills they're seeking
-
-4. Keyword Integration:
-   - Naturally incorporate exact keywords and phrases from job description
-   - Include company-specific terminology if mentioned
-   - Add industry buzzwords and technical jargon used in the posting
-   - Ensure ATS optimization with relevant keyword density
-
-5. Content Prioritization:
-   - Lead with information most relevant to the job requirements
-   - Emphasize experiences that align with job responsibilities
-   - Highlight education and projects that match their needs
-   - De-emphasize or reframe less relevant background
-
-STRICT RULES:
-- Keep all factual information (names, companies, schools, dates) accurate
-- Only enhance descriptions, summaries, and skill presentations
-- Do not fabricate experiences, education, or achievements
-- Focus on reframing existing background to match job requirements
-- Make the resume feel like it was written specifically for this job
-`.trim();
+  "certifications": ["string"]
+}`.trim();
 };
 
-const parseResumeResult = (result) => {
-  const jsonMatch = result.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
-    throw new Error('No valid JSON found in AI response');
-  }
-
+const parseResumeResult = (raw) => {
+  const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error('No valid JSON found in AI response');
   const parsed = JSON.parse(jsonMatch[0]);
   if (!parsed.personalInfo || !parsed.summary || !parsed.experience) {
-    throw new Error('Invalid resume structure');
+    throw new Error('Invalid resume structure in AI response');
   }
-
   return parsed;
 };
 
-const extractSkillsFromJobDescription = (jobDescription) => {
-  const skillKeywords = [
-    'JavaScript', 'Python', 'Java', 'TypeScript', 'C++', 'C#', 'PHP', 'Ruby', 'Go', 'Rust', 'Swift', 'Kotlin',
-    'React', 'Vue', 'Angular', 'Node.js', 'Express', 'Next.js', 'HTML', 'CSS', 'Sass', 'Bootstrap', 'Tailwind',
-    'MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'SQLite', 'Oracle', 'SQL', 'NoSQL',
-    'AWS', 'Azure', 'GCP', 'Docker', 'Kubernetes', 'Jenkins', 'CI/CD', 'Git', 'GitHub', 'GitLab',
-    'Linux', 'Unix', 'Agile', 'Scrum', 'REST', 'API', 'GraphQL', 'Microservices', 'TDD', 'Unit Testing'
-  ];
-
-  const extracted = [];
-  const lowerJobDesc = jobDescription.toLowerCase();
-
-  skillKeywords.forEach((skill) => {
-    if (lowerJobDesc.includes(skill.toLowerCase())) {
-      extracted.push(skill);
-    }
-  });
-
-  const skillPatterns = [
-    /\b[A-Z][a-z]*\.js\b/g,
-    /\b[A-Z]{2,}\b/g
-  ];
-
-  skillPatterns.forEach((pattern) => {
-    const matches = jobDescription.match(pattern);
-    if (!matches) return;
-    matches.forEach((match) => {
-      if (!extracted.includes(match) && match.length > 2) {
-        extracted.push(match);
-      }
-    });
-  });
-
-  return [...new Set(extracted)];
-};
-
-const createUserBasedFallback = (jobDescription, userData) => {
-  const jobKeywords = jobDescription ? extractSkillsFromJobDescription(jobDescription) : [];
-
+const createUserBasedFallback = (userData) => {
   if (userData && userData.personalDetails) {
     return {
       personalInfo: {
-        name: normalizeString(userData.personalDetails.fullName) || 'User',
-        email: normalizeString(userData.personalDetails.email) || 'user@email.com',
-        phone: normalizeString(userData.personalDetails.phone) || '(555) 123-4567',
-        location: normalizeString(userData.personalDetails.location) || 'City, State',
-        linkedIn: normalizeString(userData.personalDetails.linkedin) || undefined,
-        portfolio: normalizeString(userData.personalDetails.website) || undefined
+        name: normalizeString(userData.personalDetails.fullName) || '',
+        email: normalizeString(userData.personalDetails.email) || '',
+        phone: normalizeString(userData.personalDetails.phone) || '',
+        location: normalizeString(userData.personalDetails.location) || '',
+        linkedIn: normalizeString(userData.personalDetails.linkedin) || '',
+        portfolio: normalizeString(userData.personalDetails.website) || '',
       },
-      summary: normalizeString(userData.personalDetails.summary) || 'Professional with diverse experience and strong technical skills.',
+      summary: normalizeString(userData.personalDetails.summary) || '',
       experience: (userData.experiences || [])
         .filter((exp) => exp.jobTitle && exp.company)
         .map((exp) => ({
@@ -272,14 +174,11 @@ const createUserBasedFallback = (jobDescription, userData) => {
           position: normalizeString(exp.jobTitle),
           duration: `${normalizeString(exp.startDate)} - ${exp.current ? 'Present' : normalizeString(exp.endDate)}`,
           description: exp.description
-            ? exp.description
-              .split(/\n(?=[-•●○◦▪▸►✓✔→⁃∙·*]\s)/) // Split only at bullet starts
-              .filter((line) => line.trim())
-              .map((line) => {
-                const cleaned = line.trim().replace(/^[-•●○◦▪▸►✓✔→⁃∙·*]\s*/, '');
-                return cleaned.startsWith('-') ? cleaned : `- ${cleaned}`;
+            ? exp.description.split(/\n(?=[-•*]\s)/).filter(Boolean).map((l) => {
+                const c = l.trim().replace(/^[-•*]\s*/, '');
+                return c.startsWith('-') ? c : `- ${c}`;
               })
-            : [`- Responsibilities and achievements at ${normalizeString(exp.company)}`]
+            : [`- Responsibilities at ${normalizeString(exp.company)}`],
         })),
       education: (userData.education || [])
         .filter((edu) => edu.degree && edu.school)
@@ -287,103 +186,53 @@ const createUserBasedFallback = (jobDescription, userData) => {
           institution: normalizeString(edu.school),
           degree: normalizeString(edu.degree),
           graduation: normalizeString(edu.graduationDate),
-          gpa: normalizeString(edu.gpa) || undefined
+          gpa: normalizeString(edu.gpa) || undefined,
         })),
-      skills: {
-        technical: userData.skills
-          ? [...userData.skills.split(',').map((s) => s.trim()).filter(Boolean), ...jobKeywords].slice(0, 12)
-          : jobKeywords.slice(0, 8),
-        soft: ['Communication', 'Leadership', 'Problem Solving', 'Teamwork']
-      },
+      skills: { technical: [], soft: [] },
       projects: [],
-      certifications: []
+      certifications: [],
     };
   }
-
-  const fallbackData = getFallbackResumeData();
-  if (jobKeywords.length > 0) {
-    fallbackData.skills.technical = [...new Set([...fallbackData.skills.technical, ...jobKeywords])].slice(0, 12);
-  }
-
-  return fallbackData;
-};
-
-const getFallbackResumeData = () => ({
-  source: 'fallback',
-  status: 'failed',
-  confidence: 0,
-  data: {
-    personalInfo: {
-      name: '',
-      email: '',
-      phone: '',
-      location: '',
-      linkedIn: '',
-      portfolio: ''
-    },
+  return {
+    personalInfo: { name: '', email: '', phone: '', location: '', linkedIn: '', portfolio: '' },
     summary: '',
     experience: [],
     education: [],
-    skills: {
-      technical: [],
-      soft: []
-    },
+    skills: { technical: [], soft: [] },
     projects: [],
-    certifications: []
-  }
-});
+    certifications: [],
+  };
+};
 
 export const generateResume = async ({ jobDescription, templateId, userData }) => {
   const trimmedDescription = normalizeString(jobDescription);
   const resolvedTemplateId = normalizeString(templateId) || 'default';
   const sanitizedUserData = userData && typeof userData === 'object' ? userData : null;
 
-  if (!trimmedDescription) {
-    throw new Error('Job description is required');
-  }
+  if (!trimmedDescription) throw new Error('Job description is required');
 
-  const { client, config, error } = getDeepseekClient();
-  if (!client) {
-    const fallback = createUserBasedFallback(trimmedDescription, sanitizedUserData);
+  try {
+    getGenAI(); // validate key exists
+  } catch (err) {
+    console.warn('[CREATE] API key missing, using fallback:', err.message);
     return {
-      resume: fallback,
-      meta: { source: 'fallback', reason: error.message }
+      resume: createUserBasedFallback(sanitizedUserData),
+      meta: { source: 'fallback', reason: err.message },
     };
   }
 
   try {
     const prompt = buildResumePrompt(trimmedDescription, resolvedTemplateId, sanitizedUserData);
-    const completion = await client.chat.completions.create({
-      model: config.model,
-      messages: [
-        {
-          role: 'system',
-          content: 'You are an expert resume writer and career consultant. Create compelling, ATS-optimized resumes that perfectly match job requirements while highlighting relevant skills and experience.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 3000
-    });
-
-    const result = completion?.choices?.[0]?.message?.content;
-    if (!result) {
-      throw new Error('No resume data received from AI');
-    }
-
-    const parsed = parseResumeResult(result);
-    return {
-      resume: parsed,
-      meta: { source: 'ai', model: config.model }
-    };
+    console.log(`[CREATE] Calling Gemini ${getModel()} for resume generation...`);
+    const raw = await callGemini(prompt);
+    const parsed = parseResumeResult(raw);
+    console.log(`[CREATE] Resume generation complete`);
+    return { resume: parsed, meta: { source: 'ai', model: getModel() } };
   } catch (err) {
-    const fallback = createUserBasedFallback(trimmedDescription, sanitizedUserData);
+    console.error('[CREATE] Generation failed:', err.message);
     return {
-      resume: fallback,
-      meta: { source: 'fallback', reason: err.message }
+      resume: createUserBasedFallback(sanitizedUserData),
+      meta: { source: 'fallback', reason: err.message },
     };
   }
 };

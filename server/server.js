@@ -53,6 +53,8 @@ import { deleteJobApplication, editJobApplication, getJobApplications, setJobApp
 import { getAllPosts, getPostBySlug, getFeaturedPosts, getCategories, getPopularPosts } from "./controller/blog.controller.js";
 import { savePortfolio, getPortfolio, deletePortfolio } from "./controller/portfolio.controller.js";
 import { isLoggedIn } from './middleware/auth.middleware.js';
+import jobsRouter from './routes/jobs.routes.js';
+import { startJobScheduler } from './services/jobPipeline/scheduler.js';
 
 const app = express();
 const PORT = process.env.PORT || 3007;
@@ -148,6 +150,9 @@ app.get('/api/health', (req, res) => {
 // common controller
 app.get("/api/hr/list/demo", getHrIndianListDemo);
 app.post('/api/contact-us', contactus);
+
+// job board read API (DB-backed, scheduled ingestion)
+app.use('/api', jobsRouter);
 
 // job controller routes
 app.get('/api/job/applications',isLoggedIn, getJobApplications);
@@ -1546,6 +1551,8 @@ app.post('/api/optimize-resume-stream', upload.single('resume'), async (req, res
     try { if (file) fs.unlinkSync(file.path); } catch (_) {}
   };
 
+  const keepAlive = setInterval(() => res.write(': ping\n\n'), 15_000);
+
   try {
     console.log('[/api/optimize-resume-stream] Received file:', file.originalname, 'size:', file.size);
 
@@ -1555,6 +1562,7 @@ app.post('/api/optimize-resume-stream', upload.single('resume'), async (req, res
     cleanup();
 
     if (!resumeText.trim()) {
+      clearInterval(keepAlive);
       send('error', { message: 'Could not extract text from the uploaded file.' });
       return res.end();
     }
@@ -1562,10 +1570,12 @@ app.post('/api/optimize-resume-stream', upload.single('resume'), async (req, res
     send('progress', { message: 'Optimizing resume with AI...' });
     const result = await optimizeResumeSimple(resumeText, jobDescription || '');
 
+    clearInterval(keepAlive);
     send('complete', { data: result });
     res.end();
   } catch (err) {
     console.error('[/api/optimize-resume-stream] Error:', err.message);
+    clearInterval(keepAlive);
     cleanup();
     send('error', { message: err.message || 'Optimization failed' });
     res.end();
@@ -2378,7 +2388,6 @@ app.post('/api/analyze-resume', upload.single('resume'), async (req, res) => {
     return res.status(400).json({ success: false, error: 'Resume file is required' });
   }
 
-  // SSE setup — keeps connection alive while Gemini streams
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
@@ -2392,6 +2401,8 @@ app.post('/api/analyze-resume', upload.single('resume'), async (req, res) => {
     try { if (file) fs.unlinkSync(file.path); } catch (_) {}
   };
 
+  const keepAlive = setInterval(() => res.write(': ping\n\n'), 15_000);
+
   try {
     console.log('[/api/analyze-resume] Received file:', file.originalname, 'size:', file.size);
 
@@ -2400,18 +2411,19 @@ app.post('/api/analyze-resume', upload.single('resume'), async (req, res) => {
     cleanup();
 
     if (!resumeText.trim()) {
+      clearInterval(keepAlive);
       send('error', { message: 'Could not extract text from the uploaded file. Please ensure it contains readable text.' });
       return res.end();
     }
 
-    const analysis = await analyzeResumeForATSStream(resumeText, jobDescription || '', (chunk) => {
-      send('chunk', { text: chunk });
-    });
+    const analysis = await analyzeResumeForATS(resumeText, jobDescription || '');
 
+    clearInterval(keepAlive);
     send('result', { success: true, data: analysis });
     res.end();
   } catch (err) {
     console.error('[/api/analyze-resume] Error:', err);
+    clearInterval(keepAlive);
     cleanup();
     send('error', { message: err.message || 'Failed to analyze resume' });
     res.end();
@@ -2527,11 +2539,17 @@ app.use((req, res) => {
   });
 });
 
+if (process.env.JOB_DISCOVERY_ENABLED === 'true') {
+  startJobScheduler();
+} else {
+  console.log('[JobScheduler] JOB_DISCOVERY_ENABLED is not "true" — scheduler disabled');
+}
+
 const server = app.listen(PORT, () => {
   console.log(`🚀 Resume Optimizer API v2.0 running on port ${PORT}`);
   console.log(`✅ Health check: http://localhost:${PORT}/api/health`);
   console.log(`🎯 NEW: ATS Optimizer: http://localhost:${PORT}/api/ats-optimize`);
-  console.log(`📊 Gemini API Key: ${process.env.GEMINI_API_KEY ? '✓ Configured' : '✗ Missing'}`);
+  console.log(`📊 NVIDIA API Key: ${process.env.NVIDIA_API_KEY ? '✓ Configured' : '✗ Missing'}`);
   console.log(`🎨 Features: ATS Optimization, Page Preservation, Template Generation`);
 });
 

@@ -84,7 +84,8 @@ function normalizeChangelog(raw: any): Changelog {
   };
 }
 
-function mapToResumeJSON(p: OptimizedPayload["optimized_resume"]): ResumeJSON {
+function mapToResumeJSON(p: OptimizedPayload["optimized_resume"] | undefined | null): ResumeJSON {
+  if (!p) throw new Error("Optimizer returned an unexpected response structure. Please try again.");
   const c = p.contact || {};
   const skills = Array.isArray(p.skills) ? p.skills : [];
   return {
