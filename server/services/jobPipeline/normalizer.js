@@ -6,7 +6,7 @@ const TALENTD_FRESHNESS_MS = 48 * 60 * 60 * 1000;
 
 // Sources that serve the India job board — bypass PM/APM classifier,
 // get the strict 48h freshness gate, and have categories[] mapped.
-export const INDIA_SOURCES = new Set(['talentd', 'remoteok-india']);
+export const INDIA_SOURCES = new Set(['talentd', 'remoteok-india', 'linkedin-india']);
 
 function sanitizeDate(val) {
   if (!val) return null;

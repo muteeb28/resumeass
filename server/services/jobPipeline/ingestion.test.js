@@ -24,24 +24,26 @@ const mockTheMuseFetch       = vi.fn();
 const mockGreenhouseFetch    = vi.fn();
 const mockLeverFetch         = vi.fn();
 const mockArcdevFetch        = vi.fn();
-const mockTalentdFetch       = vi.fn();
-const mockRemoteOkIndiaFetch = vi.fn();
+const mockTalentdFetch        = vi.fn();
+const mockRemoteOkIndiaFetch  = vi.fn();
+const mockLinkedInIndiaFetch  = vi.fn();
 
-vi.mock('./sources/remotive.js',        () => ({ fetch: mockRemotiveFetch,      name: 'Remotive',        sourceKey: 'remotive' }));
-vi.mock('./sources/remoteOk.js',        () => ({ fetch: mockRemoteOkFetch,      name: 'RemoteOK',        sourceKey: 'remoteok' }));
-vi.mock('./sources/himalayas.js',       () => ({ fetch: mockHimalayasFetch,     name: 'Himalayas',       sourceKey: 'himalayas' }));
-vi.mock('./sources/workingNomads.js',   () => ({ fetch: mockWorkingNomadsFetch, name: 'Working Nomads',  sourceKey: 'workingnomads' }));
-vi.mock('./sources/jobicy.js',          () => ({ fetch: mockJobicyFetch,        name: 'Jobicy',          sourceKey: 'jobicy' }));
-vi.mock('./sources/weWorkRemotely.js',  () => ({ fetch: mockWeWorkFetch,        name: 'We Work Remotely', sourceKey: 'weworkremotely' }));
-vi.mock('./sources/jobspresso.js',      () => ({ fetch: mockJobspressoFetch,    name: 'Jobspresso',      sourceKey: 'jobspresso' }));
-vi.mock('./sources/authenticjobs.js',   () => ({ fetch: mockAuthenticFetch,     name: 'Authentic Jobs',  sourceKey: 'authenticjobs' }));
-vi.mock('./sources/dynamitejobs.js',    () => ({ fetch: mockDynamiteFetch,      name: 'Dynamite Jobs',   sourceKey: 'dynamitejobs' }));
-vi.mock('./sources/themuse.js',         () => ({ fetch: mockTheMuseFetch,       name: 'The Muse',        sourceKey: 'themuse' }));
-vi.mock('./sources/greenhouse.js',      () => ({ fetch: mockGreenhouseFetch,    name: 'Greenhouse',      sourceKey: 'greenhouse' }));
-vi.mock('./sources/lever.js',           () => ({ fetch: mockLeverFetch,         name: 'Lever',           sourceKey: 'lever' }));
-vi.mock('./sources/arcdev.js',          () => ({ fetch: mockArcdevFetch,        name: 'Arc.dev',         sourceKey: 'arcdev' }));
-vi.mock('./sources/talentd.js',         () => ({ fetch: mockTalentdFetch,       name: 'Talentd',         sourceKey: 'talentd' }));
-vi.mock('./sources/remoteOkIndia.js',   () => ({ fetch: mockRemoteOkIndiaFetch, name: 'RemoteOK',        sourceKey: 'remoteok-india' }));
+vi.mock('./sources/remotive.js',        () => ({ fetch: mockRemotiveFetch,       name: 'Remotive',        sourceKey: 'remotive' }));
+vi.mock('./sources/remoteOk.js',        () => ({ fetch: mockRemoteOkFetch,       name: 'RemoteOK',        sourceKey: 'remoteok' }));
+vi.mock('./sources/himalayas.js',       () => ({ fetch: mockHimalayasFetch,      name: 'Himalayas',       sourceKey: 'himalayas' }));
+vi.mock('./sources/workingNomads.js',   () => ({ fetch: mockWorkingNomadsFetch,  name: 'Working Nomads',  sourceKey: 'workingnomads' }));
+vi.mock('./sources/jobicy.js',          () => ({ fetch: mockJobicyFetch,         name: 'Jobicy',          sourceKey: 'jobicy' }));
+vi.mock('./sources/weWorkRemotely.js',  () => ({ fetch: mockWeWorkFetch,         name: 'We Work Remotely', sourceKey: 'weworkremotely' }));
+vi.mock('./sources/jobspresso.js',      () => ({ fetch: mockJobspressoFetch,     name: 'Jobspresso',      sourceKey: 'jobspresso' }));
+vi.mock('./sources/authenticjobs.js',   () => ({ fetch: mockAuthenticFetch,      name: 'Authentic Jobs',  sourceKey: 'authenticjobs' }));
+vi.mock('./sources/dynamitejobs.js',    () => ({ fetch: mockDynamiteFetch,       name: 'Dynamite Jobs',   sourceKey: 'dynamitejobs' }));
+vi.mock('./sources/themuse.js',         () => ({ fetch: mockTheMuseFetch,        name: 'The Muse',        sourceKey: 'themuse' }));
+vi.mock('./sources/greenhouse.js',      () => ({ fetch: mockGreenhouseFetch,     name: 'Greenhouse',      sourceKey: 'greenhouse' }));
+vi.mock('./sources/lever.js',           () => ({ fetch: mockLeverFetch,          name: 'Lever',           sourceKey: 'lever' }));
+vi.mock('./sources/arcdev.js',          () => ({ fetch: mockArcdevFetch,         name: 'Arc.dev',         sourceKey: 'arcdev' }));
+vi.mock('./sources/talentd.js',         () => ({ fetch: mockTalentdFetch,        name: 'Talentd',         sourceKey: 'talentd' }));
+vi.mock('./sources/remoteOkIndia.js',   () => ({ fetch: mockRemoteOkIndiaFetch,  name: 'RemoteOK India',  sourceKey: 'remoteok-india' }));
+vi.mock('./sources/linkedinIndia.js',   () => ({ fetch: mockLinkedInIndiaFetch,  name: 'LinkedIn India',  sourceKey: 'linkedin-india' }));
 
 function makeRawJob(overrides = {}) {
   return {
@@ -82,12 +84,13 @@ describe('ingestion (multi-source)', () => {
     vi.mock('./sources/arcdev.js',         () => ({ fetch: mockArcdevFetch,         name: 'Arc.dev',         sourceKey: 'arcdev' }));
     vi.mock('./sources/talentd.js',        () => ({ fetch: mockTalentdFetch,        name: 'Talentd',         sourceKey: 'talentd' }));
     vi.mock('./sources/remoteOkIndia.js',  () => ({ fetch: mockRemoteOkIndiaFetch,  name: 'RemoteOK India',  sourceKey: 'remoteok-india' }));
+    vi.mock('./sources/linkedinIndia.js', () => ({ fetch: mockLinkedInIndiaFetch,  name: 'LinkedIn India',  sourceKey: 'linkedin-india' }));
 
     // Default: all sources return empty
     [mockRemotiveFetch, mockRemoteOkFetch, mockHimalayasFetch, mockWorkingNomadsFetch,
      mockJobicyFetch, mockWeWorkFetch, mockJobspressoFetch, mockAuthenticFetch,
      mockDynamiteFetch, mockTheMuseFetch, mockGreenhouseFetch, mockLeverFetch,
-     mockArcdevFetch, mockTalentdFetch, mockRemoteOkIndiaFetch].forEach(m => m.mockResolvedValue([]));
+     mockArcdevFetch, mockTalentdFetch, mockRemoteOkIndiaFetch, mockLinkedInIndiaFetch].forEach(m => m.mockResolvedValue([]));
 
     mockBulkWrite.mockResolvedValue({ upsertedCount: 0, modifiedCount: 0 });
 
@@ -318,11 +321,12 @@ describe('Talentd freshness gate', () => {
     vi.mock('./sources/arcdev.js',         () => ({ fetch: mockArcdevFetch,         name: 'Arc.dev',         sourceKey: 'arcdev' }));
     vi.mock('./sources/talentd.js',        () => ({ fetch: mockTalentdFetch,        name: 'Talentd',         sourceKey: 'talentd' }));
     vi.mock('./sources/remoteOkIndia.js',  () => ({ fetch: mockRemoteOkIndiaFetch,  name: 'RemoteOK India',  sourceKey: 'remoteok-india' }));
+    vi.mock('./sources/linkedinIndia.js', () => ({ fetch: mockLinkedInIndiaFetch,  name: 'LinkedIn India',  sourceKey: 'linkedin-india' }));
 
     [mockRemotiveFetch, mockRemoteOkFetch, mockHimalayasFetch, mockWorkingNomadsFetch,
      mockJobicyFetch, mockWeWorkFetch, mockJobspressoFetch, mockAuthenticFetch,
      mockDynamiteFetch, mockTheMuseFetch, mockGreenhouseFetch, mockLeverFetch,
-     mockArcdevFetch, mockRemoteOkIndiaFetch].forEach(m => m.mockResolvedValue([]));
+     mockArcdevFetch, mockRemoteOkIndiaFetch, mockLinkedInIndiaFetch].forEach(m => m.mockResolvedValue([]));
 
     mockBulkWrite.mockResolvedValue({ upsertedCount: 0, modifiedCount: 0 });
 
@@ -438,11 +442,12 @@ describe('Talentd update-sync', () => {
     vi.mock('./sources/arcdev.js',         () => ({ fetch: mockArcdevFetch,         name: 'Arc.dev',         sourceKey: 'arcdev' }));
     vi.mock('./sources/talentd.js',        () => ({ fetch: mockTalentdFetch,        name: 'Talentd',         sourceKey: 'talentd' }));
     vi.mock('./sources/remoteOkIndia.js',  () => ({ fetch: mockRemoteOkIndiaFetch,  name: 'RemoteOK India',  sourceKey: 'remoteok-india' }));
+    vi.mock('./sources/linkedinIndia.js', () => ({ fetch: mockLinkedInIndiaFetch,  name: 'LinkedIn India',  sourceKey: 'linkedin-india' }));
 
     [mockRemotiveFetch, mockRemoteOkFetch, mockHimalayasFetch, mockWorkingNomadsFetch,
      mockJobicyFetch, mockWeWorkFetch, mockJobspressoFetch, mockAuthenticFetch,
      mockDynamiteFetch, mockTheMuseFetch, mockGreenhouseFetch, mockLeverFetch,
-     mockArcdevFetch, mockRemoteOkIndiaFetch].forEach(m => m.mockResolvedValue([]));
+     mockArcdevFetch, mockRemoteOkIndiaFetch, mockLinkedInIndiaFetch].forEach(m => m.mockResolvedValue([]));
 
     mockBulkWrite.mockResolvedValue({ upsertedCount: 0, modifiedCount: 0 });
 
@@ -556,11 +561,12 @@ describe('Talentd timeout/failure isolation', () => {
     vi.mock('./sources/arcdev.js',         () => ({ fetch: mockArcdevFetch,         name: 'Arc.dev',         sourceKey: 'arcdev' }));
     vi.mock('./sources/talentd.js',        () => ({ fetch: mockTalentdFetch,        name: 'Talentd',         sourceKey: 'talentd' }));
     vi.mock('./sources/remoteOkIndia.js',  () => ({ fetch: mockRemoteOkIndiaFetch,  name: 'RemoteOK India',  sourceKey: 'remoteok-india' }));
+    vi.mock('./sources/linkedinIndia.js', () => ({ fetch: mockLinkedInIndiaFetch,  name: 'LinkedIn India',  sourceKey: 'linkedin-india' }));
 
     [mockRemotiveFetch, mockRemoteOkFetch, mockHimalayasFetch, mockWorkingNomadsFetch,
      mockJobicyFetch, mockWeWorkFetch, mockJobspressoFetch, mockAuthenticFetch,
      mockDynamiteFetch, mockTheMuseFetch, mockGreenhouseFetch, mockLeverFetch,
-     mockArcdevFetch, mockRemoteOkIndiaFetch].forEach(m => m.mockResolvedValue([]));
+     mockArcdevFetch, mockRemoteOkIndiaFetch, mockLinkedInIndiaFetch].forEach(m => m.mockResolvedValue([]));
 
     mockBulkWrite.mockResolvedValue({ upsertedCount: 0, modifiedCount: 0 });
     process.env.JOB_SOURCE_MODE = 'talentd_only';
@@ -650,11 +656,12 @@ describe('Talentd detail fallback', () => {
     vi.mock('./sources/arcdev.js',         () => ({ fetch: mockArcdevFetch,         name: 'Arc.dev',         sourceKey: 'arcdev' }));
     vi.mock('./sources/talentd.js',        () => ({ fetch: mockTalentdFetch,        name: 'Talentd',         sourceKey: 'talentd' }));
     vi.mock('./sources/remoteOkIndia.js',  () => ({ fetch: mockRemoteOkIndiaFetch,  name: 'RemoteOK India',  sourceKey: 'remoteok-india' }));
+    vi.mock('./sources/linkedinIndia.js', () => ({ fetch: mockLinkedInIndiaFetch,  name: 'LinkedIn India',  sourceKey: 'linkedin-india' }));
 
     [mockRemotiveFetch, mockRemoteOkFetch, mockHimalayasFetch, mockWorkingNomadsFetch,
      mockJobicyFetch, mockWeWorkFetch, mockJobspressoFetch, mockAuthenticFetch,
      mockDynamiteFetch, mockTheMuseFetch, mockGreenhouseFetch, mockLeverFetch,
-     mockArcdevFetch, mockRemoteOkIndiaFetch].forEach(m => m.mockResolvedValue([]));
+     mockArcdevFetch, mockRemoteOkIndiaFetch, mockLinkedInIndiaFetch].forEach(m => m.mockResolvedValue([]));
 
     mockBulkWrite.mockResolvedValue({ upsertedCount: 0, modifiedCount: 0 });
     process.env.JOB_SOURCE_MODE = 'talentd_only';
@@ -772,12 +779,13 @@ describe('India mode ingestion', () => {
     vi.mock('./sources/lever.js',          () => ({ fetch: mockLeverFetch,           name: 'Lever',           sourceKey: 'lever' }));
     vi.mock('./sources/arcdev.js',         () => ({ fetch: mockArcdevFetch,          name: 'Arc.dev',         sourceKey: 'arcdev' }));
     vi.mock('./sources/talentd.js',        () => ({ fetch: mockTalentdFetch,         name: 'Talentd',         sourceKey: 'talentd' }));
-    vi.mock('./sources/remoteOkIndia.js',  () => ({ fetch: mockRemoteOkIndiaFetch,   name: 'RemoteOK',        sourceKey: 'remoteok-india' }));
+    vi.mock('./sources/remoteOkIndia.js',  () => ({ fetch: mockRemoteOkIndiaFetch,   name: 'RemoteOK India',  sourceKey: 'remoteok-india' }));
+    vi.mock('./sources/linkedinIndia.js', () => ({ fetch: mockLinkedInIndiaFetch,   name: 'LinkedIn India',  sourceKey: 'linkedin-india' }));
 
     [mockRemotiveFetch, mockRemoteOkFetch, mockHimalayasFetch, mockWorkingNomadsFetch,
      mockJobicyFetch, mockWeWorkFetch, mockJobspressoFetch, mockAuthenticFetch,
      mockDynamiteFetch, mockTheMuseFetch, mockGreenhouseFetch, mockLeverFetch,
-     mockArcdevFetch, mockRemoteOkIndiaFetch].forEach(m => m.mockResolvedValue([]));
+     mockArcdevFetch, mockRemoteOkIndiaFetch, mockLinkedInIndiaFetch].forEach(m => m.mockResolvedValue([]));
 
     mockBulkWrite.mockResolvedValue({ upsertedCount: 0, modifiedCount: 0 });
     process.env.JOB_SOURCE_MODE = 'india';
@@ -790,15 +798,17 @@ describe('India mode ingestion', () => {
     delete process.env.JOB_SOURCE_MODE;
   });
 
-  it('runs talentd and remoteok-india — not other sources', async () => {
+  it('runs talentd, remoteok-india, and linkedin-india — not other sources', async () => {
     mockTalentdFetch.mockResolvedValue([makeTalentdRawJob()]);
     mockRemoteOkIndiaFetch.mockResolvedValue([makeRemoteOkIndiaRawJob()]);
+    mockLinkedInIndiaFetch.mockResolvedValue([]);
     mockBulkWrite.mockResolvedValue({ upsertedCount: 2, modifiedCount: 0 });
 
     const stats = await modIndia.runIngestion();
 
     expect(mockTalentdFetch).toHaveBeenCalled();
     expect(mockRemoteOkIndiaFetch).toHaveBeenCalled();
+    expect(mockLinkedInIndiaFetch).toHaveBeenCalled();
     expect(mockRemotiveFetch).not.toHaveBeenCalled();
     expect(stats.total).toBe(2);
   });
@@ -861,9 +871,161 @@ describe('India mode ingestion', () => {
     const dup = makeRemoteOkIndiaRawJob({ sourceId: 'remoteok-india-99001' });
     mockTalentdFetch.mockResolvedValue([]);
     mockRemoteOkIndiaFetch.mockResolvedValue([dup, dup]);
+    mockLinkedInIndiaFetch.mockResolvedValue([]);
     mockBulkWrite.mockResolvedValue({ upsertedCount: 1, modifiedCount: 0 });
 
     const stats = await modIndia.runIngestion();
     expect(stats.total).toBe(1);
+  });
+});
+
+// ─── LinkedIn India ingestion ─────────────────────────────────────────────────
+
+const FRESH_3H_LINKEDIN = NOW_MS - 3 * 60 * 60 * 1000;
+
+function makeLinkedInIndiaRawJob(overrides = {}) {
+  return {
+    sourceId:       'linkedin-india-9876543210',
+    sourceJobId:    '9876543210',
+    title:          'Software Engineer',
+    company:        'Google India',
+    location:       'Bengaluru, Karnataka, India',
+    url:            'https://www.linkedin.com/jobs/view/9876543210',
+    remote:         false,
+    tags:           [],
+    source:         'linkedin-india',
+    sourceLabel:    'LinkedIn India',
+    sourcePostedAt: new Date(FRESH_3H_LINKEDIN),
+    ...overrides,
+  };
+}
+
+describe('LinkedIn India ingestion', () => {
+  let modLinkedIn;
+
+  beforeEach(async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(NOW_MS);
+    vi.resetModules();
+
+    mockUpdateMany.mockResolvedValue({ modifiedCount: 0 });
+
+    vi.mock('../../models/Job.model.js', () => ({
+      default: { bulkWrite: mockBulkWrite, updateMany: mockUpdateMany },
+    }));
+    vi.mock('./sources/remotive.js',       () => ({ fetch: mockRemotiveFetch,       name: 'Remotive',        sourceKey: 'remotive' }));
+    vi.mock('./sources/remoteOk.js',       () => ({ fetch: mockRemoteOkFetch,       name: 'RemoteOK',        sourceKey: 'remoteok' }));
+    vi.mock('./sources/himalayas.js',      () => ({ fetch: mockHimalayasFetch,      name: 'Himalayas',       sourceKey: 'himalayas' }));
+    vi.mock('./sources/workingNomads.js',  () => ({ fetch: mockWorkingNomadsFetch,  name: 'Working Nomads',  sourceKey: 'workingnomads' }));
+    vi.mock('./sources/jobicy.js',         () => ({ fetch: mockJobicyFetch,         name: 'Jobicy',          sourceKey: 'jobicy' }));
+    vi.mock('./sources/weWorkRemotely.js', () => ({ fetch: mockWeWorkFetch,         name: 'We Work Remotely', sourceKey: 'weworkremotely' }));
+    vi.mock('./sources/jobspresso.js',     () => ({ fetch: mockJobspressoFetch,     name: 'Jobspresso',      sourceKey: 'jobspresso' }));
+    vi.mock('./sources/authenticjobs.js',  () => ({ fetch: mockAuthenticFetch,      name: 'Authentic Jobs',  sourceKey: 'authenticjobs' }));
+    vi.mock('./sources/dynamitejobs.js',   () => ({ fetch: mockDynamiteFetch,       name: 'Dynamite Jobs',   sourceKey: 'dynamitejobs' }));
+    vi.mock('./sources/themuse.js',        () => ({ fetch: mockTheMuseFetch,        name: 'The Muse',        sourceKey: 'themuse' }));
+    vi.mock('./sources/greenhouse.js',     () => ({ fetch: mockGreenhouseFetch,     name: 'Greenhouse',      sourceKey: 'greenhouse' }));
+    vi.mock('./sources/lever.js',          () => ({ fetch: mockLeverFetch,          name: 'Lever',           sourceKey: 'lever' }));
+    vi.mock('./sources/arcdev.js',         () => ({ fetch: mockArcdevFetch,         name: 'Arc.dev',         sourceKey: 'arcdev' }));
+    vi.mock('./sources/talentd.js',        () => ({ fetch: mockTalentdFetch,        name: 'Talentd',         sourceKey: 'talentd' }));
+    vi.mock('./sources/remoteOkIndia.js',  () => ({ fetch: mockRemoteOkIndiaFetch,  name: 'RemoteOK India',  sourceKey: 'remoteok-india' }));
+    vi.mock('./sources/linkedinIndia.js',  () => ({ fetch: mockLinkedInIndiaFetch,  name: 'LinkedIn India',  sourceKey: 'linkedin-india' }));
+
+    [mockRemotiveFetch, mockRemoteOkFetch, mockHimalayasFetch, mockWorkingNomadsFetch,
+     mockJobicyFetch, mockWeWorkFetch, mockJobspressoFetch, mockAuthenticFetch,
+     mockDynamiteFetch, mockTheMuseFetch, mockGreenhouseFetch, mockLeverFetch,
+     mockArcdevFetch, mockRemoteOkIndiaFetch, mockLinkedInIndiaFetch].forEach(m => m.mockResolvedValue([]));
+
+    mockBulkWrite.mockResolvedValue({ upsertedCount: 0, modifiedCount: 0 });
+    process.env.JOB_SOURCE_MODE = 'india';
+    modLinkedIn = await import('./ingestion.js');
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.clearAllMocks();
+    delete process.env.JOB_SOURCE_MODE;
+  });
+
+  it('JOB_SOURCE_MODE=india runs linkedin-india alongside talentd and remoteok-india', async () => {
+    mockTalentdFetch.mockResolvedValue([]);
+    mockRemoteOkIndiaFetch.mockResolvedValue([]);
+    mockLinkedInIndiaFetch.mockResolvedValue([makeLinkedInIndiaRawJob()]);
+    mockBulkWrite.mockResolvedValue({ upsertedCount: 1, modifiedCount: 0 });
+
+    const stats = await modLinkedIn.runIngestion();
+
+    expect(mockTalentdFetch).toHaveBeenCalled();
+    expect(mockRemoteOkIndiaFetch).toHaveBeenCalled();
+    expect(mockLinkedInIndiaFetch).toHaveBeenCalled();
+    expect(mockRemotiveFetch).not.toHaveBeenCalled();
+    expect(stats.total).toBe(1);
+  });
+
+  it('saves a fresh LinkedIn India job', async () => {
+    mockTalentdFetch.mockResolvedValue([]);
+    mockRemoteOkIndiaFetch.mockResolvedValue([]);
+    mockLinkedInIndiaFetch.mockResolvedValue([makeLinkedInIndiaRawJob()]);
+    mockBulkWrite.mockResolvedValue({ upsertedCount: 1, modifiedCount: 0 });
+
+    const stats = await modLinkedIn.runIngestion();
+    expect(stats.total).toBe(1);
+  });
+
+  it('rejects a LinkedIn India job with null sourcePostedAt', async () => {
+    mockTalentdFetch.mockResolvedValue([]);
+    mockRemoteOkIndiaFetch.mockResolvedValue([]);
+    mockLinkedInIndiaFetch.mockResolvedValue([makeLinkedInIndiaRawJob({ sourcePostedAt: null })]);
+
+    const stats = await modLinkedIn.runIngestion();
+    expect(stats.total).toBe(0);
+    expect(mockBulkWrite).not.toHaveBeenCalled();
+  });
+
+  it('rejects a LinkedIn India job older than 48h', async () => {
+    const stale = new Date(NOW_MS - 49 * 60 * 60 * 1000);
+    mockTalentdFetch.mockResolvedValue([]);
+    mockRemoteOkIndiaFetch.mockResolvedValue([]);
+    mockLinkedInIndiaFetch.mockResolvedValue([makeLinkedInIndiaRawJob({ sourcePostedAt: stale })]);
+
+    const stats = await modLinkedIn.runIngestion();
+    expect(stats.total).toBe(0);
+    expect(mockBulkWrite).not.toHaveBeenCalled();
+  });
+
+  it('LinkedIn India failure does NOT abort the india mode run', async () => {
+    mockTalentdFetch.mockResolvedValue([]);
+    mockRemoteOkIndiaFetch.mockResolvedValue([makeRemoteOkIndiaRawJob()]);
+    mockLinkedInIndiaFetch.mockRejectedValue(new Error('LinkedIn network error'));
+    mockBulkWrite.mockResolvedValue({ upsertedCount: 1, modifiedCount: 0 });
+
+    const stats = await modLinkedIn.runIngestion();
+    expect(stats.total).toBe(1); // RemoteOK India job still saved
+  });
+
+  it('passes an AbortSignal to linkedinIndia.fetch', async () => {
+    let receivedSignal;
+    mockLinkedInIndiaFetch.mockImplementation(async (signal) => {
+      receivedSignal = signal;
+      return [];
+    });
+    mockTalentdFetch.mockResolvedValue([]);
+    mockRemoteOkIndiaFetch.mockResolvedValue([]);
+
+    await modLinkedIn.runIngestion();
+
+    expect(receivedSignal).toBeInstanceOf(AbortSignal);
+  });
+
+  it('does not mark linkedin-india jobs inactive — they age out via the 48h postedAt filter', async () => {
+    mockTalentdFetch.mockResolvedValue([]);
+    mockRemoteOkIndiaFetch.mockResolvedValue([]);
+    mockLinkedInIndiaFetch.mockResolvedValue([makeLinkedInIndiaRawJob()]);
+    mockBulkWrite.mockResolvedValue({ upsertedCount: 1, modifiedCount: 0 });
+
+    await modLinkedIn.runIngestion();
+
+    for (const [filter] of mockUpdateMany.mock.calls) {
+      expect(filter.source).not.toBe('linkedin-india');
+    }
   });
 });

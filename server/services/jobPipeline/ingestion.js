@@ -17,12 +17,13 @@ import * as lever          from './sources/lever.js';
 import * as arcdev         from './sources/arcdev.js';
 import * as talentd        from './sources/talentd.js';
 import * as remoteOkIndia  from './sources/remoteOkIndia.js';
+import * as linkedinIndia  from './sources/linkedinIndia.js';
 
 const ALL_SOURCES = [
   remotive, remoteOk, himalayas, workingNomads, jobicy,
   weWorkRemotely, jobspresso, authenticjobs, dynamitejobs,
   themuse, greenhouse, lever, arcdev,
-  talentd, remoteOkIndia,
+  talentd, remoteOkIndia, linkedinIndia,
 ];
 
 // INDIA_SOURCE_KEYS is imported from normalizer.js (INDIA_SOURCES) — single source of truth
@@ -92,12 +93,16 @@ export async function runIngestion() {
   // ── Fetch all active sources in parallel ────────────────────────────────────
   // Talentd gets its own AbortController so the ingestion timeout can cancel
   // in-flight network requests inside the scraper, not just reject the promise.
-  const talentdController = new AbortController();
+  const talentdController      = new AbortController();
+  const linkedinIndiaController = new AbortController();
 
   const results = await Promise.allSettled(
     activeSources.map((s) => {
       if (s.sourceKey === 'talentd') {
         return withTimeout(s.fetch(talentdController.signal), s.name, SOURCE_TIMEOUT_MS, talentdController);
+      }
+      if (s.sourceKey === 'linkedin-india') {
+        return withTimeout(s.fetch(linkedinIndiaController.signal), s.name, SOURCE_TIMEOUT_MS, linkedinIndiaController);
       }
       return withTimeout(s.fetch(), s.name, SOURCE_TIMEOUT_MS);
     })

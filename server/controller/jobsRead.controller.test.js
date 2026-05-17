@@ -161,7 +161,7 @@ describe('getJobs — Talentd postedAt freshness filter', () => {
 
     const [filter] = mockFind.mock.calls[0];
     expect(filter.roleType).toBe('INTERN');
-    expect(filter.source).toEqual({ $nin: ['talentd', 'remoteok-india'] });
+    expect(filter.source).toEqual({ $nin: ['talentd', 'remoteok-india', 'linkedin-india'] });
   });
 });
 
@@ -205,7 +205,7 @@ describe('getJobs — source=india', () => {
     await getJobs(req, res);
 
     const [filter] = mockFind.mock.calls[0];
-    expect(filter.source).toEqual({ $in: ['talentd', 'remoteok-india'] });
+    expect(filter.source).toEqual({ $in: ['talentd', 'remoteok-india', 'linkedin-india'] });
     expect(filter.isActive).toBe(true);
     expect(filter.postedAt).toEqual({ $gte: CUTOFF_48H });
   });
@@ -218,7 +218,7 @@ describe('getJobs — source=india', () => {
 
     const [filter] = mockFind.mock.calls[0];
     expect(filter.categories).toBe('Remote');
-    expect(filter.source).toEqual({ $in: ['talentd', 'remoteok-india'] });
+    expect(filter.source).toEqual({ $in: ['talentd', 'remoteok-india', 'linkedin-india'] });
   });
 
   it('applies search across title and company for india source', async () => {
@@ -232,7 +232,7 @@ describe('getJobs — source=india', () => {
       { title:   { $regex: 'PayU', $options: 'i' } },
       { company: { $regex: 'PayU', $options: 'i' } },
     ]);
-    expect(filter.source).toEqual({ $in: ['talentd', 'remoteok-india'] });
+    expect(filter.source).toEqual({ $in: ['talentd', 'remoteok-india', 'linkedin-india'] });
   });
 
   it('does not add category filter when category param is absent', async () => {
