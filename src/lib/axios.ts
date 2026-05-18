@@ -15,7 +15,7 @@ axiosInstance.interceptors.response.use(
     // 1. Check if the backend is throwing an authentication error
     // (Common triggers: Status 401 Unauthorized or a specific backend error code)
     if (
-      error.response?.status === 401 || 
+      error.response?.status === 401 &&
       error.response?.data?.errorCode === 'GLOBAL_AUTH_ERR'
     ) {
       // 2. Wipe the Zustand store completely
