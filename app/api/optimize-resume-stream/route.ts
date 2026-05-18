@@ -1,7 +1,7 @@
 import "server-only";
 import { NextRequest } from "next/server";
 
-const BACKEND_API = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:9001/api").replace(/\/$/, "");
+const BACKEND_API = (process.env.NEXT_PUBLIC_JOBFILX_APIURL || "http://localhost:9001/api").replace(/\/$/, "");
 
 export async function POST(req: NextRequest) {
   const formData = await req.formData();

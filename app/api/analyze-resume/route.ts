@@ -1,9 +1,9 @@
 import "server-only";
 import { NextRequest } from "next/server";
 
-// NEXT_PUBLIC_BACKEND_URL = "http://localhost:9001/api"
+// NEXT_PUBLIC_JOBFILX_APIURL = "http://localhost:9001/api"
 // Do NOT use process.env.PORT — Next.js overrides that to its own dev port (3001).
-const BACKEND_API = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:9001/api").replace(/\/$/, "");
+const BACKEND_API = (process.env.NEXT_PUBLIC_JOBFILX_APIURL || "http://localhost:9001/api").replace(/\/$/, "");
 
 export async function POST(req: NextRequest) {
   const formData = await req.formData();

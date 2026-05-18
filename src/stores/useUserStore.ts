@@ -32,7 +32,7 @@ export const useUserStore = create<UserStore>((set) => ({
 	login: async (email: string, password: string) => {
 		set({ loading: true });
 		try {
-			const res = await fetch(`${process.env.NEXT_PUBLIC_AUTH_URL}/user/login`, {
+			const res = await fetch(`${process.env.NEXT_PUBLIC_JOBFILX_APIURL}/user/login`, {
 				method: "POST",
 				credentials: "include",
 				headers: { "Content-Type": "application/json" },
@@ -52,7 +52,7 @@ export const useUserStore = create<UserStore>((set) => ({
 	signup: async (data: Record<string, unknown>) => {
 		set({ loading: true });
 		try {
-			const res = await fetch(`${process.env.NEXT_PUBLIC_AUTH_URL}/user/create`, {
+			const res = await fetch(`${process.env.NEXT_PUBLIC_JOBFILX_APIURL}/user/create`, {
 				method: "POST",
 				credentials: "include",
 				headers: { "Content-Type": "application/json" },
@@ -71,7 +71,7 @@ export const useUserStore = create<UserStore>((set) => ({
 
 	logout: async () => {
 		try {
-			const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_URL}/auth/logout`, {
+			const response = await fetch(`${process.env.NEXT_PUBLIC_JOBFILX_APIURL}/auth/logout`, {
 				method: "POST",
 				credentials: "include", // include cookies if your auth uses them
 				headers: {
@@ -88,7 +88,7 @@ export const useUserStore = create<UserStore>((set) => ({
 	checkAuth: async () => {
 		set({ checkingAuth: true });
 		try {
-			const res = await fetch(`${process.env.NEXT_PUBLIC_AUTH_URL}/account/profile`, {
+			const res = await fetch(`${process.env.NEXT_PUBLIC_JOBFILX_APIURL}/account/profile`, {
 				credentials: "include",
 			});
 

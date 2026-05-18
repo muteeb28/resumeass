@@ -144,7 +144,7 @@ export default function SidebarDemo() {
 
   const getJobApplications = useCallback(async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/applications`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_JOBFILX_APIURL}/job/applications`, {
         credentials: 'include',
       });
       const data = await response.json();
@@ -222,7 +222,7 @@ const Dashboard = ({
 
     try {
       setSaveLoader(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/applications`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_JOBFILX_APIURL}/job/applications`, {
         method: "POST",
         credentials: 'include',
         headers: { "Content-Type": "application/json" },
@@ -250,7 +250,7 @@ const Dashboard = ({
     );
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/applications`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_JOBFILX_APIURL}/job/applications`, {
         method: "POST",
         credentials: 'include',
         headers: { "Content-Type": "application/json" },
@@ -275,7 +275,7 @@ const Dashboard = ({
       return;
     }
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/application/delete`, {
+      await fetch(`${process.env.NEXT_PUBLIC_JOBFILX_APIURL}/job/application/delete`, {
         method: "POST",
         credentials: 'include',
         headers: { "Content-Type": "application/json" },
@@ -296,7 +296,7 @@ const Dashboard = ({
       return;
     }
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/application/status/update/${row._id}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_JOBFILX_APIURL}/job/application/status/update/${row._id}`, {
         method: "PUT",
         credentials: 'include',
         headers: { "Content-Type": "application/json" },
@@ -350,7 +350,7 @@ const Dashboard = ({
 
     try {
       setSaveEditLoader(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/job/applications/${editForm._id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_JOBFILX_APIURL}/job/applications/${editForm._id}`, {
         method: "PUT",
         credentials: 'include',
         headers: { "Content-Type": "application/json" },
