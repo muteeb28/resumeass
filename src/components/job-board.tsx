@@ -39,7 +39,10 @@ type CategoryValue =
   | "Batch 2025"
   | "Full Time"
   | "Design"
-  | "Sales & Marketing";
+  | "Sales & Marketing"
+  | "DevOps"
+  | "APM"
+  | "PM";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const TALENTD_CATEGORIES: { label: string; value: CategoryValue }[] = [
@@ -49,6 +52,9 @@ const TALENTD_CATEGORIES: { label: string; value: CategoryValue }[] = [
   { label: "Remote",            value: "Remote" },
   { label: "IT / Software",     value: "IT/Software" },
   { label: "Core Engineering",  value: "Core Engineering" },
+  { label: "DevOps",            value: "DevOps" },
+  { label: "PM",                value: "PM" },
+  { label: "APM",               value: "APM" },
   { label: "Batch 2026",        value: "Batch 2026" },
   { label: "Batch 2025",        value: "Batch 2025" },
   { label: "Full Time",         value: "Full Time" },
