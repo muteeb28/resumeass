@@ -1,6 +1,6 @@
 # Current State — AI Handoff
 
-_Last updated: 2026-05-19 (session 3). Update this file at the end of each session._
+_Last updated: 2026-05-19 (session 3, post-merge). Update this file at the end of each session._
 
 ---
 
@@ -157,7 +157,35 @@ The 48h freshness gate and normalizer are never touched. The scorer only assigns
 
 ---
 
-## 7. Next Intended Task
+## 7. Merge History — 2026-05-19
+
+### Remote auth/backend refactor (merged into local main)
+
+**Diverge point:** `0eab872`
+**Merge commit:** `7b5cebc` (pushed to origin/main)
+
+**What the remote's 11 commits introduced:**
+| Commit | Change |
+|---|---|
+| `4ed18c0` | `refactor: backend` — deleted ALL of `server/` (Express backend removed) |
+| `39258af` | `feat: authentication cookie based` — `AuthProvider.tsx`, `src/lib/axios.ts`, `useUserStore.ts` rewritten for cookie auth |
+| `6185431` | `refactor: api url` — `next.config.ts` rewrites updated, `sidebar-demo.tsx` updated |
+| `0b9a834`–`f0723cb` | axios polishing, optimize-resume route switched to axios |
+| `c6ee031` | login/signup pages removed (`app/login/page.tsx`, `app/signup/page.tsx` deleted) |
+| `776cecd`–`e730585` | logout redirect, premium HR emails |
+
+**Architectural change to understand:** The old Express backend (`server/server.js` on port 3007) is **gone from the repo**. All non-job-board API routes now go through a different backend (not in this repo). The job board routes go through `app/api/jobs/route.ts` → `external/jobflix-backend-js` port 9001.
+
+**Conflicts resolved:**
+- `server/server.js` — accepted remote deletion (job board logic already in `external/jobflix-backend-js`)
+- `server/services/resumeGenerator.js` — accepted remote deletion
+- `server/services/resumeOptimizerService.js` — accepted remote deletion
+
+**Pre-merge commit added:** `cbb8b86` — replaced old scraper-based `app/api/jobs/route.ts` with a 20-line clean backend proxy. Old file was a 500+ line Cheerio scraper; new file just forwards `?source=india` requests to `NEXT_PUBLIC_API_URL`.
+
+---
+
+## 8. Next Intended Task
 
 No next task defined. Ask the user.
 
