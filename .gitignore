@@ -42,3 +42,4 @@ server/cache
 
 # Local test scripts (may contain hardcoded API keys)
 scripts/
+.vercel

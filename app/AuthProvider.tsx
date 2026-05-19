@@ -1,22 +1,49 @@
-"use client"
+"use client";
 
-import { useEffect } from 'react'
-import { Toaster } from 'react-hot-toast'
-import { Toaster as SonnerToaster } from 'sonner'
-import { useUserStore } from '@/stores/useUserStore'
+import { useState, useEffect, ReactNode } from "react";
+import { useUserStore } from "@/stores/useUserStore";
 
-export default function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { checkAuth } = useUserStore()
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export default function AuthProvider({ children }: AuthProviderProps) {
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    checkAuth()
-  }, [checkAuth])
+    // 1. Handle initial Zustand hydration from the cookie
+    if (useUserStore.persist.hasHydrated()) {
+      setIsHydrated(true);
+    } else {
+      const unsub = useUserStore.persist.onFinishHydration(() => {
+        setIsHydrated(true);
+      });
+      return () => unsub();
+    }
+  }, []);
 
-  return (
-    <>
-      <Toaster position="top-right" />
-      <SonnerToaster position="top-right" />
-      {children}
-    </>
-  )
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    // 2. Multi-Tab Syncing: If the user changes tabs or returns to this site,
+    // force the Zustand store to instantly re-read the cookie.
+    const handleSync = () => {
+      if (document.visibilityState === "visible") {
+        useUserStore.persist.rehydrate();
+      }
+    };
+
+    window.addEventListener("visibilitychange", handleSync);
+    window.addEventListener("focus", handleSync);
+
+    return () => {
+      window.removeEventListener("visibilitychange", handleSync);
+      window.removeEventListener("focus", handleSync);
+    };
+  }, [isHydrated]);
+
+  // Prevent server-side rendering matching errors
+  if (!isHydrated) return null;
+
+  return <>{children}</>;
 }

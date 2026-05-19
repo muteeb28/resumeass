@@ -32,7 +32,7 @@ const nextConfig: NextConfig = {
       fallback: [
         {
           source: '/api/:path*',
-          destination: `${(process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:9001/api').replace(/\/api\/?$/, '')}/api/:path*`,
+          destination: `${(process.env.NEXT_PUBLIC_JOBFILX_APIURL || 'http://localhost:9001/api').replace(/\/api\/?$/, '')}/api/:path*`,
         },
       ],
     }
