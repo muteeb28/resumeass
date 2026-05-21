@@ -2,8 +2,11 @@
 import { motion } from "motion/react";
 import { cn } from "../lib/utils";
 import { Zap } from "lucide-react";
-import { useNavigation } from "./hooks/useNavigation";
+import { useRouter } from 'next/navigation';
 import { useUserStore } from "@/stores/useUserStore";
+import { useState } from "react";
+import axiosInstance from "@/lib/axios";
+import { toast } from "sonner";
 
 const PricingCard = ({
   title,
@@ -30,7 +33,7 @@ const PricingCard = ({
   buttonText?: string;
   delay?: number;
   className?: string;
-  onClick?: () => void;
+  onClick?: (e: any) => void;
 }) => {
   return (
     <motion.div
@@ -137,15 +140,53 @@ const PricingCard = ({
 };
 
 export const PaymentSection = () => {
-
-  const { navigate } = useNavigation();
   const { user } = useUserStore();
+  const router = useRouter();
 
-  const onClick = () => {
+  const onClick = async (planId: string) => {
     if (!user) {
-      navigate('/login');
+      router.push(`${process.env.NEXT_PUBLIC_AUTH_CLIENT_URL}/login`)
     } else {
-      alert('user found');
+      try {
+        const response = await axiosInstance.post('/payment/resumeassist/subscription/create', {
+          planId: planId,
+          customerEmail: user.email,
+        });
+
+        const data = response.data;
+        if (!data.success) throw new Error(data.message || 'Subscription initialization failed.');
+
+        // Open Razorpay Checkout Modal
+        const options = {
+          key: data.razorpayKeyId,
+          subscription_id: data.subscriptionId,
+          name: 'Jobflix Perks',
+          description: `${planId} Membership`,
+          image: '/logo.png',
+          handler: async function (authResponse: any) {
+            toast.loading('Verifying your subscription activation...', { id: 'verify-sub' });
+            const verificationPayload = {
+              razorpay_payment_id: authResponse.razorpay_payment_id,
+              razorpay_subscription_id: authResponse.razorpay_subscription_id,
+              razorpay_signature: authResponse.razorpay_signature
+            };
+            await axiosInstance.post('/payment/subscription/verify', verificationPayload);
+            toast.success('Welcome to GemBook Premium!', { id: 'verify-sub' });
+          },
+          prefill: {
+            email: user.email,
+            contact: user.phone || '',
+          },
+          theme: {
+            color: '#0B132B',
+          },
+        };
+
+        const rzp = new (window as any).Razorpay(options);
+        rzp.open();
+      } catch (error: any) {
+        toast.error(error?.response?.data?.message || 'Could not launch the checkout gateway. Please try again.');
+      }
     }
   }
 
@@ -195,7 +236,7 @@ export const PaymentSection = () => {
               { text: "One-time payment" },
             ]}
             buttonText="Pay ₹50"
-            onClick={onClick}
+            onClick={() => onClick('plan_ID_99')}
           />
 
           <PricingCard
@@ -215,7 +256,7 @@ export const PaymentSection = () => {
             ]}
             isPopular
             buttonText="Unlock Full Access"
-            onClick={onClick}
+            onClick={() => onClick('plan_ID_155')}
           />
 
           <PricingCard
@@ -233,6 +274,7 @@ export const PaymentSection = () => {
             ]}
             comingSoon
             buttonText="Notify Me"
+            onClick={() => onClick('plan_ID_349')}
           />
         </div>
 

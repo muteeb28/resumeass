@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef } from "react";
 import type { ResumeJSON } from "@/types/resume";
-import { buildApiUrl } from "@/services/resumeOptimizerApi";
 import { exportResumeDocx } from "@/services/docxExport";
 import { convertToPortfoliolyFormat } from "@/utils/resume-converter";
 import { BackgroundRippleLayout } from "@/components/background-ripple-layout";
@@ -16,6 +15,8 @@ import TemplateDarkSidebar from "@/templates/TemplateDarkSidebar";
 import type { ResumeData } from "@/types/portfolioly-resume";
 import { Pencil, Eye, Download, ChevronDown, ChevronUp } from "lucide-react";
 import axiosInstance from "@/lib/axios";
+import { useUserStore } from "@/stores/useUserStore";
+import { useRouter } from "next/navigation";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -153,6 +154,8 @@ export default function OptimizerPage() {
   const atsBefore = preAnalysis?.ats_score_before ?? 0;
   const atsAfter = changelog?.ats_score_after ?? 0;
   const delta = atsAfter - atsBefore;
+  const { user } = useUserStore();
+  const router = useRouter();
 
   // ── Call 1: Pre-analysis ──────────────────────────────────────────────────
 
@@ -248,6 +251,10 @@ const handleOptimize = useCallback(async () => {
   setPhase("optimizing");
 
   try {
+    if (!user) {
+      router.push(`${process.env.NEXT_PUBLIC_AUTH_CLIENT_URL}/login`);
+      return;
+    }
     const formData = new FormData();
     formData.append("resume", selectedFile);
     if (jobDescription.trim()) formData.append("jobDescription", jobDescription);
