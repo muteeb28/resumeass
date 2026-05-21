@@ -15,6 +15,7 @@ import TemplateSidebar from "@/templates/TemplateSidebar";
 import TemplateDarkSidebar from "@/templates/TemplateDarkSidebar";
 import type { ResumeData } from "@/types/portfolioly-resume";
 import { Pencil, Eye, Download, ChevronDown, ChevronUp } from "lucide-react";
+import axiosInstance from "@/lib/axios";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -155,97 +156,119 @@ export default function OptimizerPage() {
 
   // ── Call 1: Pre-analysis ──────────────────────────────────────────────────
 
-  const handleFileSelect = useCallback(
-    async (file: File) => {
-      setSelectedFile(file);
-      setUploadedFilename(file.name);
-      setErrorMsg("");
-      setPreAnalysis(null);
-      setOptimizedResume(null);
-      setChangelog(null);
-      setPhase("analyzing");
+const handleFileSelect = useCallback(
+  async (file: File) => {
+    setSelectedFile(file);
+    setUploadedFilename(file.name);
+    setErrorMsg("");
+    setPreAnalysis(null);
+    setOptimizedResume(null);
+    setChangelog(null);
+    setPhase("analyzing");
 
-      try {
-        const formData = new FormData();
-        formData.append("resume", file);
-        if (jobDescription.trim()) formData.append("jobDescription", jobDescription);
+    try {
+      const formData = new FormData();
+      formData.append("resume", file);
+      if (jobDescription.trim()) formData.append("jobDescription", jobDescription);
 
-        const res = await fetch(buildApiUrl("analyze-resume"), { method: "POST", body: formData });
-        if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
+      let buffer = "";
+      let eventName = "";
+      let gotResult = false;
+      let seenBytes = 0;
 
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-        let eventName = "";
-        let gotResult = false;
+      // Make the Axios POST request to your endpoint
+      await axiosInstance.post('/analyze-resume', formData, {
+        responseType: 'text',
+        headers: {
+          // Override global instance JSON header for multipart form data
+          'Content-Type': 'multipart/form-data',
+        },
+        onDownloadProgress: (progressEvent) => {
+          const currentResponse = progressEvent.event.target.response || "";
+          
+          // Isolate the brand new string chunk
+          const chunk = currentResponse.substring(seenBytes);
+          seenBytes = currentResponse.length;
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
+          // Append to our processing buffer
+          buffer += chunk;
+
+          // Parse incoming SSE lines right here as they stream in
           const lines = buffer.split("\n");
-          buffer = lines.pop() || "";
+          buffer = lines.pop() || ""; // Retain incomplete lines in buffer
+
           for (const line of lines) {
             if (line.startsWith("event: ")) {
               eventName = line.slice(7).trim();
             } else if (line.startsWith("data: ")) {
               const data = JSON.parse(line.slice(6));
+              
               if (eventName === "result") {
                 if (!data.success) throw new Error(data.error || "Analysis failed");
                 const raw = data.data;
+                
                 setPreAnalysis({
                   ats_score_before: Number(raw?.ats_score_before) || 0,
                   current_keywords: toArray<string>(raw?.current_keywords),
                   weak_sections: toArray<string>(raw?.weak_sections),
                 });
+                
                 gotResult = true;
                 setPhase("ready");
               } else if (eventName === "error") {
                 throw new Error(data.message || "Analysis failed");
               }
-              eventName = "";
+              eventName = ""; // Reset context for the next block
             }
           }
         }
+      });
 
-        if (!gotResult) {
-          throw new Error("Analysis timed out — server did not return a result");
-        }
-      } catch (err: any) {
-        setErrorMsg(err.message || "Failed to analyze resume");
-        setPhase("idle");
+      // This executes AFTER the entire network stream completes
+      if (!gotResult) {
+        throw new Error("Analysis completed — server did not return a result");
       }
-    },
-    [jobDescription]
-  );
+
+    } catch (err: any) {
+      // Captures network errors, interceptor redirects, and custom parsing errors
+      const errMsg = err.response?.data?.message || err.message || "Failed to analyze resume";
+      setErrorMsg(errMsg);
+      setPhase("idle");
+    }
+  },
+  [jobDescription] // React tracking dependencies
+);
 
   // ── Call 2: Optimization (SSE) ────────────────────────────────────────────
 
-  const handleOptimize = useCallback(async () => {
-    if (!selectedFile) return;
-    setErrorMsg("");
-    setProgressMsg("Starting optimization...");
-    setPhase("optimizing");
+const handleOptimize = useCallback(async () => {
+  if (!selectedFile) return;
+  setErrorMsg("");
+  setProgressMsg("Starting optimization...");
+  setPhase("optimizing");
 
-    try {
-      const formData = new FormData();
-      formData.append("resume", selectedFile);
-      if (jobDescription.trim()) formData.append("jobDescription", jobDescription);
+  try {
+    const formData = new FormData();
+    formData.append("resume", selectedFile);
+    if (jobDescription.trim()) formData.append("jobDescription", jobDescription);
+    
+    let buffer = "";
+    let eventName = "";
+    let gotComplete = false;
+    let seenBytes = 0;
 
-      const res = await fetch(buildApiUrl("optimize-resume-stream"), { method: "POST", body: formData });
-      if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
+    await axiosInstance.post('/optimize-resume-stream', formData, {
+      responseType: 'text',
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      onDownloadProgress: (progressEvent) => {
+        const currentResponse = progressEvent.event.target.response || "";
+        const chunk = currentResponse.substring(seenBytes);
+        seenBytes = currentResponse.length;
 
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      let eventName = "";
-      let gotComplete = false;
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
+        buffer += chunk;
+        
         const lines = buffer.split("\n");
         buffer = lines.pop() || "";
 
@@ -254,12 +277,14 @@ export default function OptimizerPage() {
             eventName = line.slice(7).trim();
           } else if (line.startsWith("data: ")) {
             const data = JSON.parse(line.slice(6));
+            
             if (eventName === "progress") {
               setProgressMsg(data.message || "");
             } else if (eventName === "complete") {
               const payload = data.data as OptimizedPayload;
               const mapped = mapToResumeJSON(payload.optimized_resume);
               const rd = convertToPortfoliolyFormat(mapped);
+              
               setOptimizedResume(mapped);
               setPortfoliolyResume(rd);
               setChangelog(normalizeChangelog(payload.changelog));
@@ -272,15 +297,18 @@ export default function OptimizerPage() {
           }
         }
       }
+    });
 
-      if (!gotComplete) {
-        throw new Error("Optimization timed out — server did not return a result");
-      }
-    } catch (err: any) {
-      setErrorMsg(err.message || "Failed to optimize resume");
-      setPhase("ready");
+    if (!gotComplete) {
+      throw new Error("Optimization completed — server did not return a final result");
     }
-  }, [selectedFile, jobDescription]);
+
+  } catch (err: any) {
+    const errMsg = err.response?.data?.message || err.message || "Failed to optimize resume";
+    setErrorMsg(errMsg);
+    setPhase("ready");
+  }
+}, [selectedFile, jobDescription]);
 
   // ── Downloads ─────────────────────────────────────────────────────────────
 
@@ -296,43 +324,67 @@ export default function OptimizerPage() {
     }
   }, [optimizedResume, docxGenerating]);
 
-  const handleDownloadPdf = useCallback(async () => {
-    if (!resumePreviewRef.current || !optimizedResume || pdfGenerating) return;
-    if (viewMode !== "preview") {
-      setViewMode("preview");
-      return;
+const handleDownloadPdf = useCallback(async () => {
+  if (!resumePreviewRef.current || !optimizedResume || pdfGenerating) return;
+  if (viewMode !== "preview") {
+    setViewMode("preview");
+    return;
+  }
+  setPdfGenerating(true);
+  
+  try {
+    let stylesheets = "";
+    document.querySelectorAll("style").forEach((s) => { 
+      stylesheets += s.textContent + "\n"; 
+    });
+    document.querySelectorAll("link[rel='stylesheet']").forEach((l) => {
+      const href = (l as HTMLLinkElement).href;
+      if (href) stylesheets += `@import url('${href}');\n`;
+    });
+    
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${stylesheets}</style></head><body>${resumePreviewRef.current.outerHTML}</body></html>`;
+    const res = await axiosInstance.post('/generate-pdf', {
+      html, 
+      options: { 
+        format: "Letter", 
+        printBackground: true, 
+        preferCSSPageSize: true, 
+        margin: "0in" 
+      }
+    }, {
+      responseType: 'blob',
+      headers: {
+        "Content-Type": "application/json", 
+      }
+    });
+
+    const blob = res.data; 
+    
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const name = (optimizedResume.basics.name || "resume").replace(/[^a-z0-9]/gi, "_").toLowerCase();
+    
+    a.href = url;
+    a.download = `${name}-optimized.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+
+  } catch (err: any) {
+    let errMsg = "PDF generation failed";
+    if (err.response?.data instanceof Blob) {
+      const text = await err.response.data.text();
+      try { errMsg = JSON.parse(text).message || errMsg; } catch { errMsg = text || errMsg; }
+    } else {
+      errMsg = err.message || errMsg;
     }
-    setPdfGenerating(true);
-    try {
-      let stylesheets = "";
-      document.querySelectorAll("style").forEach((s) => { stylesheets += s.textContent + "\n"; });
-      document.querySelectorAll("link[rel='stylesheet']").forEach((l) => {
-        const href = (l as HTMLLinkElement).href;
-        if (href) stylesheets += `@import url('${href}');\n`;
-      });
-      const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${stylesheets}</style></head><body>${resumePreviewRef.current.outerHTML}</body></html>`;
-      const res = await fetch(buildApiUrl("generate-pdf"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ html, options: { format: "Letter", printBackground: true, preferCSSPageSize: true, margin: "0in" } }),
-      });
-      if (!res.ok) throw new Error("PDF generation failed");
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      const name = (optimizedResume.basics.name || "resume").replace(/[^a-z0-9]/gi, "_").toLowerCase();
-      a.href = url;
-      a.download = `${name}-optimized.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-    } catch (err: any) {
-      alert(err.message || "PDF generation failed");
-    } finally {
-      setPdfGenerating(false);
-    }
-  }, [resumePreviewRef, optimizedResume, pdfGenerating, viewMode]);
+    alert(errMsg);
+  } finally {
+    setPdfGenerating(false);
+  }
+}, [resumePreviewRef, optimizedResume, pdfGenerating, viewMode, axiosInstance]);
 
   // ── Reset ─────────────────────────────────────────────────────────────────
 
@@ -365,18 +417,16 @@ export default function OptimizerPage() {
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setViewMode("edit")}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    viewMode === "edit" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"
-                  }`}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === "edit" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"
+                    }`}
                 >
                   <Pencil className="h-3.5 w-3.5" />
                   Edit
                 </button>
                 <button
                   onClick={() => setViewMode("preview")}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    viewMode === "preview" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"
-                  }`}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === "preview" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"
+                    }`}
                 >
                   <Eye className="h-3.5 w-3.5" />
                   Preview
@@ -391,11 +441,10 @@ export default function OptimizerPage() {
                       <button
                         key={t.id}
                         onClick={() => setSelectedTemplate(t.id)}
-                        className={`px-3 py-1.5 text-xs rounded-lg border transition-all ${
-                          selectedTemplate === t.id
+                        className={`px-3 py-1.5 text-xs rounded-lg border transition-all ${selectedTemplate === t.id
                             ? "bg-neutral-900 text-white border-neutral-900"
                             : "bg-white text-neutral-500 border-neutral-200 hover:border-neutral-300"
-                        }`}
+                          }`}
                       >
                         {t.name}
                       </button>
@@ -590,139 +639,137 @@ export default function OptimizerPage() {
         <div className="mx-auto max-w-6xl">
           <div className="max-w-xl mx-auto">
             <div className="space-y-5">
-            <div>
-              <h1 className="text-lg font-bold">Optimize your resume</h1>
-              <p className="text-muted-foreground text-xs mt-1">
-                Upload your resume and optionally paste a job description. We&apos;ll analyze your ATS score, then fully rewrite it.
-              </p>
-            </div>
-
-            {/* Upload */}
-            <div className="rounded-lg border border-border bg-card p-4 space-y-3">
-              <h2 className="font-medium text-sm">Resume</h2>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,.doc,.docx"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) handleFileSelect(f);
-                  e.target.value = "";
-                }}
-              />
-              <div
-                onClick={() => phase !== "analyzing" && fileInputRef.current?.click()}
-                className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                  phase === "analyzing"
-                    ? "border-primary bg-primary/5 cursor-default"
-                    : "border-border hover:border-primary/50 hover:bg-accent/30 cursor-pointer"
-                }`}
-              >
-                {phase === "analyzing" ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                    <p className="text-sm text-muted-foreground">Analyzing resume...</p>
-                  </div>
-                ) : selectedFile ? (
-                  <div className="flex flex-col items-center gap-1">
-                    <svg className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <p className="text-sm font-medium">{uploadedFilename}</p>
-                    <p className="text-xs text-muted-foreground">Click to replace</p>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-2">
-                    <svg className="h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    <p className="text-sm">Drop or click to upload</p>
-                    <p className="text-xs text-muted-foreground">PDF or DOCX, max 10MB</p>
-                  </div>
-                )}
+              <div>
+                <h1 className="text-lg font-bold">Optimize your resume</h1>
+                <p className="text-muted-foreground text-xs mt-1">
+                  Upload your resume and optionally paste a job description. We&apos;ll analyze your ATS score, then fully rewrite it.
+                </p>
               </div>
-            </div>
 
-            {/* Job description */}
-            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
-              <div className="flex items-center justify-between">
-                <h2 className="font-medium text-sm">Job description</h2>
-                <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Optional</span>
-              </div>
-              <textarea
-                value={jobDescription}
-                onChange={(e) => setJobDescription(e.target.value)}
-                placeholder="Paste the full job description here, or leave blank for general ATS optimization..."
-                className="w-full h-28 text-sm bg-muted rounded-md px-3 py-2 border-0 resize-none focus:outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground/50"
-              />
-            </div>
-
-            {/* Pre-analysis */}
-            {preAnalysis && (
+              {/* Upload */}
               <div className="rounded-lg border border-border bg-card p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-semibold">ATS pre-analysis</p>
-                    <p className="text-[11px] text-muted-foreground">Scanned for ATS compatibility</p>
-                  </div>
-                  <AtsScoreBadge score={atsBefore} />
+                <h2 className="font-medium text-sm">Resume</h2>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleFileSelect(f);
+                    e.target.value = "";
+                  }}
+                />
+                <div
+                  onClick={() => phase !== "analyzing" && fileInputRef.current?.click()}
+                  className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${phase === "analyzing"
+                      ? "border-primary bg-primary/5 cursor-default"
+                      : "border-border hover:border-primary/50 hover:bg-accent/30 cursor-pointer"
+                    }`}
+                >
+                  {phase === "analyzing" ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      <p className="text-sm text-muted-foreground">Analyzing resume...</p>
+                    </div>
+                  ) : selectedFile ? (
+                    <div className="flex flex-col items-center gap-1">
+                      <svg className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <p className="text-sm font-medium">{uploadedFilename}</p>
+                      <p className="text-xs text-muted-foreground">Click to replace</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2">
+                      <svg className="h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      <p className="text-sm">Drop or click to upload</p>
+                      <p className="text-xs text-muted-foreground">PDF or DOCX, max 10MB</p>
+                    </div>
+                  )}
                 </div>
-
-                {preAnalysis.current_keywords.length > 0 && (
-                  <div className="space-y-1">
-                    <p className="text-[11px] font-medium text-muted-foreground">Current keywords</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {preAnalysis.current_keywords.map((kw) => (
-                        <span key={kw} className="text-[11px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
-                          {kw}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {preAnalysis.weak_sections.length > 0 && (
-                  <div className="space-y-1">
-                    <p className="text-[11px] font-medium text-muted-foreground">Weak sections</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {preAnalysis.weak_sections.map((sec) => (
-                        <span key={sec} className="text-[11px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 capitalize">
-                          {sec}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
-            )}
 
-            {/* Error */}
-            {errorMsg && (
-              <div className="rounded-md bg-destructive/10 border border-destructive/20 px-4 py-3 text-xs text-destructive">
-                {errorMsg}
+              {/* Job description */}
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-medium text-sm">Job description</h2>
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Optional</span>
+                </div>
+                <textarea
+                  value={jobDescription}
+                  onChange={(e) => setJobDescription(e.target.value)}
+                  placeholder="Paste the full job description here, or leave blank for general ATS optimization..."
+                  className="w-full h-28 text-sm bg-muted rounded-md px-3 py-2 border-0 resize-none focus:outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground/50"
+                />
               </div>
-            )}
 
-            {/* CTA */}
-            <button
-              onClick={handleOptimize}
-              disabled={!canOptimize}
-              className={`w-full py-3 px-6 rounded-lg text-sm font-medium transition-colors ${
-                canOptimize
-                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                  : "bg-muted text-muted-foreground cursor-not-allowed"
-              }`}
-            >
-              {phase === "optimizing" ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  {progressMsg || "Optimizing..."}
-                </span>
-              ) : (
-                "Optimize Now"
+              {/* Pre-analysis */}
+              {preAnalysis && (
+                <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-semibold">ATS pre-analysis</p>
+                      <p className="text-[11px] text-muted-foreground">Scanned for ATS compatibility</p>
+                    </div>
+                    <AtsScoreBadge score={atsBefore} />
+                  </div>
+
+                  {preAnalysis.current_keywords.length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-[11px] font-medium text-muted-foreground">Current keywords</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {preAnalysis.current_keywords.map((kw) => (
+                          <span key={kw} className="text-[11px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
+                            {kw}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {preAnalysis.weak_sections.length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-[11px] font-medium text-muted-foreground">Weak sections</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {preAnalysis.weak_sections.map((sec) => (
+                          <span key={sec} className="text-[11px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 capitalize">
+                            {sec}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
-            </button>
+
+              {/* Error */}
+              {errorMsg && (
+                <div className="rounded-md bg-destructive/10 border border-destructive/20 px-4 py-3 text-xs text-destructive">
+                  {errorMsg}
+                </div>
+              )}
+
+              {/* CTA */}
+              <button
+                onClick={handleOptimize}
+                disabled={!canOptimize}
+                className={`w-full py-3 px-6 rounded-lg text-sm font-medium transition-colors ${canOptimize
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                    : "bg-muted text-muted-foreground cursor-not-allowed"
+                  }`}
+              >
+                {phase === "optimizing" ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    {progressMsg || "Optimizing..."}
+                  </span>
+                ) : (
+                  "Optimize Now"
+                )}
+              </button>
             </div>
           </div>
         </div>
@@ -739,8 +786,8 @@ function AtsScoreBadge({ score }: { score: number }) {
     score >= 75
       ? "bg-green-100 text-green-700 border-green-200"
       : score >= 50
-      ? "bg-yellow-100 text-yellow-700 border-yellow-200"
-      : "bg-red-100 text-red-700 border-red-200";
+        ? "bg-yellow-100 text-yellow-700 border-yellow-200"
+        : "bg-red-100 text-red-700 border-red-200";
   return (
     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${color}`}>
       ATS {score}%
