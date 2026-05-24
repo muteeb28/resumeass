@@ -4,7 +4,6 @@ import { cn } from "../lib/utils";
 import { Zap } from "lucide-react";
 import { useRouter } from 'next/navigation';
 import { useUserStore } from "@/stores/useUserStore";
-import { useState } from "react";
 import axiosInstance from "@/lib/axios";
 import { toast } from "sonner";
 
@@ -154,7 +153,10 @@ export const PaymentSection = () => {
         });
 
         const data = response.data;
-        if (!data.success) throw new Error(data.message || 'Subscription initialization failed.');
+        if (!data.success) {
+          toast.error(data.message || 'could not create the membership. Try with a different card instead.');
+          return;
+        };
 
         // Open Razorpay Checkout Modal
         const options = {
@@ -224,8 +226,8 @@ export const PaymentSection = () => {
           <PricingCard
             delay={0.1}
             title="Resume Optimization"
-            price="₹50"
-            originalPrice="₹100"
+            price="₹99"
+            originalPrice="₹199"
             description="One-time payment per resume optimization."
             features={[
               { text: "ATS-ready resume (2 professional templates)" },
@@ -243,7 +245,7 @@ export const PaymentSection = () => {
             delay={0.2}
             title="Resume + HR Outreach"
             price="₹199"
-            originalPrice="₹399"
+            originalPrice="₹499"
             description="Full access with a one-time payment per resume optimization."
             features={[
               { text: "Resume optimization (ATS-ready)" },

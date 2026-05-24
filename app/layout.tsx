@@ -4,6 +4,7 @@ import '@/index.css'
 import '@/App.css'
 import AuthProvider from './AuthProvider'
 import Providers from './Providers'
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: 'ResumeAssist AI - AI-Powered Resume Builder',
@@ -32,6 +33,7 @@ export default function RootLayout({
           </AuthProvider>
         </Providers>
         <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
+        <Toaster position="top-center" />
       </body>
     </html>
   )
