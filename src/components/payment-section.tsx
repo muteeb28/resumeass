@@ -229,18 +229,17 @@ export const PaymentSection = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
           <PricingCard
             delay={0.1}
-            title="Resume Optimization"
+            title="Starter"
             price="₹99"
             originalPrice="₹499"
             period="month"
             saveBadge="Save 80%"
-            description="Monthly access to resume optimization tools."
+            description="Core tools to start and track your job search."
             features={[
-              { text: "ATS-ready resume (2 professional templates)" },
-              { text: "Job description matching" },
-              { text: "Built-in job tracker" },
-              { text: "ATS-friendly formatting" },
-              { text: "PDF + DOCX downloads" },
+              { text: "Job Tracker" },
+              { text: "Resume Optimizer (rate limit)" },
+              { text: "Resume Creator (rate limit)" },
+              { text: "Jobs (only latest openings)" },
             ]}
             buttonText="Get Started"
             onClick={() => onClick('plan_ID_99')}
@@ -248,20 +247,19 @@ export const PaymentSection = () => {
 
           <PricingCard
             delay={0.2}
-            title="Resume + HR Outreach"
+            title="Growth"
             price="₹155"
             originalPrice="₹310"
             period="month"
             saveBadge="Save 50%"
-            description="Full access with monthly billing — resume tools and HR contacts."
+            description="Everything in Starter plus HR contacts and fresh job leads."
             features={[
-              { text: "Resume optimization (ATS-ready)" },
-              { text: "Job tracker dashboard" },
-              { text: "50 Dubai HR email contacts" },
-              { text: "1800+ India HR email contacts" },
-              { text: "LinkedIn profiles of HRs" },
-              { text: "Cold email templates (ready to send)" },
-              { text: "Application tracking & follow-ups" },
+              { text: "Job Tracker" },
+              { text: "Resume Optimizer (rate limit)" },
+              { text: "Resume Creator (rate limit)" },
+              { text: "Jobs (Fresh)" },
+              { text: "3000+ MNC and startup HR emails" },
+              { text: "Dubai HR emails" },
             ]}
             isPopular
             buttonText="Unlock Full Access"
@@ -295,7 +293,7 @@ export const PaymentSection = () => {
           className="mt-10 text-center"
         >
           <p className="text-sm text-neutral-400">
-            Secure payment · 24/7 support · Pricing is per resume optimization
+            Secure payment · Cancel anytime · Billed monthly
           </p>
         </motion.div>
       </div>
