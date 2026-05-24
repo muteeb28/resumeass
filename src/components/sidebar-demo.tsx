@@ -6,7 +6,7 @@ import HrEmailsTable from "./hr-emails-table";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, Lock } from "lucide-react";
+import { CalendarIcon, Lock, X } from "lucide-react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,13 +21,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { motion } from "motion/react";
 
 /**
  * TYPES
  */
 type ApplicationStatus = "Offer" | "Rejected" | "Interview" | "Applied";
 
-type EditableField = 
+type EditableField =
   | "company" | "title" | "link" | "contact" | "date" | "stage"
   | "salary" | "location" | "priority" | "referral" | "notes";
 
@@ -50,6 +51,27 @@ type JobApplicationRow = {
   isSaving?: boolean;
 };
 
+// Stagger animation container config for form rows
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.04,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 300, damping: 24 }
+  },
+};
+
 const ShinyButton = () => {
   // Define the keyframes and animation class as a string
   const animationStyles = `
@@ -65,8 +87,8 @@ const ShinyButton = () => {
   return (
     <>
       <style>{animationStyles}</style>
-      
-      <button 
+
+      <button
         style={{
           backgroundColor: '#0a0a0a',
           boxShadow: '0 4px 15px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1)'
@@ -74,7 +96,7 @@ const ShinyButton = () => {
         className="cursor-pointer relative flex items-center gap-2 overflow-hidden rounded-full px-4 py-0 h-8 text-[11px] font-semibold text-white active:scale-95 transition-transform"
       >
         {/* The Shine Element */}
-        <span 
+        <span
           className="animate-inline-shine absolute inset-0 w-1/2 h-full"
           style={{
             background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.15), transparent)',
@@ -86,11 +108,11 @@ const ShinyButton = () => {
         {/* Button Content */}
         <Lock size={16} strokeWidth={2.5} style={{ opacity: 0.9 }} />
         <span style={{ letterSpacing: '0.025em' }} className="mt-[2px]">Unlock All Emails</span>
-        
+
         {/* Subtle Inner Border */}
-        <div 
-          className="absolute inset-0 rounded-lg pointer-events-none" 
-          style={{ border: '1px solid rgba(255,255,255,0.08)' }} 
+        <div
+          className="absolute inset-0 rounded-lg pointer-events-none"
+          style={{ border: '1px solid rgba(255,255,255,0.08)' }}
         />
       </button>
     </>
@@ -358,7 +380,7 @@ const Dashboard = ({
       });
 
       if (!response.ok) throw new Error();
-      
+
       setRows((prev) => prev.map((row) => (row._id === editForm._id ? { ...editForm } : row)));
       closeEditModal();
       toast.success("Updated successfully.");
@@ -475,8 +497,8 @@ const Dashboard = ({
                             <span className={cn(
                               "px-2 py-0.5 rounded text-[10px] font-bold",
                               row.priority === "High" ? "bg-red-50 text-red-600 border border-red-100" :
-                              row.priority === "Medium" ? "bg-blue-50 text-blue-600 border border-blue-100" :
-                              "bg-neutral-50 text-neutral-500 border border-neutral-200"
+                                row.priority === "Medium" ? "bg-blue-50 text-blue-600 border border-blue-100" :
+                                  "bg-neutral-50 text-neutral-500 border border-neutral-200"
                             )}>
                               {row.priority}
                             </span>
@@ -504,119 +526,213 @@ const Dashboard = ({
 
               {/* EDIT MODAL */}
               {editingRow && editForm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-[2px]">
-                  <div className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
-                    <div className="mb-6 flex justify-between items-start">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/40 backdrop-blur-xs">
+                  {/* Modal Container */}
+                  <motion.div 
+                  initial={{ opacity: 0, scale: 0.96, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.96, y: 10 }}
+                  transition={{ type: "spring", duration: 0.4, bounce: 0.15 }}
+                  className="w-full max-w-2xl rounded-lg border border-neutral-200 bg-white p-6 shadow-xl animate-in fade-in-50 zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto font-sans text-neutral-950">
+
+                    {/* Header Section */}
+                    <div className="mb-6 flex justify-between items-start border-b border-neutral-100 pb-4">
                       <div>
-                        <h3 className="text-xl font-bold text-neutral-900 tracking-tight">Edit Application</h3>
-                        <p className="text-sm text-neutral-500">Refine details for {editForm.company || "New Application"}</p>
+                        <h3 className="text-xl font-bold font-display text-neutral-950 tracking-tight">
+                          Edit Application
+                        </h3>
+                        <p className="text-xs font-body text-neutral-500 mt-1">
+                          Refine details for <span className="font-semibold text-neutral-800">{editForm.company || "New Application"}</span>
+                        </p>
                       </div>
-                      <button onClick={closeEditModal} className="text-neutral-400 hover:text-neutral-600">✕</button>
+                      <button
+                        onClick={closeEditModal}
+                        className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
+                        aria-label="Close dialog"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Grid Form Body */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 font-body">
+
+                      {/* Company */}
                       <div className="space-y-1.5">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Company</label>
-                        <Input value={editForm.company} onChange={(e) => handleEditChange("company", e.target.value)} placeholder="e.g. Google" />
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Company</label>
+                        <Input
+                          value={editForm.company}
+                          onChange={(e) => handleEditChange("company", e.target.value)}
+                          placeholder="e.g. Google"
+                          className="bg-white border-neutral-200 text-neutral-950 focus-visible:ring-teal-700"
+                        />
                       </div>
 
+                      {/* Job Title */}
                       <div className="space-y-1.5">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Job Title</label>
-                        <Input value={editForm.title} onChange={(e) => handleEditChange("title", e.target.value)} placeholder="e.g. Senior Developer" />
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Job Title</label>
+                        <Input
+                          value={editForm.title}
+                          onChange={(e) => handleEditChange("title", e.target.value)}
+                          placeholder="e.g. Senior Developer"
+                          className="bg-white border-neutral-200 text-neutral-950 focus-visible:ring-teal-700"
+                        />
                       </div>
 
+                      {/* Posting Link */}
                       <div className="space-y-1.5">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Posting Link</label>
-                        <Input value={editForm.link} onChange={(e) => handleEditChange("link", e.target.value)} placeholder="https://linkedin.com/..." />
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Posting Link</label>
+                        <Input
+                          value={editForm.link}
+                          onChange={(e) => handleEditChange("link", e.target.value)}
+                          placeholder="https://linkedin.com/..."
+                          className="bg-white border-neutral-200 text-neutral-950 focus-visible:ring-teal-700"
+                        />
                       </div>
 
+                      {/* Salary Range */}
                       <div className="space-y-1.5">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Salary Range</label>
-                        <Input value={editForm.salary} onChange={(e) => handleEditChange("salary", e.target.value)} placeholder="e.g. $140k - $160k" />
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Salary Range</label>
+                        <Input
+                          value={editForm.salary}
+                          onChange={(e) => handleEditChange("salary", e.target.value)}
+                          placeholder="e.g. $140k - $160k"
+                          className="bg-white border-neutral-200 text-neutral-950 focus-visible:ring-teal-700"
+                        />
                       </div>
 
+                      {/* Applied Date Popover */}
                       <div className="space-y-1.5 flex flex-col">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Applied Date</label>
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Applied Date</label>
                         <Popover>
                           <PopoverTrigger asChild>
-                            <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !editForm.date && "text-muted-foreground")}>
-                              <CalendarIcon className="mr-2 h-4 w-4" />
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full justify-start text-left font-normal bg-white border-neutral-200 text-neutral-950 hover:bg-neutral-50 focus:ring-2 focus:ring-teal-700",
+                                !editForm.date && "text-neutral-400"
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4 text-neutral-400" />
                               {editForm.date ? format(new Date(editForm.date), "PPP") : <span>Pick a date</span>}
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar mode="single" selected={editForm.date ? new Date(editForm.date) : undefined} onSelect={(d) => handleEditChange("date", d ? d.toISOString() : "")} initialFocus />
+                          <PopoverContent className="w-auto p-0 border border-neutral-200 bg-white text-neutral-950 shadow-md" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={editForm.date ? new Date(editForm.date) : undefined}
+                              onSelect={(d) => handleEditChange("date", d ? d.toISOString() : "")}
+                              initialFocus
+                            />
                           </PopoverContent>
                         </Popover>
                       </div>
 
+                      {/* Interview Stage Dropdown */}
                       <div className="space-y-1.5">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Interview Stage</label>
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Interview Stage</label>
                         <Select value={editForm.stage} onValueChange={(val) => handleEditChange("stage", val)}>
-                          <SelectTrigger><SelectValue placeholder="Select Stage" /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Initial Screening">Initial Screening</SelectItem>
-                            <SelectItem value="Technical Round">Technical Round</SelectItem>
-                            <SelectItem value="Managerial Round">Managerial Round</SelectItem>
-                            <SelectItem value="Culture Fit">Culture Fit</SelectItem>
-                            <SelectItem value="Final Round">Final Round</SelectItem>
+                          <SelectTrigger className="border-neutral-200 bg-white text-neutral-950 focus:ring-teal-700">
+                            <SelectValue placeholder="Select Stage" />
+                          </SelectTrigger>
+                          <SelectContent className="border border-neutral-200 !bg-white text-neutral-950 shadow-md">
+                            <SelectItem value="Initial Screening" className="hover:bg-neutral-50 focus:bg-neutral-100 cursor-pointer text-neutral-950 data-[highlighted]:bg-neutral-100 data-[highlighted]:text-neutral-950">Initial Screening</SelectItem>
+                            <SelectItem value="Technical Round" className="hover:bg-neutral-50 focus:bg-neutral-100 cursor-pointer text-neutral-950 data-[highlighted]:bg-neutral-100 data-[highlighted]:text-neutral-950">Technical Round</SelectItem>
+                            <SelectItem value="Managerial Round" className="hover:bg-neutral-50 focus:bg-neutral-100 cursor-pointer text-neutral-950 data-[highlighted]:bg-neutral-100 data-[highlighted]:text-neutral-950">Managerial Round</SelectItem>
+                            <SelectItem value="Culture Fit" className="hover:bg-neutral-50 focus:bg-neutral-100 cursor-pointer text-neutral-950 data-[highlighted]:bg-neutral-100 data-[highlighted]:text-neutral-950">Culture Fit</SelectItem>
+                            <SelectItem value="Final Round" className="hover:bg-neutral-50 focus:bg-neutral-100 cursor-pointer text-neutral-950 data-[highlighted]:bg-neutral-100 data-[highlighted]:text-neutral-950">Final Round</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
+                      {/* Location */}
                       <div className="space-y-1.5">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Location</label>
-                        <Input value={editForm.location} onChange={(e) => handleEditChange("location", e.target.value)} placeholder="Remote / Hybrid / City" />
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Location</label>
+                        <Input
+                          value={editForm.location}
+                          onChange={(e) => handleEditChange("location", e.target.value)}
+                          placeholder="Remote / Hybrid / City"
+                          className="bg-white border-neutral-200 text-neutral-950 focus-visible:ring-teal-700"
+                        />
                       </div>
 
+                      {/* Priority Dropdown */}
                       <div className="space-y-1.5">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Priority</label>
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Priority</label>
                         <Select value={editForm.priority} onValueChange={(val) => handleEditChange("priority", val)}>
-                          <SelectTrigger><SelectValue placeholder="Select Priority" /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="High">High 🔥</SelectItem>
-                            <SelectItem value="Medium">Medium ⚡</SelectItem>
-                            <SelectItem value="Low">Low 🧊</SelectItem>
+                          <SelectTrigger className="border-neutral-200 bg-white text-neutral-950 focus:ring-teal-700">
+                            <SelectValue placeholder="Select Priority" />
+                          </SelectTrigger>
+                          <SelectContent className="border border-neutral-200 !bg-white text-neutral-950 shadow-md">
+                            <SelectItem value="High" className="hover:bg-neutral-50 focus:bg-neutral-100 cursor-pointer text-neutral-950 data-[highlighted]:bg-neutral-100 data-[highlighted]:text-neutral-950">High 🔥</SelectItem>
+                            <SelectItem value="Medium" className="hover:bg-neutral-50 focus:bg-neutral-100 cursor-pointer text-neutral-950 data-[highlighted]:bg-neutral-100 data-[highlighted]:text-neutral-950">Medium ⚡</SelectItem>
+                            <SelectItem value="Low" className="hover:bg-neutral-50 focus:bg-neutral-100 cursor-pointer text-neutral-950 data-[highlighted]:bg-neutral-100 data-[highlighted]:text-neutral-950">Low 🧊</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
+                      {/* Referral Status Dropdown */}
                       <div className="space-y-1.5">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Referral Status</label>
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Referral Status</label>
                         <Select value={editForm.referral} onValueChange={(val) => handleEditChange("referral", val)}>
-                          <SelectTrigger><SelectValue placeholder="Referral status?" /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">Cold Applied</SelectItem>
-                            <SelectItem value="requested">Requested</SelectItem>
-                            <SelectItem value="secured">Referral Secured</SelectItem>
+                          <SelectTrigger className="border-neutral-200 bg-white text-neutral-950 focus:ring-teal-700">
+                            <SelectValue placeholder="Referral status?" />
+                          </SelectTrigger>
+                          <SelectContent className="border border-neutral-200 !bg-white text-neutral-950 shadow-md">
+                            <SelectItem value="none" className="hover:bg-neutral-50 focus:bg-neutral-100 cursor-pointer text-neutral-950 data-[highlighted]:bg-neutral-100 data-[highlighted]:text-neutral-950">Cold Applied</SelectItem>
+                            <SelectItem value="requested" className="hover:bg-neutral-50 focus:bg-neutral-100 cursor-pointer text-neutral-950 data-[highlighted]:bg-neutral-100 data-[highlighted]:text-neutral-950">Requested</SelectItem>
+                            <SelectItem value="secured" className="hover:bg-neutral-50 focus:bg-neutral-100 cursor-pointer text-neutral-950 data-[highlighted]:bg-neutral-100 data-[highlighted]:text-neutral-950">Referral Secured</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
+                      {/* Point of Contact */}
                       <div className="space-y-1.5">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Point of Contact</label>
-                        <Input value={editForm.contact} onChange={(e) => handleEditChange("contact", e.target.value)} placeholder="Recruiter name or email" />
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Point of Contact</label>
+                        <Input
+                          value={editForm.contact}
+                          onChange={(e) => handleEditChange("contact", e.target.value)}
+                          placeholder="Recruiter name or email"
+                          className="bg-white border-neutral-200 text-neutral-950 focus-visible:ring-teal-700"
+                        />
                       </div>
 
+                      {/* Internal Notes Textarea */}
                       <div className="space-y-1.5 md:col-span-2">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Internal Notes</label>
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Internal Notes</label>
                         <textarea
                           value={editForm.notes}
                           onChange={(e) => handleEditChange("notes", e.target.value)}
                           placeholder="Tech stack, red flags, follow-up reminders..."
-                          className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          className="w-full min-h-[100px] rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700 focus-visible:border-transparent"
                         />
                       </div>
                     </div>
 
-                    <div className="mt-8 flex justify-end gap-3 border-t pt-5">
-                      <Button variant="ghost" onClick={closeEditModal} className="text-neutral-500">Cancel</Button>
-                      <Button onClick={saveEditedRow} disabled={saveEditLoader || !hasChanges} className="bg-blue-600 hover:bg-blue-700 text-white px-8">
+                    {/* Footer Actions */}
+                    <div className="mt-8 flex justify-end gap-3 border-t border-neutral-100 pt-5 font-body">
+                      <Button
+                        variant="ghost"
+                        onClick={closeEditModal}
+                        className="text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={saveEditedRow}
+                        disabled={saveEditLoader || !hasChanges}
+                        className="bg-teal-700 hover:bg-teal-800 active:bg-teal-900 text-white font-medium px-8 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                      >
                         {saveEditLoader ? "Saving..." : "Save Changes"}
                       </Button>
                     </div>
-                  </div>
-                </div>
+
+                  </motion.div>
+                </motion.div>
               )}
             </>
           ) : (

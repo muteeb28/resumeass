@@ -9,8 +9,7 @@ import SidebarDemo from "./sidebar-demo";
 import { HeroSection } from "./hero-section";
 import { JobsPreviewSection } from "./jobs-preview-section";
 import { WhyUsSection, FAQSection } from "./why-us-faq";
-
-
+import Link from "next/link";
 
 export function AnimatedPinDemo() {
   return (
@@ -66,7 +65,7 @@ export function AnimatedPinDemo() {
         <div className="flex justify-center">
           <PinContainer
             title="careerSprint"
-            href="https://levelup-8csx.vercel.app/jobs"
+            href="https://jobflix.in/jobs"
             cardClassName="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 border-white/10"
           >
             <div className="flex w-[26rem] flex-col gap-4 p-6 text-slate-100 sm:w-[28rem]">
@@ -106,10 +105,10 @@ export function AnimatedPinDemo() {
             The future of resume building is here
           </p>
           <div className="flex justify-center gap-8 text-neutral-500 text-sm">
-            <a href="#" className="hover:text-neutral-900 transition-colors">Privacy</a>
-            <a href="#" className="hover:text-neutral-900 transition-colors">Terms</a>
-            <a href="#" className="hover:text-neutral-900 transition-colors">Support</a>
-            <a href="#" className="hover:text-neutral-900 transition-colors">Contact</a>
+            <Link href="/privacy-policy" className="hover:text-neutral-900 transition-colors">Privacy</Link>
+            <Link href="/terms-of-service" className="hover:text-neutral-900 transition-colors">Terms</Link>
+            <Link href="/refund-policy" className="hover:text-neutral-900 transition-colors">Refund Policy</Link>
+            <Link href="/contact-us" className="hover:text-neutral-900 transition-colors">Contact</Link>
           </div>
           <div className="mt-8 text-neutral-400 text-xs">
             © 2024 ResumeAssist AI. All rights reserved.
