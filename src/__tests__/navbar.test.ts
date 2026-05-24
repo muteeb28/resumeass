@@ -4,7 +4,7 @@
  * These tests mirror the navItems array in navbar.tsx and verify the
  * nav structure after the 2026-05-24 updates:
  *  - "Job Tracker" renamed to "Job Referrals"
- *  - "Fresh Jobs" added (links to the Find Jobs tab)
+ *  - "Jobs" added (links to the Find Jobs tab)
  *  - "Courses" removed
  *  - "Features" renamed to "Learn" (external link to jobflix.in/courses)
  *  - Desktop and mobile both render from the same navItems array
@@ -17,7 +17,7 @@ import { describe, it, expect } from 'vitest';
 // Mirrors navItems in src/components/navbar.tsx.
 const navItems = [
   { name: 'Job Referrals', href: '/job-tracker' },
-  { name: 'Fresh Jobs',    href: '/job-tracker?tab=jobs' },
+  { name: 'Jobs',          href: '/job-tracker?tab=jobs' },
   { name: 'Learn',         href: 'https://jobflix.in/courses', external: true },
   { name: 'Pricing',       href: '/#pricing' },
   { name: 'Blog',          href: '/blog' },
@@ -45,13 +45,13 @@ describe('navbar — Job Referrals', () => {
 
 // ─── New item ─────────────────────────────────────────────────────────────────
 
-describe('navbar — Fresh Jobs', () => {
-  it('renders Fresh Jobs', () => {
-    expect(navNames).toContain('Fresh Jobs');
+describe('navbar — Jobs', () => {
+  it('renders Jobs', () => {
+    expect(navNames).toContain('Jobs');
   });
 
-  it('Fresh Jobs links to the Find Jobs tab', () => {
-    const item = navItems.find((i) => i.name === 'Fresh Jobs');
+  it('Jobs links to the Find Jobs tab', () => {
+    const item = navItems.find((i) => i.name === 'Jobs');
     expect(item?.href).toBe('/job-tracker?tab=jobs');
   });
 });
@@ -107,8 +107,8 @@ describe('navbar — item order', () => {
     expect(navItems[0].name).toBe('Job Referrals');
   });
 
-  it('Fresh Jobs is second', () => {
-    expect(navItems[1].name).toBe('Fresh Jobs');
+  it('Jobs is second', () => {
+    expect(navItems[1].name).toBe('Jobs');
   });
 
   it('Learn is third', () => {

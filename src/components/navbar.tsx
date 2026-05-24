@@ -22,7 +22,7 @@ export const Navbar = ({
 
   const navItems = [
     { name: "Job Referrals", href: "/job-tracker" },
-    { name: "Fresh Jobs", href: "/job-tracker?tab=jobs" },
+    { name: "Jobs", href: "/job-tracker?tab=jobs" },
     { name: "Learn", href: "https://jobflix.in/courses", external: true },
     { name: "Pricing", href: "/#pricing" },
     { name: "Blog", href: "/blog" },
