@@ -1,280 +1,412 @@
 # Jobs Hub Design System
-# Direction A — Calm Linear + Teal Salary/Hover
+# Direction 1 — Sharp (cool slate + vibrant indigo)
 
-**Confirmed:** 2026-05-21  
+**Confirmed:** 2026-05-23  
 **Scope:** `app/job-tracker/` and all components under `src/components/jobs-hub/`  
+**Replaces:** Direction A (Calm Linear + teal) from 2026-05-21  
 **Do not apply outside this scope without explicit approval.**
+
+> This is the source of truth for all Jobs Hub styling. Subagents and phases implement FROM this spec. Any deviation must update this file first.
 
 ---
 
-## 1. Palette
+## 1. CSS Tokens — add to `src/index.css` under `:root`
 
-All values are Tailwind utility names. Use these — never hardcode hex in component files.
+Tailwind v4 supports OKLCH natively. Register as a `@theme` block so Tailwind generates utility classes automatically.
 
-| Role | Tailwind class | Hex approx | Usage |
+```css
+/* ── Jobs Hub Design System v2 (Direction 1 — Sharp, 2026-05-23) ── */
+@theme {
+  /* base */
+  --color-hub-bg:             oklch(0.987 0.002 260);
+  --color-hub-bg-subtle:      oklch(0.972 0.004 260);
+  --color-hub-surface:        oklch(1.000 0.001 260);
+  --color-hub-border:         oklch(0.905 0.005 260);
+  --color-hub-border-strong:  oklch(0.812 0.008 260);
+  /* text */
+  --color-hub-text-1:         oklch(0.100 0.010 260);
+  --color-hub-text-2:         oklch(0.440 0.010 260);
+  --color-hub-text-3:         oklch(0.600 0.007 260);
+  /* accent — vibrant Linear-grade indigo */
+  --color-hub-accent:         oklch(0.520 0.220 278);
+  --color-hub-accent-soft:    oklch(0.960 0.030 278);
+  --color-hub-accent-fg:      oklch(0.360 0.160 278);
+  /* salary */
+  --color-hub-salary:         oklch(0.490 0.160 148);
+  --color-hub-salary-bg:      oklch(0.950 0.040 148);
+  /* status */
+  --color-hub-warn:           oklch(0.570 0.150  55);
+  --color-hub-warn-bg:        oklch(0.950 0.050  55);
+}
+```
+
+This generates Tailwind utilities: `bg-hub-bg`, `text-hub-text-1`, `border-hub-border`, `bg-hub-accent`, etc.
+
+### Quick reference table
+
+| Token | OKLCH | Nearest hex | Usage |
 |---|---|---|---|
-| Page background | `bg-neutral-50` | #F5F5F5 | `BackgroundRippleLayout tone="light"` — unchanged |
-| Surface | `bg-white` | #FFFFFF | Cards, table rows, pill strip, chips |
-| Text primary | `text-neutral-900` | #171717 | Headings, card titles, table name cells |
-| Text secondary | `text-neutral-500` | #737373 | Descriptions, meta, company name |
-| Text muted | `text-neutral-400` | #A3A3A3 | Region labels, row numbers, timestamps |
-| Border default | `border-neutral-200` | #E5E5E5 | Cards, chips, tab strip, table |
-| Border strong | `border-neutral-300` | #D4D4D4 | Apply button at rest |
-| Active pill bg | `bg-neutral-900` | #171717 | Active tab pill, active chip, table header |
-| **Teal — salary** | `text-emerald-600` | #059669 | Salary/CTC figures only |
-| **Teal — hover** | `hover:bg-teal-600` / `hover:border-teal-300` / `hover:text-teal-600` | #0D9488 | Card hover border, Apply button hover fill, table link hover |
-| Live badge bg | `bg-emerald-50` | #ECFDF5 | LiveReadyBadge background |
-| Live badge border | `border-emerald-200` | #A7F3D0 | LiveReadyBadge border |
-| Live badge text | `text-emerald-700` | #065F46 | LiveReadyBadge text |
-| Live dot | `bg-emerald-500` | #10B981 | Animated pulse dot |
+| `hub-bg` | `0.987 0.002 260` | #FAFBFC | Page background |
+| `hub-surface` | `1.000 0.001 260` | #FFFFFF | Cards, table rows |
+| `hub-bg-subtle` | `0.972 0.004 260` | #F3F4F6 | Thead, hover row, chip rest |
+| `hub-border` | `0.905 0.005 260` | #E2E4E9 | Cards, chips, table |
+| `hub-border-strong` | `0.812 0.008 260` | #C8CBD4 | Input border, dividers |
+| `hub-text-1` | `0.100 0.010 260` | #141419 | Headings, titles |
+| `hub-text-2` | `0.440 0.010 260` | #5E6175 | Meta, company |
+| `hub-text-3` | `0.600 0.007 260` | #8890A0 | Timestamps, muted |
+| `hub-accent` | `0.520 0.220 278` | #4F5DE8 | Tab indicator, active chip, "New" badge |
+| `hub-accent-soft` | `0.960 0.030 278` | #EEEFFE | Active chip bg, badge bg |
+| `hub-accent-fg` | `0.360 0.160 278` | #2F3AB2 | Text on accent-soft |
+| `hub-salary` | `0.490 0.160 148` | #18795E | Salary/CTC figures |
+| `hub-salary-bg` | `0.950 0.040 148` | #EDFBF4 | Replied badge bg |
+| `hub-warn` | `0.570 0.150 55` | #B45309 | Opened badge text |
+| `hub-warn-bg` | `0.950 0.050 55` | #FEF3C7 | Opened badge bg |
 
-### Teal constraint — hard rule
-Teal appears **only** in these three contexts:
-1. Salary / CTC figures: `text-emerald-600`
-2. Interactive hover states: card border, apply button fill, chip hover, table link hover
-3. The live-ready badge and pulse dot
+### Accent rule
+Accent (`hub-accent`) appears only in:
+1. Tab indicator line (2px bottom border)
+2. Active filter chip (fill + border)
+3. "New" badge on job cards
+4. Focus rings
+5. Hover state on chips (border only, at 40% opacity)
 
-**Never** use teal for headings, chips at rest, tab pills, backgrounds, or decorative elements.
-
-### Type badge colors (small pills on job cards)
-These are functional indicators, not decorative. They remain pastel-tinted:
-
-| Type | Classes |
-|---|---|
-| Full-time | `bg-emerald-50 text-emerald-700 border-emerald-200` |
-| Internship | `bg-violet-50 text-violet-700 border-violet-200` |
-| Contract | `bg-amber-50 text-amber-700 border-amber-200` |
-| Part-time | `bg-sky-50 text-sky-700 border-sky-200` |
-| Default | `bg-neutral-100 text-neutral-600 border-neutral-200` |
-
-These are isolated within the type badge component and do not set a precedent for other chip styling.
+**Never** use accent on headings, card bodies, or table cells. Never use it decoratively.
 
 ---
 
 ## 2. Typography
 
-| Element | Classes | Notes |
+Font: **Plus Jakarta Sans** — add to `src/index.css` import at top:
+```css
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+```
+Then add to `@theme`:
+```css
+--font-hub: 'Plus Jakarta Sans', -apple-system, sans-serif;
+```
+
+| Element | Tailwind classes | Notes |
 |---|---|---|
-| Page h1 | `text-3xl md:text-5xl font-bold text-neutral-900 tracking-tight` | `tracking-tight` = -0.025em, Direction A key trait |
-| Region label | `text-xs uppercase tracking-[0.3em] text-neutral-400` | Existing pattern — preserved |
-| Tab description | `text-sm text-neutral-500 max-w-2xl mt-3 leading-relaxed` | |
-| Card job title | `text-sm font-semibold text-neutral-900 leading-snug` | |
-| Card company | `text-xs text-neutral-500` | |
-| Card salary | `text-sm font-semibold text-emerald-600` | Teal only here |
-| Card meta (location/time) | `text-xs text-neutral-400` | |
-| Filter chip | `text-[11px] font-medium` | |
-| Tab pill | `text-xs font-semibold` | |
-| Table header | `text-[10px] font-semibold uppercase tracking-[0.04em] text-white` | |
-| Table cell | `text-xs text-neutral-600` | |
-| Table name cell | `text-xs font-semibold text-neutral-900` | |
-| Table link | `text-xs text-teal-600 hover:underline` | Teal scoped to links |
-| Result count | `text-xs text-neutral-500` | `<strong>` = `text-neutral-900 font-semibold` |
+| Page title (h1) | `text-xl font-bold text-hub-text-1 tracking-tight` | -0.022em tracking |
+| Panel subtitle | `text-xs text-hub-text-3` | Lives below panel title |
+| Card job title | `text-[14px] font-semibold text-hub-text-1 leading-snug tracking-[-0.01em]` | |
+| Card company / meta | `text-[12.5px] text-hub-text-2` | Company · Location · Work type |
+| Card salary | `text-[13px] font-semibold text-hub-salary` | Only place salary color appears |
+| Card timestamp | `text-[11.5px] text-hub-text-3` | |
+| Skill tag | `text-[11.5px] font-medium text-hub-text-3` | Inside tag chip |
+| Filter chip | `text-[12px] font-medium` | |
+| Tab label | `text-[13px] font-medium` inactive / `font-semibold` active | |
+| Table thead | `text-[11.5px] font-semibold text-hub-text-3` | lowercase, no uppercase |
+| Table cell | `text-[13px] text-hub-text-1` | |
+| Table muted cell | `text-[12.5px] text-hub-text-3` | Timestamps, email |
+| Status badge | `text-[11.5px] font-semibold` | |
+| "New" badge | `text-[10px] font-semibold` | |
 
 ---
 
 ## 3. Spacing & Layout
 
-| Element | Classes |
+| Element | Value |
 |---|---|
-| Page section | `px-4 py-16` |
-| Page container | `max-w-6xl mx-auto` |
-| Tab strip margin | `mb-10` |
-| Tab header margin | `mb-8` |
-| Filter row margin | `mb-6` |
-| Cards grid gap | `gap-3` (12px — tighter than gap-4 per Direction A) |
-| Cards grid columns | `grid-cols-1 md:grid-cols-2 xl:grid-cols-3` |
-| Card padding | `p-5` |
-| Card internal gap | `gap-3 flex flex-col` |
-| Table cell padding | `px-3 py-2.5` |
+| Page max width | `max-w-[940px] mx-auto px-5` |
+| Top bar height | `h-[52px]` |
+| Tab nav height | `h-[42px]` (tabs + indicator row) |
+| Page content padding | `pt-7 pb-20` |
+| Panel title margin | `mb-5` |
+| Search / toolbar margin | `mb-[14px]` |
+| Chips row margin | `mb-[18px]` |
+| Job list gap | `gap-[3px]` (barely visible separation) |
+| Job card padding | `px-4 py-[13px]` |
+| Company logo size | `w-9 h-9` (36px) |
+| Logo — card gap | `gap-3` (12px) |
+| Tag chip gap | `gap-1` |
+| Kanban col gap | `gap-[10px]` |
+| Table cell padding | `px-4 py-[11px]` |
 
 ---
 
 ## 4. Border Radius
 
-| Component | Class | px equiv |
-|---|---|---|
-| **Job card** | `rounded-xl` | 12px — **changed from `rounded-2xl`** |
-| Company avatar | `rounded-xl` | 12px — matches card |
-| Tab pills / chips | `rounded-full` | pill |
-| Apply button | `rounded-lg` | 8px |
-| Table container | `rounded-xl` | 12px |
-| Type badge | `rounded-full` | pill |
-| Skeleton bars | `rounded-full` | pill |
-| Skeleton blocks | `rounded-xl` | 12px |
-| Pagination buttons | `rounded-lg` | 8px |
+| Component | Value |
+|---|---|
+| Job card | `rounded-[10px]` |
+| Company logo | `rounded-[6px]` |
+| Filter chip | `rounded-full` |
+| "New" badge | `rounded-full` |
+| Status badge | `rounded-[4px]` |
+| Skill tag | `rounded-[4px]` |
+| Table container | `rounded-[14px]` |
+| Search input | `rounded-[10px]` |
+| Button | `rounded-[10px]` |
+| Kanban card | `rounded-[6px]` |
+| Kanban column | `rounded-[10px]` |
 
 ---
 
-## 5. Shadows
+## 5. Shadow System
 
-Direction A is **shadow-free at rest**. Shadows appear only on interaction.
+All shadows use cool-tinted color to match the slate base. No warm shadows.
+
+```css
+/* paste these into :root in src/index.css */
+--shadow-hub-sm: 0 1px 2px oklch(0.10 0.01 260 / 0.07), 0 1px 1px oklch(0.10 0.01 260 / 0.04);
+--shadow-hub:    0 2px 8px oklch(0.10 0.01 260 / 0.09), 0 1px 3px oklch(0.10 0.01 260 / 0.05);
+--shadow-hub-md: 0 4px 16px oklch(0.10 0.01 260 / 0.11), 0 2px 4px oklch(0.10 0.01 260 / 0.06);
+```
 
 | State | Shadow |
 |---|---|
 | Card at rest | none |
-| Card hover | `hover:shadow-lg hover:shadow-teal-500/5` — existing, keep |
-| Tab strip | `shadow-sm` |
-| Active pill | `shadow` (Tailwind default) |
-| Table container | `shadow-sm` |
-| Apply button at rest | none |
+| Card hover | `var(--shadow-hub)` + `translateY(-1px)` |
+| Kanban card hover | `var(--shadow-hub-sm)` + `translateY(-1px)` |
+| Table container | none (border only) |
+| Search input focus | `0 0 0 3px oklch(0.52 0.22 278 / 0.12)` |
 
 ---
 
-## 6. Component Specs
+## 6. Motion — Framer Motion Constants
 
-### 6.1 Tab Pill (in JobsHubNav)
+Create `src/lib/motion.ts` — import from here everywhere. **Do not hardcode easing inline.**
+
+```typescript
+// src/lib/motion.ts
+// Centralized motion primitives for Jobs Hub
+// All Framer Motion variants and transitions reference this file.
+
+/** Tab indicator slide — spring with slight overshoot */
+export const TAB_INDICATOR = {
+  type: 'spring' as const,
+  stiffness: 380,
+  damping: 28,
+  mass: 1,
+} satisfies import('framer-motion').SpringOptions
+
+/** Content panel entrance — expo-out feel */
+export const PANEL_IN = {
+  initial: { opacity: 0, y: 7 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.30, ease: [0.16, 1, 0.3, 1] },
+} as const
+
+/** Stagger container — wraps lists of job cards */
+export const STAGGER_CONTAINER = {
+  animate: { transition: { staggerChildren: 0.055 } },
+} as const
+
+/** Single staggered item (job card, table row, kanban column) */
+export const STAGGER_ITEM = {
+  initial: { opacity: 0, y: 8 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.36, ease: [0.16, 1, 0.3, 1] },
+  },
+} as const
+
+/** Active dot on tab (scale in on active) */
+export const TAB_DOT = {
+  initial: { scale: 0.3, opacity: 0 },
+  animate: { scale: 1, opacity: 1 },
+  transition: { type: 'spring', stiffness: 400, damping: 22 },
+} as const
+
+/** Card hover lift — use with whileHover */
+export const CARD_HOVER = {
+  y: -1,
+  transition: { duration: 0.18, ease: [0.16, 1, 0.3, 1] },
+} as const
+
+/** Chip hover */
+export const CHIP_HOVER = {
+  scale: 1.01,
+  transition: { duration: 0.12 },
+} as const
+
+/** Reduced-motion safe wrapper — disables y-transforms when prefers-reduced-motion */
+export function safeMotion<T extends { initial?: object; animate?: object }>(
+  variant: T,
+  reducedMotion: boolean
+): T {
+  if (!reducedMotion) return variant
+  return {
+    ...variant,
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+  }
+}
+```
+
+### Reduced motion rule
+Always wrap Framer Motion components with `useReducedMotion()`. When true: disable y-transforms, use instant opacity only.
+
+```tsx
+const reduced = useReducedMotion()
+// pass reducedMotion={reduced ?? false} to safeMotion() 
+// or check before applying y-based variants
+```
+
+---
+
+## 7. Component Specs
+
+### 7.1 Tab Navigation
+
+Tab bar: `sticky top-[52px] z-[100]`, `border-b border-hub-border`, `bg-hub-surface`.
+
+```tsx
+// Tab indicator: absolutely positioned, uses layoutId for Framer Motion spring
+<motion.div
+  layoutId="tab-indicator"
+  className="absolute bottom-0 h-[2px] rounded-t-[2px] bg-hub-accent"
+  transition={TAB_INDICATOR}
+/>
+```
+
+Active tab: `text-hub-text-1 font-semibold`
+Inactive tab: `text-hub-text-3 font-medium hover:text-hub-text-2`
+Tab padding: `px-[15px] py-[11px]`
+Active dot: `w-[5px] h-[5px] rounded-full bg-hub-accent ml-[5px]` — `<AnimatePresence>` + scale spring
+
+### 7.2 Filter Chips
 
 ```
-At rest:    px-5 py-2 rounded-full text-xs font-semibold text-neutral-500 hover:text-neutral-900
-Active:     px-5 py-2 rounded-full text-xs font-semibold bg-neutral-900 text-white shadow
-Press:      active:scale-[0.97] transition-transform duration-100
-Focus:      focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 focus-visible:ring-offset-white
+Rest:   bg-hub-surface border border-hub-border-strong text-hub-text-2
+        text-[12px] font-medium px-[11px] py-1 rounded-full
+Hover:  border-hub-accent/40 text-hub-accent-fg bg-hub-accent-soft
+Active: bg-hub-accent border-hub-accent text-white
+        box-shadow: 0 1px 4px oklch(0.52 0.22 278 / 0.3)
+Transition: 130ms, border + bg + color
 ```
 
-### 6.2 Filter Chip (in JobBoard)
+### 7.3 Job Card
 
 ```
-At rest:    px-3 py-1.5 rounded-full text-[11px] font-medium border border-neutral-200
-            bg-white text-neutral-500
-            hover:border-neutral-400 hover:text-neutral-900
-            transition-colors duration-100
-Active:     bg-neutral-900 text-white border-neutral-900
-            hover:bg-neutral-800
+Rest:   bg-hub-surface border border-hub-border rounded-[10px]
+        padding: px-4 py-[13px]
+Hover:  border-hub-border-strong, var(--shadow-hub), translateY(-1px)
+        transition: border 150ms, box-shadow 180ms, transform 180ms
 ```
 
-No per-category colors. All chips are neutral. The type badge on each card (Full-time / Internship) already provides category color signal.
+Company logo: 36×36, `rounded-[6px]`, `border border-hub-border`.
+Logo background: use a small palette of cool-tinted OKLCH colors keyed by company initial — not random warm tints.
 
-### 6.3 Apply Button (in JobCard)
+Salary: `text-[13px] font-semibold text-hub-salary` — the only place salary color appears.
+"New" badge: `bg-hub-accent-soft text-hub-accent-fg border border-hub-accent/20 text-[10px] font-semibold rounded-full px-1.5 py-0.5`
 
-```
-w-full py-2.5 rounded-lg text-sm font-semibold
-border border-neutral-300 bg-white text-neutral-900
-hover:bg-teal-600 hover:text-white hover:border-teal-600
-transition-colors duration-200
-```
+### 7.4 HR / Dubai HR Table
 
-This replaces the current `bg-neutral-900` solid button. At rest it's ghost/outlined; on hover it fills teal. This is the primary interaction where teal earns its keep.
-
-### 6.4 Job Card
+Container: `bg-hub-surface border border-hub-border rounded-[14px] overflow-hidden`
 
 ```
-group bg-white border border-neutral-200 rounded-xl p-5
-hover:border-teal-300 hover:shadow-lg hover:shadow-teal-500/5
-transition-all duration-200 flex flex-col gap-3
+thead:  bg-hub-bg-subtle
+th:     text-[11.5px] font-semibold text-hub-text-3 px-4 py-[9px] text-left
+        border-b border-hub-border
+tbody tr:
+  rest:   border-b border-hub-border
+  hover:  bg-hub-bg-subtle transition-colors 100ms
+  last:   no border-b
+td:     text-[13px] text-hub-text-1 px-4 py-[11px]
 ```
 
-Changed: `rounded-2xl` → `rounded-xl`
+Status badges (no side-stripe borders — use full background):
 
-### 6.5 Company Avatar
+| Status | Background | Text | Border |
+|---|---|---|---|
+| Sent | `hub-bg-subtle` | `hub-text-3` | `hub-border` |
+| Opened | `hub-warn-bg` | `hub-warn` | `hub-warn/20` |
+| Replied | `hub-salary-bg` | `hub-salary` | `hub-salary/20` |
+
+Format: `inline-flex items-center gap-1 text-[11.5px] font-semibold px-2 py-0.5 rounded-[4px]` with a 4px filled circle before the label.
+
+### 7.5 Kanban (Job Tracker)
+
+Columns: 4-col grid, `gap-[10px]`
+Column bg: `bg-hub-bg-subtle border border-hub-border rounded-[10px] p-[11px]`
+Stage label: `text-[11.5px] font-semibold text-hub-text-2`
+Count badge: `text-[10.5px] font-semibold text-hub-text-3 bg-hub-border min-w-[18px] h-[18px] rounded-full`
+Card: `bg-hub-surface border border-hub-border rounded-[6px] p-[9px] cursor-pointer`
+Card hover: `var(--shadow-hub-sm)` + `translateY(-1px)`
+Empty state: `border border-dashed border-hub-border-strong rounded-[6px] p-4 text-center text-[12.5px] text-hub-text-3`
+
+### 7.6 Search Input
 
 ```
-w-11 h-11 rounded-xl flex items-center justify-center
-text-sm font-bold flex-shrink-0
+height: 35px, rounded-[10px], border border-hub-border-strong bg-hub-surface
+padding: px-3 pl-[30px] (for search icon)
+text: text-[13px] text-hub-text-1, placeholder: text-hub-text-3
+focus: border-hub-accent, box-shadow: 0 0 0 3px oklch(0.52 0.22 278 / 0.12)
+transition: border-color 150ms, box-shadow 150ms
 ```
 
-Colors remain the existing random-by-initial palette (teal, indigo, rose, amber, etc.) — these are purely decorative identity signals, not teal-constrained.
+### 7.7 Live Dot + Badge
 
-### 6.6 TabHeader
-
-```html
-<div class="mb-8">
-  <p class="text-xs uppercase tracking-[0.3em] text-neutral-400 mb-2">
-    {region}
-  </p>
-  <div class="flex items-center gap-3 flex-wrap">
-    <h1 class="text-3xl md:text-5xl font-bold text-neutral-900 tracking-tight">
-      {label}
-    </h1>
-    {badge?}
-  </div>
-  <p class="text-sm text-neutral-500 mt-3 max-w-2xl leading-relaxed">
-    {description}
-  </p>
-</div>
-```
-
-Note: `tracking-tight` added to h1 — this is the key Direction A typographic trait.
-
-### 6.7 LiveReadyBadge
-
-```html
-<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
-             bg-emerald-50 border border-emerald-200 text-emerald-700
-             text-[10px] font-semibold shrink-0">
-  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-  {text}
+```tsx
+<span className="flex items-center gap-1.5 text-[11.5px] font-semibold text-hub-text-3">
+  <span className="w-[5px] h-[5px] rounded-full bg-hub-salary animate-pulse" />
+  Live
 </span>
 ```
 
-### 6.8 Table Header Row
-
-```html
-<thead class="bg-neutral-900 text-white sticky top-0 z-10">
-  <tr>
-    <th class="px-3 py-2.5 text-[10px] font-semibold tracking-[0.04em] whitespace-nowrap">
-```
-
-`bg-neutral-900` — matches active pill. This replaces `bg-blue-600` in hr-emails-table.tsx.
-
-### 6.9 Skeleton Bars (EmptyRegionState)
-
-All skeleton fills use `bg-neutral-100 animate-pulse`. No colored skeletons.
-
-### 6.10 Fade Overlays (JobsHubNav)
-
-```
-from-neutral-50 to-transparent
-```
-
-Must match `BackgroundRippleLayout tone="light"` background (`bg-neutral-50`).
+Pulse animation: standard Tailwind `animate-pulse` (CSS only — no Framer Motion for this).
 
 ---
 
-## 7. What Changes Per File
+## 8. Phase Implementation Plan
 
-| File | What changes |
-|---|---|
-| `src/components/job-board.tsx` | `rounded-2xl` → `rounded-xl` on cards; Apply button ghost/outlined + teal hover; chip colors all neutral (remove pastel per-category chips) |
-| `src/components/hr-emails-table.tsx` | `bg-blue-600` → `bg-neutral-900` on thead |
-| `src/components/jobs-hub/JobsHubNav.tsx` | New file — uses `from-neutral-50` fades |
-| `src/components/jobs-hub/TabHeader.tsx` | New file — `tracking-tight` on h1 |
-| `src/components/jobs-hub/DubaiHrTab.tsx` | New file — `bg-neutral-900` thead, `text-teal-600` links |
-| `src/components/sidebar-demo.tsx` | Remove inner toggle only (no style changes) |
-| `app/job-tracker/page.tsx` | Wire new nav — no style changes |
+Phases are sequential. Each phase must not be started until the previous is merged and working.
 
-### Explicitly NOT changing
-- `job-board.tsx` company avatar palette (decorative, not teal)
-- Type badges (emerald/violet/amber) — functional, isolated
-- `BackgroundRippleLayout` — affects whole app, not in scope
+### Phase 1 — Foundation (implement first, nothing else depends on it)
+- [ ] Add `@theme` color tokens to `src/index.css`
+- [ ] Add CSS shadow variables to `:root` in `src/index.css`
+- [ ] Add Google Font import for Plus Jakarta Sans to `src/index.css`
+- [ ] Create `src/lib/motion.ts` with all motion constants
+- [ ] Create `src/components/jobs-hub/tabs.config.ts` with TabId, TabConfig, TABS array
+
+### Phase 2 — Navigation
+- [ ] Create/update `src/components/jobs-hub/JobsHubNav.tsx`
+  - Framer Motion `layoutId="tab-indicator"` spring indicator
+  - 6 tabs with `AnimatePresence` dot
+  - Sticky positioning below topbar
+- [ ] Wire into `app/job-tracker/page.tsx`
+
+### Phase 3 — Jobs Feed
+- [ ] Update `src/components/job-board.tsx`
+  - Apply new card styles (surface/border/radius/hover)
+  - Filter chips to Direction 1 spec
+  - Stagger job cards with `STAGGER_CONTAINER` + `STAGGER_ITEM`
+  - Company logo cool-tinted colors
+
+### Phase 4 — HR Tables
+- [ ] Update `src/components/hr-emails-table.tsx`
+  - New thead/tbody styles
+  - Status badge system (Sent/Opened/Replied)
+  - Row hover + stagger entrance
+
+### Phase 5 — Regional Panels
+- [ ] Dubai HR tab (new table matching Phase 4 spec)
+- [ ] Gulf Jobs tab (job list matching Phase 3 spec)
+- [ ] AU & NZ Jobs tab (job list matching Phase 3 spec)
+
+---
+
+## 9. Shared Primitive Checklist
+
+Before any Phase 3+ work begins, confirm these files exist:
+
+- [ ] `src/lib/motion.ts`
+- [ ] `src/components/jobs-hub/tabs.config.ts`
+- [ ] `src/index.css` — hub tokens registered under `@theme`
+
+Every component imports motion from `src/lib/motion.ts`. No inline easing strings.
+
+---
+
+## 10. Out of Scope
+
+Do not change any of the following in any phase:
+
+- `BackgroundRippleLayout` — affects whole app
 - `Navbar` — not in scope
-- Any resume/optimizer/portfolio routes
-
----
-
-## 8. Animation Tokens
-
-| Animation | Value |
-|---|---|
-| Tab pill morph | `spring { duration: 0.35, bounce: 0.12 }` |
-| Tab content in | `opacity 0→1, y 8→0, duration 0.22s, ease [0.23, 1, 0.32, 1]` |
-| Tab content out | `opacity 1→0, y 0→-4, duration 0.22s` |
-| Card hover | `transition-all duration-200` (CSS, not Motion) |
-| Apply hover | `transition-colors duration-200` |
-| Chip hover | `transition-colors duration-100` |
-| Fade overlay | `transition-opacity duration-200` |
-| Skeleton | `animate-pulse` (Tailwind — CSS animation) |
-| Reduced motion | y=0 on all transforms, spring → instant snap |
-
----
-
-## 9. Centralized Primitive Checklist
-
-Before any subagent writes component code, verify these shared primitives exist:
-
-- [ ] `.scrollbar-hide` in `src/index.css`
-- [ ] `src/components/jobs-hub/tabs.config.ts` — TabId, TabConfig, TABS
-- [ ] `src/components/jobs-hub/LiveReadyBadge.tsx`
-- [ ] `src/components/jobs-hub/TabHeader.tsx` (with `tracking-tight`)
-- [ ] `src/components/jobs-hub/EmptyRegionState.tsx`
-
-Every new tab component **imports from these**. No subagent creates its own badge, header, or skeleton.
+- Resume, Portfolio, Optimizer routes
+- Any company logo color palettes used elsewhere
+- `src/styles/resume-optimizer.css`

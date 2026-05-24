@@ -1,4 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 @import "./styles/resume-optimizer.css";
 
@@ -35,6 +36,10 @@
   --app-neutral-800: #2f2f29;
   --app-neutral-900: var(--app-accent);
   --app-neutral-950: var(--app-ink);
+  /* Jobs Hub shadows — cool-tinted, no warm cast */
+  --shadow-hub-sm: 0 1px 2px oklch(0.10 0.01 260 / 0.07), 0 1px 1px oklch(0.10 0.01 260 / 0.04);
+  --shadow-hub:    0 2px 8px oklch(0.10 0.01 260 / 0.09), 0 1px 3px oklch(0.10 0.01 260 / 0.05);
+  --shadow-hub-md: 0 4px 16px oklch(0.10 0.01 260 / 0.11), 0 2px 4px oklch(0.10 0.01 260 / 0.06);
 }
 
 .font-display {
@@ -69,6 +74,8 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+  --color-jobs-teal: #0D9488;
+  --color-jobs-teal-light: #99F6E4;
   --color-teal-50: var(--app-neutral-50);
   --color-teal-100: var(--app-neutral-100);
   --color-teal-200: var(--app-neutral-200);
@@ -102,6 +109,29 @@
   --color-purple-800: var(--app-neutral-800);
   --color-purple-900: var(--app-neutral-900);
   --color-purple-950: var(--app-neutral-950);
+
+  /* ── Jobs Hub Design System v2 (Direction 1 — Sharp, 2026-05-23) ── */
+  --font-hub: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  /* base */
+  --color-hub-bg:             oklch(0.987 0.002 260);
+  --color-hub-bg-subtle:      oklch(0.972 0.004 260);
+  --color-hub-surface:        oklch(1.000 0.001 260);
+  --color-hub-border:         oklch(0.905 0.005 260);
+  --color-hub-border-strong:  oklch(0.812 0.008 260);
+  /* text */
+  --color-hub-text-1:         oklch(0.100 0.010 260);
+  --color-hub-text-2:         oklch(0.440 0.010 260);
+  --color-hub-text-3:         oklch(0.600 0.007 260);
+  /* accent */
+  --color-hub-accent:         oklch(0.520 0.220 278);
+  --color-hub-accent-soft:    oklch(0.960 0.030 278);
+  --color-hub-accent-fg:      oklch(0.360 0.160 278);
+  /* salary */
+  --color-hub-salary:         oklch(0.490 0.160 148);
+  --color-hub-salary-bg:      oklch(0.950 0.040 148);
+  /* status */
+  --color-hub-warn:           oklch(0.570 0.150  55);
+  --color-hub-warn-bg:        oklch(0.950 0.050  55);
 }
 
 @layer base {
@@ -155,6 +185,15 @@
 
 .animate-float {
   animation: float 6s ease-in-out infinite;
+}
+
+/* Scrollbar utilities */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
 @keyframes blob {

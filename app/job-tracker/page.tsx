@@ -2,91 +2,86 @@
 
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { BackgroundRippleLayout } from "@/components/background-ripple-layout";
+import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "@/components/navbar";
+import { JobsHubNav } from "@/components/jobs-hub/JobsHubNav";
+import { TabHeader } from "@/components/jobs-hub/TabHeader";
+import { LiveReadyBadge } from "@/components/jobs-hub/LiveReadyBadge";
+import { RegionalEmptyState } from "@/components/jobs-hub/RegionalEmptyState";
 import SidebarDemo from "@/components/sidebar-demo";
 import HrEmailsTable from "@/components/hr-emails-table";
 import JobBoard from "@/components/job-board";
+import { TABS, type TabId } from "@/components/jobs-hub/tabs.config";
+import { TAB_PANEL } from "@/lib/motion";
 
-type View = "jobs" | "tracker" | "emails";
+const TABLE_CLASS = "border border-hub-border bg-hub-surface rounded-[14px]";
 
 function JobTrackerContent() {
   const searchParams = useSearchParams();
-  const tabParam = searchParams.get("tab") as View | null;
-  const [view, setView] = useState<View>(tabParam === "jobs" || tabParam === "emails" ? tabParam : "tracker");
+  const tabParam = searchParams.get("tab") as TabId | null;
+  const validIds = TABS.map((t) => t.id);
+  const [tab, setTab] = useState<TabId>(
+    tabParam && validIds.includes(tabParam) ? tabParam : "tracker"
+  );
 
-  const tabs: { id: View; label: string }[] = [
-    { id: "jobs", label: "Find Jobs" },
-    { id: "tracker", label: "Job Tracker" },
-    { id: "emails", label: "HR Emails" },
-  ];
+  const cfg = (id: TabId) => TABS.find((t) => t.id === id)!;
 
   return (
-    <BackgroundRippleLayout tone="light" contentClassName="pt-16">
+    <div className="min-h-screen bg-hub-bg pt-16" style={{ fontFamily: "var(--font-hub)" }}>
       <Navbar tone="light" />
 
-      <section className="px-4 py-16">
-        <div className="max-w-6xl mx-auto">
-          {/* Tab switcher */}
-          <div className="flex items-center gap-1 rounded-full bg-white border border-neutral-200 p-1 shadow-sm w-fit mb-10">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setView(tab.id)}
-                className={`px-5 py-2 rounded-full text-xs font-semibold transition ${
-                  view === tab.id
-                    ? "bg-neutral-900 text-white shadow"
-                    : "text-neutral-500 hover:text-neutral-900"
-                }`}
-                type="button"
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+      <JobsHubNav active={tab} onChange={setTab} />
 
-          {view === "jobs" && <JobBoard />}
+      <main className="max-w-[940px] mx-auto px-5 pt-7 pb-20">
+        <AnimatePresence initial={false}>
+          <motion.div key={tab} {...TAB_PANEL}>
 
-          {view === "tracker" && (
-            <>
-              <div className="mb-8">
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500 mb-2">
-                  Job Tracker
-                </p>
-                <h1 className="text-3xl md:text-5xl font-bold text-neutral-900">
-                  Keep every application organized
-                </h1>
-                <p className="text-neutral-500 mt-3 max-w-2xl">
-                  Track stages, export to Google Sheets, and manage HR outreach from a single
-                  workspace.
-                </p>
+            {tab === "jobs" && (
+              <div role="tabpanel" id="panel-jobs" aria-labelledby="tab-jobs">
+                <TabHeader config={cfg("jobs")} badge={<LiveReadyBadge text="Live" />} />
+                <JobBoard />
               </div>
-              <SidebarDemo />
-            </>
-          )}
+            )}
 
-          {view === "emails" && (
-            <>
-              <div className="mb-8">
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500 mb-2">
-                  HR Emails
-                </p>
-                <h1 className="text-3xl md:text-5xl font-bold text-neutral-900">
-                  Your outreach inbox
-                </h1>
-                <p className="text-neutral-500 mt-3 max-w-2xl">
-                  Review and manage all HR email communications in one place.
-                </p>
+            {tab === "tracker" && (
+              <div role="tabpanel" id="panel-tracker" aria-labelledby="tab-tracker">
+                <TabHeader config={cfg("tracker")} />
+                <SidebarDemo />
               </div>
-              <HrEmailsTable
-                className="border border-neutral-200 bg-white shadow-sm rounded-lg"
-                tableClassName="max-h-[520px]"
-              />
-            </>
-          )}
-        </div>
-      </section>
-    </BackgroundRippleLayout>
+            )}
+
+            {tab === "emails" && (
+              <div role="tabpanel" id="panel-emails" aria-labelledby="tab-emails">
+                <TabHeader config={cfg("emails")} badge={<LiveReadyBadge text="Live" />} />
+                <HrEmailsTable className={TABLE_CLASS} tableClassName="max-h-[520px]" />
+              </div>
+            )}
+
+            {tab === "dubai-hr" && (
+              <div role="tabpanel" id="panel-dubai-hr" aria-labelledby="tab-dubai-hr">
+                <TabHeader config={cfg("dubai-hr")} badge={<LiveReadyBadge text="Live" />} />
+                <HrEmailsTable className={TABLE_CLASS} tableClassName="max-h-[520px]" />
+              </div>
+            )}
+
+            {tab === "gulf-jobs" && (
+              <div role="tabpanel" id="panel-gulf-jobs" aria-labelledby="tab-gulf-jobs">
+                <TabHeader config={cfg("gulf-jobs")} />
+                <RegionalEmptyState tabId="gulf-jobs" />
+              </div>
+            )}
+
+            {tab === "au-nz" && (
+              <div role="tabpanel" id="panel-au-nz" aria-labelledby="tab-au-nz">
+                <TabHeader config={cfg("au-nz")} />
+                <RegionalEmptyState tabId="au-nz" />
+              </div>
+            )}
+
+          </motion.div>
+        </AnimatePresence>
+      </main>
+    </div>
   );
 }
 

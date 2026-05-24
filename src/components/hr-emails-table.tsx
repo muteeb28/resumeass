@@ -1,113 +1,148 @@
 "use client";
-import { cn } from "@/lib/utils";
-import React from "react";
-import { useEffect } from "react";
 
-interface HrEmailsTableProps {
-  id: string,
-  name: string,
-  email: string,
-  title: string,
-  company: string,
-  createdAt: string,
-  updateAt: string,
-  status: string,
-  website: string,
-  linkedIn: string,
-  social: string,
-  twitter: string,
-  location: string,
-  phone: string,
+import React, { useEffect, useState } from "react";
+import { motion } from "motion/react";
+import { Copy, Check, Linkedin, Globe } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { TABLE_ROWS, TABLE_ROW } from "@/lib/motion";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+interface HrContact {
+  id: string;
+  name: string;
+  email: string;
+  title: string;
+  company: string;
+  status: string;
+  website: string;
+  linkedIn: string;
+  location: string;
+  phone: string;
+  social: string;
+  twitter: string;
+  createdAt: string;
+  updateAt: string;
 }
 
-const renderCell = (value: string) => {
-  if (!value) return <span className="text-slate-400">-</span>;
-  const isUrl = value.startsWith("http://") || value.startsWith("https://");
-  if (isUrl) {
-    return (
-      <a
-        href={value}
-        target="_blank"
-        rel="noreferrer"
-        className="text-blue-600 hover:underline break-all"
-      >
-        {value}
-      </a>
-    );
-  }
-  return <span className="text-slate-700">{value}</span>;
-};
+// ─── Status system ────────────────────────────────────────────────────────────
+const STATUS_MAP: Record<string, { label: string; bg: string; color: string; border: string }> = {
+  replied: {
+    label: "Replied",
+    bg: "var(--color-hub-salary-bg)",
+    color: "var(--color-hub-salary)",
+    border: "oklch(0.49 0.16 148 / 0.2)",
+  },
+  opened: {
+    label: "Opened",
+    bg: "var(--color-hub-warn-bg)",
+    color: "var(--color-hub-warn)",
+    border: "oklch(0.57 0.15 55 / 0.2)",
+  },
+  sent: {
+    label: "Sent",
+    bg: "var(--color-hub-bg-subtle)",
+    color: "var(--color-hub-text-3)",
+    border: "var(--color-hub-border)",
+  },
+}
 
-// export default function HrEmailsTable({
-//   className,
-//   tableClassName,
-// }: {
-//   className?: string;
-//   tableClassName?: string;
-//   hrContacts?: HrEmailsTableProps[];
-// }) {
+function getStatus(raw: string) {
+  const key = (raw || "active").toLowerCase();
+  return (
+    STATUS_MAP[key] ?? {
+      label: raw || "Active",
+      bg: "var(--color-hub-bg-subtle)",
+      color: "var(--color-hub-text-3)",
+      border: "var(--color-hub-border)",
+    }
+  );
+}
 
-//     const [hrContacts, setHrContacts] = React.useState<HrEmailsTableProps[] | []>([]);
-  
-//     useEffect(() => {
-//       const getHrContacts = async () => {
-//         try {
-//           const response = await fetch(`${process.env.NEXT_PUBLIC_JOBFILX_APIURL}/hr/list/demo`);
-//           const data = await response.json();
-//           console.log('this is the response from the server: ', data.list);
-//           setHrContacts(data.list);
-//         } catch (error) {
-//           console.error("error handling the response", error);
-//         }
-//       }
-//       getHrContacts();
-//     }, []);
+// ─── Sub-components ───────────────────────────────────────────────────────────
+function TableSkeleton() {
+  return (
+    <>
+      {Array.from({ length: 7 }).map((_, i) => (
+        <tr key={i} className="border-b border-hub-border animate-pulse">
+          <td className="px-4 py-[11px]">
+            <div className="space-y-[5px]">
+              <div className="h-[13px] w-28 bg-hub-bg-subtle rounded" />
+              <div className="h-[11px] w-20 bg-hub-bg-subtle rounded" />
+            </div>
+          </td>
+          <td className="px-4 py-[11px]">
+            <div className="h-[13px] w-24 bg-hub-bg-subtle rounded" />
+          </td>
+          <td className="px-4 py-[11px]">
+            <div className="h-[13px] w-36 bg-hub-bg-subtle rounded" />
+          </td>
+          <td className="px-4 py-[11px]">
+            <div className="h-[13px] w-20 bg-hub-bg-subtle rounded" />
+          </td>
+          <td className="px-4 py-[11px]">
+            <div className="h-[13px] w-10 bg-hub-bg-subtle rounded" />
+          </td>
+          <td className="px-4 py-[11px]">
+            <div className="h-[19px] w-14 bg-hub-bg-subtle rounded-[4px]" />
+          </td>
+        </tr>
+      ))}
+    </>
+  );
+}
 
-//   return (
-//     <div className={cn("rounded-2xl border border-slate-200 bg-white shadow-sm", className)}>
-//       <div className={cn("overflow-x-auto max-h-[420px] overflow-y-auto", tableClassName)}>
-//         <table className="min-w-full text-left text-xs">
-//           <thead className="bg-blue-600 text-white">
-//             <tr>
-//               <th className="px-3 py-2 font-semibold">S.No</th>
-//               <th className="px-3 py-2 font-semibold">Name</th>
-//               <th className="px-3 py-2 font-semibold">Job Title</th>
-//               <th className="px-3 py-2 font-semibold">Company Name</th>
-//               <th className="px-3 py-2 font-semibold">Status</th>
-//               <th className="px-3 py-2 font-semibold">Company Email</th>
-//               <th className="px-3 py-2 font-semibold">Company Website</th>
-//               <th className="px-3 py-2 font-semibold">Company Linkedin</th>
-//               <th className="px-3 py-2 font-semibold">Company Social</th>
-//               <th className="px-3 py-2 font-semibold">Company Twitter</th>
-//               <th className="px-3 py-2 font-semibold">Location</th>
-//             </tr>
-//           </thead>
-//           <tbody>
-//             {hrContacts?.map((row, index) => (
-//               <tr
-//                 key={`${row.name}-${index}`}
-//                 className={index % 2 === 0 ? "bg-white" : "bg-slate-50"}
-//               >
-//                 <td className="px-3 py-2 text-slate-600">{index + 1}</td>
-//                 <td className="px-3 py-2 font-semibold text-slate-900">{row.name}</td>
-//                 <td className="px-3 py-2">{renderCell(row.title)}</td>
-//                 <td className="px-3 py-2">{renderCell(row.company)}</td>
-//                 <td className="px-3 py-2">{renderCell(row.status || 'active')}</td>
-//                 <td className="px-3 py-2">{renderCell(row.email)}</td>
-//                 <td className="px-3 py-2">{renderCell(row.website || '-')}</td>
-//                 <td className="px-3 py-2">{renderCell(row.linkedin || '-')}</td>
-//                 <td className="px-3 py-2">{renderCell(row.social || '-')}</td>
-//                 <td className="px-3 py-2">{renderCell(row.twitter || '-')}</td>
-//                 <td className="px-3 py-2">{renderCell(row.location || '-')}</td>
-//               </tr>
-//             ))}
-//           </tbody>
-//         </table>
-//       </div>
-//     </div>
-//   );
-// }
+function StatusBadge({ raw }: { raw: string }) {
+  const { label, bg, color, border } = getStatus(raw);
+  return (
+    <span
+      className="inline-flex items-center gap-1 text-[11.5px] font-semibold px-2 py-0.5 rounded-[4px]"
+      style={{ backgroundColor: bg, color, border: `1px solid ${border}` }}
+    >
+      <span
+        className="w-[4px] h-[4px] rounded-full flex-shrink-0"
+        style={{ backgroundColor: color }}
+      />
+      {label}
+    </span>
+  );
+}
 
+function LinkIcon({
+  href,
+  icon: Icon,
+  label,
+}: {
+  href: string;
+  icon: React.ElementType;
+  label: string;
+}) {
+  if (!href || href === "-") return null;
+  const url = href.startsWith("http") ? href : `https://${href}`;
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={label}
+      className="p-1 rounded-[4px] text-hub-text-3 outline-none"
+      style={{ transition: "color 130ms, background-color 130ms" }}
+      onMouseEnter={(e) => {
+        const el = e.currentTarget as HTMLAnchorElement;
+        el.style.color = "var(--color-hub-text-1)";
+        el.style.backgroundColor = "var(--color-hub-bg-subtle)";
+      }}
+      onMouseLeave={(e) => {
+        const el = e.currentTarget as HTMLAnchorElement;
+        el.style.color = "";
+        el.style.backgroundColor = "";
+      }}
+    >
+      <Icon size={13} strokeWidth={1.8} />
+    </a>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
 export default function HrEmailsTable({
   className,
   tableClassName,
@@ -115,94 +150,163 @@ export default function HrEmailsTable({
   className?: string;
   tableClassName?: string;
 }) {
-  const [hrContacts, setHrContacts] = React.useState<HrEmailsTableProps[]>([]);
+  const [contacts, setContacts] = useState<HrContact[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
-    const getHrContacts = async () => {
+    const fetchContacts = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_JOBFILX_APIURL}/hr/list/demo`);
-        const data = await response.json();
-        console.log('this is the response from the server: ', data.list);
-        setHrContacts(data.list);
-      } catch (error) {
-        console.error("error handling the response", error);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_JOBFILX_APIURL}/hr/list/demo`
+        );
+        if (!res.ok) throw new Error(`${res.status}`);
+        const data = await res.json();
+        setContacts(data?.list ?? []);
+      } catch {
+        setContacts([]);
+      } finally {
+        setLoading(false);
       }
     };
-    getHrContacts();
+    fetchContacts();
   }, []);
 
+  function copyEmail(id: string, email: string) {
+    if (!email || email === "-") return;
+    navigator.clipboard.writeText(email).catch(() => {});
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 1500);
+  }
+
   return (
-    <div className={cn("rounded-2xl border border-slate-200 bg-white shadow-sm", className)}>
-      <div className={cn("overflow-x-auto max-h-[420px] overflow-y-auto", tableClassName)}>
-        <table className="min-w-full text-left text-xs">
-          <thead className="bg-blue-600 text-white sticky top-0 z-10">
-            <tr>
-              <th className="px-3 py-2 font-semibold">S.No</th>
-              <th className="px-3 py-2 font-semibold">Name</th>
-              <th className="px-3 py-2 font-semibold">Job Title</th>
-              <th className="px-3 py-2 font-semibold">Company Name</th>
-              <th className="px-3 py-2 font-semibold">Status</th>
-              <th className="px-3 py-2 font-semibold">Company Email</th>
-              <th className="px-3 py-2 font-semibold">Phone Number</th>
-              <th className="px-3 py-2 font-semibold">Company Website</th>
-              <th className="px-3 py-2 font-semibold">Company Linkedin</th>
-              <th className="px-3 py-2 font-semibold">Company Social</th>
-              <th className="px-3 py-2 font-semibold">Company Twitter</th>
-              <th className="px-3 py-2 font-semibold">Location</th>
+    <div
+      className={cn(
+        "bg-hub-surface border border-hub-border rounded-[14px] overflow-hidden",
+        className
+      )}
+      style={{ fontFamily: "var(--font-hub)" }}
+    >
+      <div className={cn("overflow-x-auto overflow-y-auto", tableClassName)}>
+        <table className="min-w-full text-left">
+          <thead className="sticky top-0 z-10 bg-hub-bg-subtle">
+            <tr className="border-b border-hub-border">
+              {["Contact", "Company", "Email", "Location", "Links", "Status"].map(
+                (col) => (
+                  <th
+                    key={col}
+                    className="px-4 py-[9px] text-[11.5px] font-semibold text-hub-text-3 whitespace-nowrap"
+                  >
+                    {col}
+                  </th>
+                )
+              )}
             </tr>
           </thead>
-          <tbody>
-            {hrContacts?.map((row, index) => {
-              const isPremium = (row as any).type === "premium";
 
-              return (
-                <tr
-                  key={`${row.name}-${index}`}
-                  className={cn(
-                    index % 2 === 0 ? "bg-white" : "bg-slate-50",
-                    isPremium && "bg-amber-50/40 hover:bg-amber-50/60 transition-colors"
-                  )}
+          {loading ? (
+            <tbody>
+              <TableSkeleton />
+            </tbody>
+          ) : contacts.length === 0 ? (
+            <tbody>
+              <tr>
+                <td
+                  colSpan={6}
+                  className="px-4 py-16 text-center text-[13px] text-hub-text-3"
                 >
-                  <td className="px-3 py-2 text-slate-600">
-                    {isPremium ? (
-                      <span className="flex items-center gap-1">
-                        {index + 1} <span title="Premium Contact">⭐</span>
+                  No contacts found.
+                </td>
+              </tr>
+            </tbody>
+          ) : (
+            <motion.tbody
+              variants={TABLE_ROWS}
+              initial="hidden"
+              animate="show"
+            >
+              {contacts.map((row, index) => (
+                <motion.tr
+                  key={row.id ?? `row-${index}`}
+                  variants={TABLE_ROW}
+                  className="border-b border-hub-border last:border-b-0"
+                  style={{ transition: "background-color 100ms" }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.backgroundColor =
+                      "var(--color-hub-bg-subtle)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.backgroundColor = "";
+                  }}
+                >
+                  {/* Contact: name + title */}
+                  <td className="px-4 py-[11px] min-w-[160px]">
+                    <span className="block text-[13px] font-semibold text-hub-text-1 leading-snug">
+                      {row.name || "—"}
+                    </span>
+                    {row.title && (
+                      <span className="block text-[12px] text-hub-text-3 mt-[2px] leading-snug">
+                        {row.title}
                       </span>
-                    ) : (
-                      index + 1
                     )}
                   </td>
-                  <td className="px-3 py-2">
-                    <div className="flex flex-col gap-1">
-                      <span className="font-semibold text-slate-900">{row.name}</span>
-                      {isPremium && (
-                        <span className="w-fit bg-amber-100 text-amber-700 text-[9px] px-1.5 py-0.5 rounded-md border border-amber-200 font-bold uppercase">
-                          Premium
-                        </span>
+
+                  {/* Company */}
+                  <td className="px-4 py-[11px] min-w-[140px]">
+                    <span className="text-[13px] text-hub-text-1">
+                      {row.company || "—"}
+                    </span>
+                  </td>
+
+                  {/* Email + copy */}
+                  <td className="px-4 py-[11px] min-w-[200px]">
+                    <div className="flex items-center gap-1.5 group/email">
+                      <span className="text-[12.5px] text-hub-text-2 truncate max-w-[180px]">
+                        {row.email || "—"}
+                      </span>
+                      {row.email && row.email !== "-" && (
+                        <button
+                          onClick={() => copyEmail(row.id ?? `row-${index}`, row.email)}
+                          aria-label="Copy email"
+                          className="flex-shrink-0 p-0.5 rounded-[3px] text-hub-text-3 outline-none"
+                          style={{ transition: "color 130ms, opacity 130ms" }}
+                        >
+                          {copiedId === (row.id ?? `row-${index}`) ? (
+                            <Check size={11} strokeWidth={2.5} style={{ color: "var(--color-hub-salary)" }} />
+                          ) : (
+                            <Copy size={11} strokeWidth={1.8} className="opacity-40 group-hover/email:opacity-100" />
+                          )}
+                        </button>
                       )}
                     </div>
                   </td>
-                  <td className="px-3 py-2">{renderCell(row.title)}</td>
-                  <td className="px-3 py-2">{renderCell(row.company)}</td>
-                  <td className="px-3 py-2">
-                    <span className={cn(
-                      "px-2 py-0.5 rounded-full text-[10px] font-medium",
-                      isPremium ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600"
-                    )}>
-                      {row.status || 'active'}
+
+                  {/* Location */}
+                  <td className="px-4 py-[11px] min-w-[120px]">
+                    <span className="text-[12.5px] text-hub-text-3">
+                      {row.location || "—"}
                     </span>
                   </td>
-                  <td className="px-3 py-2">{renderCell(row.email)}</td>
-                  <td className="px-3 py-2">{renderCell(row.phone || '-')}</td>
-                  <td className="px-3 py-2">{renderCell(row.linkedIn || '-')}</td>
-                  <td className="px-3 py-2">{renderCell(row.website || '-')}</td>
-                  <td className="px-3 py-2">{renderCell(row.social || '-')}</td>
-                  <td className="px-3 py-2">{renderCell(row.twitter || '-')}</td>
-                  <td className="px-3 py-2">{renderCell(row.location || '-')}</td>
-                </tr>
-              );
-            })}
-          </tbody>
+
+                  {/* Links: LinkedIn + Website */}
+                  <td className="px-4 py-[11px] min-w-[80px]">
+                    <div className="flex items-center gap-0.5">
+                      <LinkIcon href={row.linkedIn} icon={Linkedin} label="LinkedIn" />
+                      <LinkIcon href={row.website} icon={Globe} label="Website" />
+                      {!row.linkedIn && !row.website && (
+                        <span className="text-[12px] text-hub-text-3">—</span>
+                      )}
+                    </div>
+                  </td>
+
+                  {/* Status */}
+                  <td className="px-4 py-[11px] min-w-[100px]">
+                    <StatusBadge raw={row.status} />
+                  </td>
+                </motion.tr>
+              ))}
+            </motion.tbody>
+          )}
         </table>
       </div>
     </div>

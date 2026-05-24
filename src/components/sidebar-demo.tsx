@@ -1,6 +1,6 @@
 "use client";
 
-import { Dispatch, SetStateAction, useCallback, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import HrEmailsTable from "./hr-emails-table";
 import toast from "react-hot-toast";
@@ -163,25 +163,35 @@ const cleanApplicationPayload = (row: JobApplicationRow) => ({
  */
 export default function SidebarDemo() {
   const [rows, setRows] = useState<JobApplicationRow[]>([]);
+  const applicationAbortRef = useRef<AbortController | null>(null);
 
   const getJobApplications = useCallback(async () => {
+    applicationAbortRef.current?.abort();
+    const controller = new AbortController();
+    applicationAbortRef.current = controller;
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_JOBFILX_APIURL}/job/applications`, {
         credentials: 'include',
+        signal: controller.signal,
       });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
-      if (Array.isArray(data.applications)) {
+      if (data && Array.isArray(data.applications)) {
         setRows(data.applications.map(normalizeFetchedRow));
       } else {
         setRows([]);
       }
     } catch (error) {
-      console.error("Error fetching job applications", error);
+      if (error instanceof Error && error.name === 'AbortError') return;
+      console.log("Error fetching job applications", error);
     }
   }, []);
 
   useEffect(() => {
     getJobApplications();
+    return () => { applicationAbortRef.current?.abort(); };
   }, [getJobApplications]);
 
   return (

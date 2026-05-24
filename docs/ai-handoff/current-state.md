@@ -1,6 +1,6 @@
 # Current State — AI Handoff
 
-_Last updated: 2026-05-19 (session 3, post-merge). Update this file at the end of each session._
+_Last updated: 2026-05-24 (session 5, loop/request-spam diagnosis + jobs-empty root cause + ingestion trigger). Update this file at the end of each session._
 
 ---
 
@@ -24,16 +24,15 @@ Do **not** run `npm run dev:server` unless an explicit rollback is needed.
 | | |
 |---|---|
 | **Start** | `npm run dev` (from repo root) |
-| **URL** | `http://localhost:3001` |
+| **URL** | `http://localhost:3002` (dev script uses `-p 3002`) |
 | **Local env** | `.env.local` (gitignored, do not commit) |
 
-`.env.local` overrides `.env` with:
+`.env.local` **must** contain (see `.env.example` for a full template):
 ```
 NEXT_PUBLIC_API_URL=http://localhost:9001/api
-NEXT_PUBLIC_BACKEND_URL=http://localhost:9001/api
-NEXT_PUBLIC_AUTH_URL=http://localhost:9001/api
 ```
-Delete `.env.local` to revert to old backend instantly.
+`app/api/jobs/route.ts` throws at module init if this is missing — you will see a clear error
+in the terminal instead of silently serving zero jobs. There is no fallback.
 
 `/api/jobs` requests go through `app/api/jobs/route.ts` (Next.js route handler)
 which reads `NEXT_PUBLIC_API_URL`. All other `/api/*` calls go through the
@@ -185,13 +184,134 @@ The 48h freshness gate and normalizer are never touched. The scorer only assigns
 
 ---
 
-## 8. Next Intended Task
+## 8. Jobs Hub UI System (added 2026-05-24)
+
+The `/job-tracker` route is the unified hub page. All work lives under `src/components/jobs-hub/` and `app/job-tracker/page.tsx`.
+
+### Design system — Direction 1 Sharp
+- Token namespace: `hub-*` (defined in `src/index.css` under `@theme {}`)
+- Base: cool slate (`oklch(…/hue 260)`), accent: vibrant indigo (`oklch(0.56 0.22 278)`)
+- Font: Plus Jakarta Sans via `--font-hub`
+- Motion constants in `src/lib/motion.ts`: `TAB_INDICATOR`, `TAB_DOT`, `TAB_PANEL`, `PRESS`, `STAGGER_*`, `TABLE_ROW*`
+
+### Tab structure (`src/components/jobs-hub/tabs.config.ts`)
+| Tab ID | Component | Status |
+|---|---|---|
+| `jobs` | `JobBoard` | Live |
+| `tracker` | `SidebarDemo` | Live (backend optional) |
+| `emails` | `HrEmailsTable` | Live |
+| `dubai-hr` | `HrEmailsTable` | Live |
+| `gulf-jobs` | `RegionalEmptyState` | Coming soon |
+| `au-nz` | `RegionalEmptyState` | Coming soon |
+
+### Key layout rules
+- Fixed navbar is 64px (`h-16`). Page wrapper must have `pt-16`.
+- `JobsHubNav` is `sticky top-16` — sits directly below the fixed navbar.
+- Content area: `max-w-[940px] mx-auto px-5 pt-7 pb-20`.
+
+### Job board fetch pattern (`src/components/job-board.tsx`)
+- Single `fetchJobs` useCallback, single `useEffect([fetchJobs])` trigger.
+- Page reset (`setPage(1)`) is batched **into** event handlers and the debounce setTimeout — never in a separate effect. Prevents double-fetch.
+- AbortController: local `controller` variable (not just ref) so `controller.signal.aborted` check in `finally` is scoped to the current invocation.
+- `res.ok` checked before `res.json()` — non-200 responses set empty state instead of crashing.
+- `canHover` ref (`window.matchMedia('(hover: hover) and (pointer: fine)')`) guards all `onMouseEnter/Leave` handlers — no hover JS fires on touch devices.
+- Category chips: inactive = ghost (`bg-transparent border-transparent`). Active chip inline styles are cleared in `onClick` before Tailwind active class takes over.
+
+### Sidebar backend (port 7005)
+- `SidebarDemo` fetches `${NEXT_PUBLIC_JOBFILX_APIURL}/job/applications` — port 7005 backend, **not in this repo**.
+- Port 7005 being down renders an empty tracker table; it does not break the page.
+- AbortController added to `getJobApplications` (2026-05-24) — StrictMode double-mount no longer logs duplicate fetch errors.
+
+---
+
+## 9. Session 5 Findings — 2026-05-24
+
+### Issue 1: Loop / Request Spam
+
+**Verdict: No actual React state loop. Dev-only noise.**
+
+Execution chain traced:
+
+- `job-board.tsx` — `fetchJobs` useCallback deps `[category, searchQuery, page, disabled]` are all stable
+  primitives. No state mutated inside `fetchJobs` is in its dep array. No loop.
+- `sidebar-demo.tsx` — `getJobApplications` has `[]` deps; reference is stable; effect fires once.
+  AbortController correctly handles StrictMode double-mount. No loop.
+- `framer-motion` vs `motion/react` (page.tsx uses `framer-motion`, job-board.tsx uses `motion/react`):
+  both packages at v12 are the same underlying code — `framer-motion@12` re-exports from `motion`.
+  No duplicate React context. Not a loop cause.
+
+**Observed symptoms explained:**
+- `[Fast Refresh] rebuilding` / `done` repeating → webpack watcher reacts to AI tooling file writes
+  (`.superpowers/`, `.claude/`, `skills-lock.json`, etc. written during dev sessions). NOT React code.
+- Duplicate fetches in console → React StrictMode double-mount. AbortController fix (session 4) correctly
+  aborts the first mount's in-flight request; only one fetch completes per interaction.
+- Effect replay noise → expected dev-only StrictMode behavior.
+
+**Fix applied — `next.config.ts`:**
+Added AI tooling directories to `webpack watchOptions.ignored` so the watcher no longer triggers Fast
+Refresh when these files change:
+```
+.superpowers/  .claude/  skills-lock.json  .agents/  .cursor/
+.gemini/  .kiro/  .pi/  .qoder/  .playwright-mcp/
+```
+Restart the dev server (`npm run dev`) for the new ignore rules to take effect.
+
+---
+
+### Issue 2: Jobs Not Appearing
+
+**Root cause: Empty database + scheduler never wired into server.js.**
+
+Evidence chain:
+- `GET http://localhost:9001/api/health` → 200 (backend alive)
+- `GET http://localhost:9001/api/jobs?source=india` → `{"jobs":[],"total":0,"lastIngested":null}`
+- `GET http://localhost:9001/api/jobs/meta` → `{"total":0,"bySource":[],"lastIngested":null}`
+- Frontend `job-board.tsx` payload handling is correct — shows empty state, no crash
+- Proxy `app/api/jobs/route.ts` is clean, `res.ok` check is in place
+
+The code had no bug. This was a pure operations failure: no ingestion had run since before 2026-05-19.
+The 48h freshness gate at `normalizer.js:92` discarded all stale jobs. DB was empty.
+
+**Why no automatic ingestion ran:**
+`services/jobPipeline/scheduler.js` (`startJobScheduler`) exists and is correctly implemented
+(10s delay, then every 12h via `setInterval`). But it was **never imported or called** in `server.js`.
+The scheduler was dead code.
+
+**Fixes applied:**
+
+1. Manually triggered: `POST http://localhost:9001/api/jobs/ingest`
+   → Completed: 299 jobs (248 LinkedIn India, 37 RemoteOK India, 14 Talentd), `durationMs: 127455`
+
+2. `external/jobflix-backend-js/server.js` — wired up scheduler:
+   - Added `import { startJobScheduler } from './services/jobPipeline/scheduler.js';`
+   - Added `startJobScheduler()` call inside `app.listen` callback after `connectDB()`
+   - Scheduler now runs: first ingestion 10s after server start, then every 12h automatically
+
+**Backend restart:** nodemon auto-restarted on the server.js file save. The scheduler fired 10s after
+restart and ran a second ingestion (newJobs: 14, updatedJobs: 281 — dedup correctly handled repeats).
+
+**UI verification (Playwright accessibility snapshot, 2026-05-24):**
+- `/job-tracker?tab=jobs` loads correctly
+- "313 fresh jobs" count displayed
+- 9 job cards on page 1 — real titles, companies, locations, `7h ago` timestamps
+- Pagination: Page 1 of 35
+- All 14 category chips rendered
+- Search box and refresh button present and functional
+- Zero JS errors in console at steady state
+
+**Affected files:**
+- `external/jobflix-backend-js/server.js` — scheduler wired in
+- `next.config.ts` — AI tooling dirs added to webpack ignored list
+
+---
+
+## 10. Next Intended Task
 
 No next task defined. Ask the user.
 
 ---
 
-## 8. Rules for This Project
+## 11. Rules for This Project
 
 - **Do not touch `server/` or old backend** unless explicitly asked.
 - **Do not run `npm run dev:server`** — that starts the old backend on port 3007.
@@ -206,7 +326,7 @@ No next task defined. Ask the user.
 
 ---
 
-## 9. Smoke Tests
+## 12. Smoke Tests
 
 ```bash
 curl http://localhost:9001/api/health

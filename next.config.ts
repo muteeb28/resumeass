@@ -15,7 +15,21 @@ const nextConfig: NextConfig = {
       // Ignoring .next/** breaks that cycle.
       config.watchOptions = {
         ...config.watchOptions,
-        ignored: ['**/.next/**', '**/node_modules/**'],
+        ignored: [
+          '**/.next/**',
+          '**/node_modules/**',
+          // AI tooling dirs — written frequently during dev sessions, not app source
+          '**/.superpowers/**',
+          '**/.claude/**',
+          '**/skills-lock.json',
+          '**/.agents/**',
+          '**/.cursor/**',
+          '**/.gemini/**',
+          '**/.kiro/**',
+          '**/.pi/**',
+          '**/.qoder/**',
+          '**/.playwright-mcp/**',
+        ],
       }
     }
     return config
