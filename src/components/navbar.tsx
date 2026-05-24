@@ -3,7 +3,6 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "../lib/utils";
 import { Button } from "./button";
-import { HoverBorderGradient } from "./ui/hover-border-gradient";
 import AuthModal from "./auth-modal";
 import { useUserStore } from "../stores/useUserStore";
 import { useRouter } from "next/navigation";
@@ -22,10 +21,11 @@ export const Navbar = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navItems = [
-    { name: "Job Tracker", href: "/job-tracker" },
-    { name: "Features", href: "/#features" },
+    { name: "Job Referrals", href: "/job-tracker" },
+    { name: "Fresh Jobs", href: "/job-tracker?tab=jobs" },
+    { name: "Learn", href: "https://jobflix.in/courses", external: true },
     { name: "Pricing", href: "/#pricing" },
-    { name: "Blog", href: "/blog" }
+    { name: "Blog", href: "/blog" },
   ];
 
   const router = useRouter();
@@ -67,6 +67,8 @@ export const Navbar = ({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
                 href={item.href}
+                target={item.external ? "_blank" : undefined}
+                rel={item.external ? "noopener noreferrer" : undefined}
                 className={cn(
                   "transition-colors duration-200 relative group text-sm font-medium",
                   isLight ? "text-slate-600 hover:text-slate-900" : "text-slate-300 hover:text-white"
@@ -81,26 +83,6 @@ export const Navbar = ({
                 ></span>
               </motion.a>
             ))}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 + navItems.length * 0.1 }}
-            >
-              <HoverBorderGradient
-                as="a"
-                href="https://levelup-8csx.vercel.app/courses"
-                target="_blank"
-                rel="noopener noreferrer"
-                containerClassName="rounded-full"
-                className={cn(
-                  "text-sm font-medium px-3 py-1",
-                  isLight ? "bg-white text-slate-700" : "bg-black text-slate-200"
-                )}
-                duration={2}
-              >
-                Courses
-              </HoverBorderGradient>
-            </motion.div>
           </div>
 
           {/* Desktop Action Buttons */}
@@ -276,6 +258,8 @@ export const Navbar = ({
                   <a
                     key={item.name}
                     href={item.href}
+                    target={item.external ? "_blank" : undefined}
+                    rel={item.external ? "noopener noreferrer" : undefined}
                     className={cn(
                       "block px-3 py-2 rounded-md transition-all duration-200 text-sm font-medium",
                       isLight
@@ -288,23 +272,6 @@ export const Navbar = ({
                   </a>
                 ))}
                 <div className={cn("border-t pt-3 mt-3 space-y-2", isLight ? "border-slate-200" : "border-slate-700")}>
-                  <div className="px-3">
-                    <HoverBorderGradient
-                      as="a"
-                      href="https://levelup-8csx.vercel.app/courses"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      containerClassName="rounded-full w-full"
-                      className={cn(
-                        "text-sm font-medium px-3 py-1 w-full justify-center",
-                        isLight ? "bg-white text-slate-700" : "bg-black text-slate-200"
-                      )}
-                      duration={2}
-                      onClick={() => setIsOpen(false)}
-                    >
-                      Courses
-                    </HoverBorderGradient>
-                  </div>
                   <a
                     href="contact-us"
                     className={cn(

@@ -305,7 +305,40 @@ restart and ran a second ingestion (newJobs: 14, updatedJobs: 281 — dedup corr
 
 ---
 
-## 10. Next Intended Task
+## 10. Session 6 Findings — 2026-05-24 (Navbar Update)
+
+### Changes applied to `src/components/navbar.tsx`
+- Removed `HoverBorderGradient` import (was only used for Courses)
+- Renamed nav item: `"Job Tracker"` → `"Job Referrals"` (href unchanged: `/job-tracker`)
+- Added nav item: `"Fresh Jobs"` → `/job-tracker?tab=jobs` (opens Find Jobs tab directly)
+- Removed hardcoded "Courses" block from desktop nav (was `HoverBorderGradient` with external link)
+- Removed hardcoded "Courses" block from mobile dropdown (same component, same external link)
+
+### Final nav order (desktop + mobile identical)
+Job Referrals | Fresh Jobs | Features | Pricing | Blog | [Contact Us] [Login/User]
+
+### Why "Fresh Jobs"
+Already the language used in the live UI ("313 fresh jobs"). Consistent with the 48h freshness
+story. Shorter than "Latest Jobs", more evocative than plain "Jobs".
+
+### Tests added
+`src/__tests__/navbar.test.ts` — 16 tests (all passing):
+- Job Referrals present, linked to /job-tracker
+- Job Tracker (old name) absent
+- Fresh Jobs present, linked to /job-tracker?tab=jobs
+- Courses absent, no levelup URL in config
+- Features / Pricing / Blog preserved with correct anchors
+- Item order locked (Job Referrals first, Fresh Jobs second)
+- Desktop/mobile parity confirmed (single navItems array in component)
+
+### Pre-existing issues NOT touched (noted for future cleanup)
+- `href="contact-us"` in mobile menu is relative (no leading `/`); desktop uses `/contact-us`
+- `showAuth` state has no caller that sets it to `true` (AuthModal never opens)
+- `</motion.nav >` has a stray space (cosmetic)
+
+---
+
+## 11. Next Intended Task
 
 No next task defined. Ask the user.
 

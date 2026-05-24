@@ -17,6 +17,7 @@ const PricingCard = ({
   isPopular = false,
   comingSoon = false,
   buttonText = "Get Started",
+  saveBadge,
   delay = 0,
   className,
   onClick
@@ -30,6 +31,7 @@ const PricingCard = ({
   isPopular?: boolean;
   comingSoon?: boolean;
   buttonText?: string;
+  saveBadge?: string;
   delay?: number;
   className?: string;
   onClick?: (e: any) => void;
@@ -80,9 +82,11 @@ const PricingCard = ({
       {originalPrice && (
         <div className="flex items-center gap-2 mb-4">
           <span className="text-sm text-neutral-400 line-through">{originalPrice}</span>
-          <span className="rounded-full bg-teal-50 border border-teal-200 px-2 py-0.5 text-xs font-semibold text-teal-700">
-            Save 50%
-          </span>
+          {saveBadge && (
+            <span className="rounded-full bg-teal-50 border border-teal-200 px-2 py-0.5 text-xs font-semibold text-teal-700">
+              {saveBadge}
+            </span>
+          )}
         </div>
       )}
 
@@ -218,7 +222,7 @@ export const PaymentSection = () => {
           transition={{ delay: 0.2, duration: 0.5, ease: "easeOut" }}
           className="mx-auto mb-8 max-w-2xl text-center text-base text-neutral-500"
         >
-          Simple pricing for resume optimization and job tracking. Pay once for a resume or go monthly for tracking and outreach.
+          Simple monthly plans for resume optimization and job tracking. Cancel anytime.
         </motion.p>
 
         {/* Cards */}
@@ -227,26 +231,29 @@ export const PaymentSection = () => {
             delay={0.1}
             title="Resume Optimization"
             price="₹99"
-            originalPrice="₹199"
-            description="One-time payment per resume optimization."
+            originalPrice="₹499"
+            period="month"
+            saveBadge="Save 80%"
+            description="Monthly access to resume optimization tools."
             features={[
               { text: "ATS-ready resume (2 professional templates)" },
               { text: "Job description matching" },
               { text: "Built-in job tracker" },
               { text: "ATS-friendly formatting" },
               { text: "PDF + DOCX downloads" },
-              { text: "One-time payment" },
             ]}
-            buttonText="Pay ₹50"
+            buttonText="Get Started"
             onClick={() => onClick('plan_ID_99')}
           />
 
           <PricingCard
             delay={0.2}
             title="Resume + HR Outreach"
-            price="₹199"
-            originalPrice="₹499"
-            description="Full access with a one-time payment per resume optimization."
+            price="₹155"
+            originalPrice="₹310"
+            period="month"
+            saveBadge="Save 50%"
+            description="Full access with monthly billing — resume tools and HR contacts."
             features={[
               { text: "Resume optimization (ATS-ready)" },
               { text: "Job tracker dashboard" },
