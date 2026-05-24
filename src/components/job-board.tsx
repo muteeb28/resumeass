@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { ExternalLink, RefreshCw, Search, SearchX, ChevronLeft, ChevronRight } from "lucide-react";
-import { STAGGER_CONTAINER, STAGGER_ITEM, CARD_HOVER, PRESS } from "@/lib/motion";
+import { STAGGER_CONTAINER, STAGGER_ITEM, CARD_HOVER, PRESS } from "../lib/motion";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Job {

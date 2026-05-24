@@ -3,8 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { Copy, Check, Linkedin, Globe } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { TABLE_ROWS, TABLE_ROW } from "@/lib/motion";
+import { cn } from "../lib/utils";
+import { TABLE_ROWS, TABLE_ROW } from "../lib/motion";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface HrContact {
