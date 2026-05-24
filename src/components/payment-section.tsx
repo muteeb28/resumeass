@@ -46,8 +46,8 @@ const PricingCard = ({
         isPopular
           ? "border-teal-300 shadow-xl shadow-teal-500/10"
           : comingSoon
-          ? "border-neutral-200 shadow-md opacity-80"
-          : "border-neutral-200 shadow-md"
+            ? "border-neutral-200 shadow-md opacity-80"
+            : "border-neutral-200 shadow-md"
       )}
     >
       {/* Top badges */}
@@ -104,8 +104,8 @@ const PricingCard = ({
           isPopular
             ? "bg-neutral-900 text-white hover:bg-teal-600"
             : comingSoon
-            ? "border border-neutral-200 bg-neutral-50 text-neutral-400 cursor-not-allowed"
-            : "border border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-900 hover:text-white"
+              ? "border border-neutral-200 bg-neutral-50 text-neutral-400 cursor-not-allowed"
+              : "border border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-900 hover:text-white"
         )}
       >
         {buttonText}
@@ -120,11 +120,11 @@ const PricingCard = ({
               isPopular
                 ? "bg-teal-600"
                 : comingSoon
-                ? "bg-neutral-300"
-                : "bg-neutral-900"
+                  ? "bg-neutral-300"
+                  : "bg-neutral-900"
             )}>
               <svg viewBox="0 0 10 8" className="w-2.5 h-2.5 fill-white">
-                <path d="M1 4l2.5 2.5L9 1" stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M1 4l2.5 2.5L9 1" stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </span>
             <span className="text-sm text-neutral-600 flex items-center gap-2 flex-wrap">
@@ -151,6 +151,7 @@ export const PaymentSection = () => {
       router.push(`${process.env.NEXT_PUBLIC_AUTH_CLIENT_URL}/login`)
     } else {
       try {
+        // Step 1: Initialize (Intent only - No DB record created yet)
         const response = await axiosInstance.post('/payment/resumeassist/subscription/create', {
           planId: planId,
           customerEmail: user.email,
@@ -158,9 +159,9 @@ export const PaymentSection = () => {
 
         const data = response.data;
         if (!data.success) {
-          toast.error(data.message || 'could not create the membership. Try with a different card instead.');
+          toast.error(data.message || 'Could not initialize membership.');
           return;
-        };
+        }
 
         // Open Razorpay Checkout Modal
         const options = {
@@ -170,14 +171,28 @@ export const PaymentSection = () => {
           description: `${planId} Membership`,
           image: '/logo.png',
           handler: async function (authResponse: any) {
-            toast.loading('Verifying your subscription activation...', { id: 'verify-sub' });
-            const verificationPayload = {
-              razorpay_payment_id: authResponse.razorpay_payment_id,
-              razorpay_subscription_id: authResponse.razorpay_subscription_id,
-              razorpay_signature: authResponse.razorpay_signature
-            };
-            await axiosInstance.post('/payment/subscription/verify', verificationPayload);
-            toast.success('Welcome to GemBook Premium!', { id: 'verify-sub' });
+            const toastId = 'verify-sub';
+            toast.loading('Verifying your subscription activation...', { id: toastId });
+
+            try {
+              // Step 2: Verification (This is where the DB record is born)
+              const verificationPayload = {
+                razorpay_payment_id: authResponse.razorpay_payment_id,
+                razorpay_subscription_id: authResponse.razorpay_subscription_id,
+                razorpay_signature: authResponse.razorpay_signature,
+                planId: planId // CRITICAL: Pass this so backend knows the tier to create
+              };
+
+              const verifyRes = await axiosInstance.post('/payment/subscription/verify', verificationPayload);
+
+              if (verifyRes.data.success) {
+                toast.success('Welcome to Jobflix Premium!', { id: toastId });
+                // Optional: Trigger a router refresh or state update
+              }
+            } catch (err: any) {
+              console.error("Verification failed:", err);
+              toast.error(err.response?.data?.message || 'Verification failed. Contact support.', { id: toastId });
+            }
           },
           prefill: {
             email: user.email,
@@ -186,12 +201,17 @@ export const PaymentSection = () => {
           theme: {
             color: '#0B132B',
           },
+          modal: {
+            ondismiss: function () {
+              toast.info('Payment cancelled.');
+            }
+          }
         };
 
         const rzp = new (window as any).Razorpay(options);
         rzp.open();
       } catch (error: any) {
-        toast.error(error?.response?.data?.message || 'Could not launch the checkout gateway. Please try again.');
+        toast.error(error?.response?.data?.message || 'Could not launch the checkout gateway.');
       }
     }
   }
