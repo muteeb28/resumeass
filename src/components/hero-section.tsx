@@ -383,17 +383,17 @@ export const HeroSection = () => {
                         <Button
                             size="lg"
                             className="bg-teal-600 hover:bg-teal-700 text-white px-6 h-12 rounded-lg font-semibold shadow-lg shadow-teal-600/20"
-                            onClick={() => window.location.href = "/create"}
+                            onClick={() => window.location.href = "/optimize"}
                         >
-                            Create AI Resume Now
+                            Optimize My Resume
                         </Button>
                         <Button
                             size="lg"
                             variant="outline"
                             className="border-slate-300 text-slate-700 hover:bg-slate-50 px-6 h-12 rounded-lg font-semibold"
-                            onClick={() => window.location.href = "/optimize"}
+                            onClick={() => window.location.href = "/create"}
                         >
-                            Improve My Resume
+                            Create AI Resume Now
                         </Button>
                     </div>
 
