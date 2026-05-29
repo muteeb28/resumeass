@@ -7,7 +7,6 @@ import { PaymentSection } from "./payment-section";
 import { BackgroundRippleLayout } from "./background-ripple-layout";
 import SidebarDemo from "./sidebar-demo";
 import { HeroSection } from "./hero-section";
-import { JobsPreviewSection } from "./jobs-preview-section";
 import { WhyUsSection, FAQSection } from "./why-us-faq";
 import Link from "next/link";
 
@@ -44,9 +43,6 @@ export function AnimatedPinDemo() {
 
       {/* Why Us */}
       <WhyUsSection />
-
-      {/* Live Jobs Preview */}
-      <JobsPreviewSection />
 
       {/* FAQ */}
       <FAQSection />
