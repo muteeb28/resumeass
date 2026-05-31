@@ -252,7 +252,7 @@ const handleOptimize = useCallback(async () => {
 
   try {
     if (!user) {
-      router.push(`${process.env.NEXT_PUBLIC_AUTH_CLIENT_URL}/login`);
+      router.push(`${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/login`);
       return;
     }
     const formData = new FormData();
@@ -311,7 +311,8 @@ const handleOptimize = useCallback(async () => {
     }
 
   } catch (err: any) {
-    const errMsg = err.response?.data?.message || err.message || "Failed to optimize resume";
+    const parsedError = JSON.parse(err.response.data);
+    const errMsg = parsedError.message || err.message || "Failed to optimize resume";
     setErrorMsg(errMsg);
     setPhase("ready");
   }
