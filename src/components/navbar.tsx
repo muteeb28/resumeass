@@ -120,8 +120,8 @@ export const Navbar = ({
                     "absolute right-0 mt-2 w-40 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transform translate-y-1 group-hover:translate-y-0 transition-all duration-150 z-50 border",
                     isLight ? "bg-white border-neutral-200" : "bg-slate-800 border-slate-700"
                   )}>
-                    <a href={`${process.env.NEXT_PUBLIC_AUTH_CLIENT_URL}/my-account/dashboard/me`} className={cn("block px-4 py-2 text-sm", isLight ? "text-neutral-700 hover:bg-neutral-100" : "text-slate-200 hover:bg-slate-700")}>Profile</a>
-                    <a href={`${process.env.NEXT_PUBLIC_AUTH_CLIENT_URL}/my-account/membership`} className={cn("block px-4 py-2 text-sm", isLight ? "text-neutral-700 hover:bg-neutral-100" : "text-slate-200 hover:bg-slate-700")}>Memberships</a>
+                    <a href={`${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/my-account/dashboard/me`} className={cn("block px-4 py-2 text-sm", isLight ? "text-neutral-700 hover:bg-neutral-100" : "text-slate-200 hover:bg-slate-700")}>Profile</a>
+                    <a href={`${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/my-account/membership`} className={cn("block px-4 py-2 text-sm", isLight ? "text-neutral-700 hover:bg-neutral-100" : "text-slate-200 hover:bg-slate-700")}>Memberships</a>
                     <button onClick={async () => { await logout(); router.replace('/') }} className={cn("w-full text-left px-4 py-2 text-sm", isLight ? "text-neutral-700 hover:bg-neutral-100" : "text-slate-200 hover:bg-slate-700")}>Logout</button>
                   </div>
                 </div>
@@ -129,7 +129,7 @@ export const Navbar = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_AUTH_CLIENT_URL}/login?next=${window.location.href}`}
+                  onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/login?next=${window.location.href}`}
                   className={cn(
                     isLight ? "text-slate-700 hover:text-slate-900 hover:bg-slate-100" : ""
                   )}
