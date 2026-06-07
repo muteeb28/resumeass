@@ -49,7 +49,7 @@ export const Navbar = ({
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
             className="flex items-center cursor-pointer"
-            onClick={() => window.location.href = "/"}
+            onClick={() => router.push('/')}
           >
             <img
               src="/logo.png"
@@ -67,6 +67,10 @@ export const Navbar = ({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
                 href={item.href}
+                onClick={(e) => {
+                  e.preventDefault();
+                  router.push(item.href)
+                }}
                 target={item.external ? "_blank" : undefined}
                 rel={item.external ? "noopener noreferrer" : undefined}
                 className={cn(
@@ -95,7 +99,7 @@ export const Navbar = ({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => window.location.href="/contact-us"}
+              onClick={() => router.push('/contact-us')}
               className={cn(
                 isLight ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100" : ""
               )}

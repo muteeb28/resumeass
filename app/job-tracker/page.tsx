@@ -13,6 +13,7 @@ import HrEmailsTable from "@/components/hr-emails-table";
 import JobBoard from "@/components/job-board";
 import { TABS, type TabId } from "@/components/jobs-hub/tabs.config";
 import { TAB_PANEL } from "@/lib/motion";
+import { useUserStore } from "@/stores/useUserStore";
 
 const TABLE_CLASS = "border border-hub-border bg-hub-surface rounded-[14px]";
 
@@ -25,6 +26,8 @@ function JobTrackerContent() {
   );
 
   const cfg = (id: TabId) => TABS.find((t) => t.id === id)!;
+
+  const { membership } = useUserStore();
 
   return (
     <div className="min-h-screen bg-hub-bg pt-16" style={{ fontFamily: "var(--font-hub)" }}>
@@ -53,14 +56,14 @@ function JobTrackerContent() {
             {tab === "emails" && (
               <div role="tabpanel" id="panel-emails" aria-labelledby="tab-emails">
                 <TabHeader config={cfg("emails")} badge={<LiveReadyBadge text="Live" />} />
-                <HrEmailsTable className={TABLE_CLASS} tableClassName="max-h-[520px]" />
+                <HrEmailsTable className={TABLE_CLASS} tableClassName="max-h-[520px]" country="india" />
               </div>
             )}
 
             {tab === "dubai-hr" && (
               <div role="tabpanel" id="panel-dubai-hr" aria-labelledby="tab-dubai-hr">
                 <TabHeader config={cfg("dubai-hr")} badge={<LiveReadyBadge text="Live" />} />
-                <HrEmailsTable className={TABLE_CLASS} tableClassName="max-h-[520px]" />
+                <HrEmailsTable className={TABLE_CLASS} tableClassName="max-h-[520px]" country="dubai" />
               </div>
             )}
 

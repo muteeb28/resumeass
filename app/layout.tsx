@@ -5,6 +5,8 @@ import '@/App.css'
 import AuthProvider from './AuthProvider'
 import Providers from './Providers'
 import { Toaster } from "@/components/ui/sonner";
+import { useEffect } from 'react'
+import MembershipSync from '@/components/MembershipSync';
 
 export const metadata: Metadata = {
   title: 'ResumeAssist AI - AI-Powered Resume Builder',
@@ -29,6 +31,7 @@ export default function RootLayout({
       <body>
         <Providers>
           <AuthProvider>
+            <MembershipSync />
             {children}
           </AuthProvider>
         </Providers>

@@ -15,8 +15,15 @@ interface User {
   // Add other user properties as needed
 }
 
+interface Membership {
+  tier: string;
+  membershipId: string;
+  status: string;
+}
+
 interface UserStore {
   user: User | null;
+  membership: Membership | null;
   loading: boolean;
   checkingAuth: boolean;
   setUser: (user: User | null) => void;
@@ -25,6 +32,7 @@ interface UserStore {
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
   updateUser: (user: Partial<User>) => void;
+  fetchMembership: () => Promise<any>;
 }
 
 /* ==========================================================================
@@ -60,6 +68,7 @@ export const useUserStore = create<UserStore>()(
   persist(
     (set) => ({
       user: null,
+      membership: null,
       loading: false,
       checkingAuth: false,
 
@@ -129,6 +138,21 @@ export const useUserStore = create<UserStore>()(
           set({ checkingAuth: false });
         }
       },
+
+      fetchMembership: async () => {
+        set({ loading: true })
+        try {
+          const response = await api.get('/account/membership/status');
+          if (response.data.success) {
+            set({ membership: response.data.payload });
+          }
+        } catch (error: any) {
+          console.log('this is the error from the backend: ', error.message);
+          set({ membership: null });
+        } finally {
+          set({ loading: false });
+        }
+      }
     }),
     {
       name: "jobflix_user_ui", // 👈 Must match exactly across all apps to share the data layer
