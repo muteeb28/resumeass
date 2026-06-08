@@ -168,24 +168,37 @@ export default function HrEmailsTable({
 
   const { membership } = useUserStore();
 
+  const hasAccess = 
+  membership?.status === 'active' && 
+  ['premium', 'ultra'].includes(membership.tier?.toLowerCase());
+
   const fetchContacts = useCallback(async () => {
     setLoading(true);
     try {
       let url = "";
       
-      if (!membership) {
+      if (!membership || membership.status !== 'active') {
         url = "/hr/list/demo";
       } else {
-        // Points directly to your route template: /hr/list/purchased/:country
-        // Appends forceCount=true if page is 1 to let backend know it should calculate totals
-        const shouldCount = page === 1 ? "&count=true" : "";
-        url = `/hr/list/purchased/${country}?page=${page}&company=${searchTerm}${shouldCount}`;
+        let targetCountry = "";
+
+        if (membership.tier === 'premium') {
+          targetCountry = "india";
+        } else if (membership.tier === 'ultra') {
+          targetCountry = "dubai";
+        }
+        if (targetCountry) {
+          const shouldCount = page === 1 ? "&count=true" : "";
+          url = `/hr/list/purchased/${targetCountry}?page=${page}&company=${searchTerm}${shouldCount}`;
+        } else {
+          url = "/hr/list/demo";
+        }
       }
 
       const res = await axiosInstance.get(url);
       
       if (res.data.success) {
-        const data = membership ? res.data.data : res.data.list;
+        const data = hasAccess ? res.data.data : res.data.list;
         setContacts(data ?? []);
         
         // Update pagination only if backend provides it (Page 1 or new search queries)
@@ -216,7 +229,7 @@ export default function HrEmailsTable({
     <div className={cn("bg-hub-surface border border-hub-border rounded-[14px] overflow-hidden flex flex-col", className)}>
       
       {/* ─── Search Bar (Only for Members) ─── */}
-      {membership && (
+      {hasAccess && (
         <div className="p-3 border-b border-hub-border bg-hub-bg-subtle/30">
           <form onSubmit={handleSearchSubmit} className="relative max-w-sm flex gap-2">
             <div className="relative flex-grow">
@@ -291,7 +304,7 @@ export default function HrEmailsTable({
       </div>
 
       {/* ─── Pagination Footer ─── */}
-      {membership && !loading && contacts.length > 0 && (
+      {hasAccess && !loading && contacts.length > 0 && (
         <div className="px-4 py-3 border-t border-hub-border flex items-center justify-between bg-hub-bg-subtle/10">
           <span className="text-[12px] text-hub-text-3">
             Page <strong>{page}</strong> of <strong>{totalPages}</strong>

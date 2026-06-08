@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { ExternalLink, RefreshCw, Search, SearchX, ChevronLeft, ChevronRight } from "lucide-react";
 import { STAGGER_CONTAINER, STAGGER_ITEM, CARD_HOVER, PRESS } from "../lib/motion";
+import axiosInstance from "@/lib/axios";
+import { useUserStore } from "@/stores/useUserStore";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Job {
@@ -65,6 +67,45 @@ const LOGO_PALETTE: Array<{ bg: string; fg: string }> = [
   { bg: "oklch(0.94 0.03 180)", fg: "oklch(0.38 0.10 180)" }, // teal
   { bg: "oklch(0.94 0.03 260)", fg: "oklch(0.38 0.08 260)" }, // slate
   { bg: "oklch(0.94 0.03 320)", fg: "oklch(0.38 0.10 320)" }, // plum
+];
+
+const DEMO_JOBS: Job[] = [
+  {
+    id: "demo-1",
+    title: "Software Engineer",
+    company: "Acme Labs",
+    location: "Remote",
+    platform: "Talentd",
+    postedDate: "1 day ago",
+    url: "#",
+    type: "Full Time",
+    salary: "$75k - $95k",
+    tags: ["React", "TypeScript", "Remote"],
+  },
+  {
+    id: "demo-2",
+    title: "Product Designer",
+    company: "Nova Studio",
+    location: "Bangalore",
+    platform: "Talentd",
+    postedDate: "3 days ago",
+    url: "#",
+    type: "Design",
+    salary: "$55k - $70k",
+    tags: ["Figma", "UX", "Cross-functional"],
+  },
+  {
+    id: "demo-3",
+    title: "Data Analyst",
+    company: "Orbit Works",
+    location: "Mumbai",
+    platform: "Talentd",
+    postedDate: "2 days ago",
+    url: "#",
+    type: "Fresher",
+    salary: "$35k - $45k",
+    tags: ["SQL", "Excel", "Analytics"],
+  },
 ];
 
 const LIMIT = 9;
@@ -233,6 +274,18 @@ export default function JobBoard() {
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const reduced                       = useReducedMotion() ?? false;
+  const { membership } = useUserStore();
+
+  const isActiveMember = Boolean(
+    membership &&
+      membership.status === "active" &&
+      ["premium", "ultra"].includes(membership.tier?.toLowerCase() ?? "")
+  );
+  const hasPremiumMembership = isActiveMember && membership?.tier === "premium";
+  const hasUltraMembership = isActiveMember && membership?.tier === "ultra";
+  const canSearch = hasUltraMembership;
+  const canFilter = isActiveMember;
+  const noAccess = !isActiveMember;
 
   const debounceRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef     = useRef<AbortController | null>(null);
@@ -248,6 +301,7 @@ export default function JobBoard() {
   }, []);
 
   function handleSearchInput(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!canSearch) return;
     const val = e.target.value;
     setSearchInput(val);
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -258,7 +312,7 @@ export default function JobBoard() {
   }
 
   const fetchJobs = useCallback(async () => {
-    if (disabled) return;
+    if (disabled || noAccess) return;
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -271,12 +325,8 @@ export default function JobBoard() {
         limit:      String(LIMIT),
       });
       if (category) params.set("category", category);
-      const res = await fetch(`/api/jobs?${params}`, { signal: controller.signal });
-      if (!res.ok) {
-        setJobs([]);
-        return;
-      }
-      const data = await res.json();
+      const res = await axiosInstance(`/jobs?${params}`, { signal: controller.signal });
+      const data = await res.data;
       if (data.disabled) { setDisabled(true); setJobs([]); return; }
       setJobs(Array.isArray(data.jobs) ? data.jobs : []);
       setTotal(data.total ?? 0);
@@ -286,15 +336,25 @@ export default function JobBoard() {
     } finally {
       if (!controller.signal.aborted) setLoading(false);
     }
-  }, [category, searchQuery, page, disabled]);
+  }, [category, searchQuery, page, disabled, noAccess]);
 
-  useEffect(() => { fetchJobs(); }, [fetchJobs]);
+  useEffect(() => {
+    if (noAccess) {
+      setJobs(DEMO_JOBS);
+      setTotal(DEMO_JOBS.length);
+      setLoading(false);
+      return;
+    }
+
+    fetchJobs();
+  }, [fetchJobs, noAccess]);
 
   const totalPages = Math.ceil(total / LIMIT);
   const filterLabel = category === "" ? "fresh" : category;
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
+    if (!canSearch) return;
     setSearchQuery(searchInput);
   }
 
@@ -320,6 +380,27 @@ export default function JobBoard() {
 
   return (
     <div className="w-full" style={{ fontFamily: "var(--font-hub)" }}>
+      {noAccess && (
+        <div className="rounded-[14px] border border-rose-200 bg-rose-50 p-4 mb-5 text-left">
+          <p className="text-[13px] font-semibold text-rose-900 mb-1">Job board access limited</p>
+          <p className="text-[12.5px] text-rose-900/90 leading-relaxed">
+            You need an active Premium or Ultra membership to access the job board. This preview shows how job listings will appear.
+          </p>
+          <p className="text-[12.5px] text-rose-900/90 leading-relaxed mt-2">
+            These are demo jobs only and not real vacancies.
+          </p>
+        </div>
+      )}
+
+      {hasPremiumMembership && !hasUltraMembership && (
+        <div className="rounded-[14px] border border-amber-200 bg-amber-50 p-4 mb-5 text-left">
+          <p className="text-[13px] font-semibold text-amber-900 mb-1">Premium access</p>
+          <p className="text-[12.5px] text-amber-900/90 leading-relaxed">
+            Premium members can browse job listings, but search is reserved for Ultra membership.
+          </p>
+        </div>
+      )}
+
       {/* Toolbar: search + refresh */}
       <form onSubmit={handleSearch} className="flex items-center gap-2 mb-[14px]">
         <div className="relative flex-1">
@@ -335,16 +416,27 @@ export default function JobBoard() {
             type="text"
             value={searchInput}
             onChange={handleSearchInput}
-            placeholder="Search jobs, companies…"
-            className="w-full h-[35px] pl-[30px] pr-3 rounded-[10px] border border-hub-border-strong bg-hub-surface
-                       text-[13px] text-hub-text-1 placeholder:text-hub-text-3 outline-none"
+            placeholder={
+              noAccess
+                ? "Upgrade to Premium or Ultra to unlock jobs"
+                : hasPremiumMembership
+                ? "Search reserved for Ultra members"
+                : "Search jobs, companies…"
+            }
+            disabled={!canSearch}
+            className={
+              "w-full h-[35px] pl-[30px] pr-3 rounded-[10px] border border-hub-border-strong bg-hub-surface text-[13px] text-hub-text-1 placeholder:text-hub-text-3 outline-none " +
+              (!canSearch ? "cursor-not-allowed opacity-70 bg-hub-bg-subtle" : "")
+            }
             style={{ transition: "border-color 150ms, box-shadow 150ms" }}
             onFocus={(e) => {
+              if (!canSearch) return;
               setSearchFocused(true);
               e.currentTarget.style.borderColor = "var(--color-hub-accent)";
               e.currentTarget.style.boxShadow = "0 0 0 3px oklch(0.52 0.22 278 / 0.12)";
             }}
             onBlur={(e) => {
+              if (!canSearch) return;
               setSearchFocused(false);
               e.currentTarget.style.borderColor = "";
               e.currentTarget.style.boxShadow = "";
@@ -381,11 +473,14 @@ export default function JobBoard() {
       <div className="flex flex-wrap gap-1.5 mb-[18px]">
         {TALENTD_CATEGORIES.map((c) => {
           const isActive = category === c.value;
+          const buttonDisabled = !canFilter;
           return (
             <motion.button
               key={c.value === "" ? "__all__" : c.value}
               type="button"
+              disabled={buttonDisabled}
               onClick={(e) => {
+                if (buttonDisabled) return;
                 setCategory(c.value);
                 setPage(1);
                 const el = e.currentTarget as HTMLButtonElement;
@@ -399,13 +494,14 @@ export default function JobBoard() {
                 isActive
                   ? "bg-hub-accent border-hub-accent text-white"
                   : "bg-transparent border-transparent text-hub-text-3",
+                buttonDisabled ? "opacity-50 cursor-not-allowed" : "",
               ].join(" ")}
               style={{
                 transition: "border-color 130ms, background-color 130ms, color 130ms, box-shadow 130ms",
                 boxShadow: isActive ? "0 1px 4px oklch(0.52 0.22 278 / 0.3)" : undefined,
               }}
               onMouseEnter={(e) => {
-                if (isActive || !canHover.current) return;
+                if (isActive || buttonDisabled || !canHover.current) return;
                 const el = e.currentTarget as HTMLButtonElement;
                 el.style.backgroundColor = "var(--color-hub-accent-soft)";
                 el.style.borderColor = "oklch(0.52 0.22 278 / 0.4)";
