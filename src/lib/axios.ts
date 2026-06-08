@@ -29,8 +29,7 @@ axiosInstance.interceptors.response.use(
         
         // Constructs a clean fallback pointing to your main login page
         // If your login logic is on account.jobflix.in, change this to match your central auth domain.
-        const loginBaseUrl = process.env.NEXT_PUBLIC_LOGIN_URL || "/login"; 
-        
+        const loginBaseUrl = `${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/login` || 'https://jobflix.in/login';
         window.location.href = `${loginBaseUrl}?next=${currentUrl}`;
       }
       

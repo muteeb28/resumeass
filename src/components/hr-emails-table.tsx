@@ -185,7 +185,7 @@ export default function HrEmailsTable({
       const res = await axiosInstance.get(url);
       
       if (res.data.success) {
-        const data = membership ? res.data.data : res.data.list?.list;
+        const data = membership ? res.data.data : res.data.list;
         setContacts(data ?? []);
         
         // Update pagination only if backend provides it (Page 1 or new search queries)
@@ -316,12 +316,12 @@ export default function HrEmailsTable({
       )}
 
       {/* ─── Upgrade Teaser ─── */}
-      {!membership && (
+      {/* {!membership && (
         <div className="p-4 bg-hub-bg-subtle/50 text-center border-t border-hub-border">
           <p className="text-[13px] text-hub-text-2 mb-2">Upgrade to Premium to access 5,000+ verified HR contacts with pagination and search.</p>
           <button className="text-[12px] font-bold text-blue-500 hover:underline">View Pricing →</button>
         </div>
-      )}
+      )} */}
     </div>
   );
 }
