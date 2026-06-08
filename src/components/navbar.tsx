@@ -6,6 +6,7 @@ import { Button } from "./button";
 import AuthModal from "./auth-modal";
 import { useUserStore } from "../stores/useUserStore";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export const Navbar = ({
   className,
@@ -126,6 +127,7 @@ export const Navbar = ({
                   )}>
                     <a href={`${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/my-account/dashboard/me`} className={cn("block px-4 py-2 text-sm", isLight ? "text-neutral-700 hover:bg-neutral-100" : "text-slate-200 hover:bg-slate-700")}>Profile</a>
                     <a href={`${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/my-account/membership`} className={cn("block px-4 py-2 text-sm", isLight ? "text-neutral-700 hover:bg-neutral-100" : "text-slate-200 hover:bg-slate-700")}>Memberships</a>
+                    <Link href="/resume" className={cn("block px-4 py-2 text-sm", isLight ? "text-neutral-700 hover:bg-neutral-100" : "text-slate-200 hover:bg-slate-700")}>My resume</Link>
                     <button onClick={async () => { await logout(); router.replace('/') }} className={cn("w-full text-left px-4 py-2 text-sm", isLight ? "text-neutral-700 hover:bg-neutral-100" : "text-slate-200 hover:bg-slate-700")}>Logout</button>
                   </div>
                 </div>
