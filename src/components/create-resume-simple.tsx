@@ -4,7 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import { Navbar } from "./navbar";
 import { BackgroundRippleLayout } from "./background-ripple-layout";
 import { Button } from "./button";
-import { buildApiUrl, extractResumeData } from "../services/resumeOptimizerApi";
+import { buildApiUrl, extractResumeData, extractPortfolioData } from "../services/resumeOptimizerApi";
 import { generateJobSpecificResume } from "../services/resumeGenerator";
 import JakeTemplate from "./resume/JakeTemplate";
 import TemplateTwoColumn from "../templates/TemplateTwoColumn";
@@ -621,9 +621,7 @@ export const CreateResumeSimple = () => {
     setPortfolioFileName(file.name);
 
     try {
-      const parsed = await extractResumeData(file) as any;
-      console.log('[PORTFOLIO] Server response keys:', Object.keys(parsed));
-      console.log('[PORTFOLIO] experience:', parsed.experience?.length, 'work_experiences:', parsed.work_experiences?.length);
+      const parsed = await extractPortfolioData(file) as any;
 
       // Build portfolio data directly from server response — no double conversion
       const p = parsed;
@@ -690,14 +688,6 @@ export const CreateResumeSimple = () => {
         })),
         volunteer: []
       };
-
-      console.log('[PORTFOLIO] Built portfolio:', {
-        work: portfolioResult.work.length,
-        education: portfolioResult.education.length,
-        skills: portfolioResult.skills.length,
-        projects: portfolioResult.projects.length,
-        awards: portfolioResult.awards.length,
-      });
 
       setPortfolioData(portfolioResult);
       setStep("portfolio-edit");

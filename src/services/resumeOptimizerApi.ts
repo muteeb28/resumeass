@@ -163,6 +163,11 @@ export async function extractResumeData(
   });
 }
 
+// Mistral OCR hard-aborts at 90s, NVIDIA NIM at 120s. Real-world latency plus
+// upload and overhead can push the total past 300s for large or detail-heavy
+// resumes. 600s gives safe headroom without changing the per-call API limits.
+export const PORTFOLIO_XHR_TIMEOUT_MS = 600_000;
+
 /**
  * Extract resume data for the portfolio flow — calls /api/extract-portfolio (separate pipeline)
  */
@@ -209,7 +214,7 @@ export async function extractPortfolioData(
     xhr.addEventListener("timeout", () => reject(new Error("Upload timed out. Please try again.")));
 
     xhr.open("POST", url);
-    xhr.timeout = 180000; // 3 minute timeout (two-step pipeline takes longer)
+    xhr.timeout = PORTFOLIO_XHR_TIMEOUT_MS;
     xhr.send(formData);
   });
 }

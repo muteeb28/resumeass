@@ -109,16 +109,22 @@ export function convertToPortfoliolyFormat(resume: ResumeJSON | ResumeJSONv2): R
       } else if (id === 'education') {
         education = items
           .filter((item): item is EducationItem => item.type === 'education')
-          .map(item => ({
-            institution: item.school || "",
-            area: item.degree || "",
-            studyType: "Degree",
-            score: item.gpa || "",
-            highlights: item.highlights || [],
-            startDate: item.startDate || (item.dates || "").split(/[-–—]/)[0]?.trim() || "",
-            endDate: item.endDate || (item.dates || "").split(/[-–—]/)[1]?.trim() || "",
-            location: item.location || "",
-          }));
+          .map(item => {
+            const details: string[] = (item as any).details || [];
+            const cgpaDetail = details.find((d: string) => /gpa|cgpa|grade/i.test(d));
+            const scoreNumeric = cgpaDetail?.match(/\d+(?:\.\d+)?(?:\s*\/\s*\d+(?:\.\d+)?)?/)?.[0] ?? "";
+            const otherDetails = details.filter((d: string) => d !== cgpaDetail);
+            return {
+              institution: item.school || "",
+              area: item.degree || "",
+              studyType: "Degree",
+              score: item.gpa || scoreNumeric || "",
+              highlights: otherDetails.length > 0 ? otherDetails : (item.highlights || []),
+              startDate: item.startDate || (item.dates || "").split(/[-–—]/)[0]?.trim() || "",
+              endDate: item.endDate || (item.dates || "").split(/[-–—]/)[1]?.trim() || "",
+              location: item.location || "",
+            };
+          });
 
       } else if (id === 'skills') {
         const grouped: Record<string, string[]> = {};
@@ -225,7 +231,9 @@ export function convertToPortfoliolyFormat(resume: ResumeJSON | ResumeJSONv2): R
     education = (resume.education || []).map(edu => {
       const details: string[] = (edu as any).details || [];
       const cgpaDetail = details.find((d: string) => /gpa|cgpa|grade/i.test(d));
-      const score = cgpaDetail || "";
+      // Extract the numeric value only — avoids "GPA: CGPA: 7.69" doubling in the renderer
+      const scoreNumeric = cgpaDetail?.match(/\d+(?:\.\d+)?(?:\s*\/\s*\d+(?:\.\d+)?)?/)?.[0] ?? "";
+      const score = scoreNumeric || "";
       const otherDetails = details.filter((d: string) => d !== cgpaDetail);
       const dates: string = (edu as any).dates || "";
       const dateParts = dates.split(/\s*[-–—]\s*/);
@@ -235,6 +243,7 @@ export function convertToPortfoliolyFormat(resume: ResumeJSON | ResumeJSONv2): R
         studyType: "Degree",
         score,
         highlights: otherDetails,
+        url: (edu as any).url || "",
         startDate: dateParts[0]?.trim() || "",
         endDate: dateParts[1]?.trim() || "",
         location: (edu as any).location || "",
@@ -256,6 +265,7 @@ export function convertToPortfoliolyFormat(resume: ResumeJSON | ResumeJSONv2): R
         entity: "Personal",
         type: "Project",
         highlights: proj.bullets || [],
+        keywords: Array.isArray(proj.keywords) ? proj.keywords : [],
         startDate: dateParts[0]?.trim() || "",
         endDate: dateParts[1]?.trim() || "",
         role: proj.role || "",

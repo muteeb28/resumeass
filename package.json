@@ -8,8 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "server": "node server/server.js",
-    "dev:server": "nodemon server/server.js",
+    "dev:server": "cd external/jobflix-backend-js && npx nodemon server.js",
     "pdf-service": "cd pdf-service && python main.py",
     "pdf-service:install": "cd pdf-service && pip install -r requirements.txt"
   },

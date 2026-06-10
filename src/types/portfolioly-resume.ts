@@ -43,6 +43,7 @@ export interface ResumeProject {
   liveUrl?: string;
   sourceUrl?: string;
   highlights?: string[];
+  keywords?: string[];
   startDate?: string;
   endDate?: string;
   role?: string;
@@ -54,6 +55,7 @@ export interface ResumeEducation {
   studyType: string;
   score: string;
   highlights?: string[];
+  url?: string;
   startDate?: string;
   endDate?: string;
   location?: string;

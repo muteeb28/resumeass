@@ -271,8 +271,8 @@ export default function CreatePortfolioPage() {
           <div className="flex items-center gap-2">
             <Button
               onClick={handlePublish}
-              disabled={isPublishing}
-              className="bg-neutral-900 text-white hover:bg-neutral-800 text-sm h-9"
+              disabled={isPublishing || !resumeData}
+              className="bg-neutral-900 text-white hover:bg-neutral-800 text-sm h-9 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Globe className="h-3.5 w-3.5 mr-1" />
               {isPublishing ? "Publishing..." : "Publish Portfolio"}
