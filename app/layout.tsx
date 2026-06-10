@@ -11,6 +11,9 @@ import MembershipSync from '@/components/MembershipSync';
 export const metadata: Metadata = {
   title: 'ResumeAssist AI - AI-Powered Resume Builder',
   description: 'AI-powered resume builder and optimizer',
+  icons: {
+    icon: '/icon.png',
+  },
 }
 
 export default function RootLayout({

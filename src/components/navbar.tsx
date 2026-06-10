@@ -55,7 +55,7 @@ export const Navbar = ({
             <img
               src="/logo.png"
               alt="ResumeAssist AI"
-              className="h-16 w-auto object-contain py-1"
+              className="h-10 w-auto object-contain py-1"
             />
           </motion.div>
 
