@@ -1,3 +1,6 @@
+import axiosInstance from "@/lib/axios";
+import { toast } from "sonner";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 const DEFAULT_API_BASE = '/api';
 
@@ -72,95 +75,71 @@ export interface ProgressUpdate {
 export async function extractResumeData(
   file: File,
   onProgress?: (progress: number) => void
-): Promise<ExtractedResumeData> {
+): Promise<ExtractedResumeData | any> {
   const formData = new FormData();
   formData.append('resume', file);
 
-  const url = buildApiUrl('extract-resume');
-
-  // Use XMLHttpRequest for progress tracking
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-
-    // Track upload progress
-    if (onProgress) {
-      xhr.upload.addEventListener("progress", (event) => {
-        if (event.lengthComputable) {
-          const progress = (event.loaded / event.total) * 100;
+  try {
+    const response = await axiosInstance.post('/extract-resume', formData, {
+      timeout: 60000, // 60 second timeout
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      
+      // Axios replaces xhr.upload.addEventListener("progress") with this:
+      onUploadProgress: (progressEvent) => {
+        if (onProgress && progressEvent.total) {
+          const progress = (progressEvent.loaded / progressEvent.total) * 100;
           onProgress(progress);
         }
-      });
+      },
+    });
+
+    const result = response.data;
+
+    // --- Logging & Debugging Block ---
+    console.log('\n' + '='.repeat(60));
+    console.log('📥 RESUME EXTRACTION RESPONSE');
+    console.log('='.repeat(60));
+    console.log('Status:', response.status);
+    
+    console.log('✅ Response received:', {
+      success: result.success,
+      hasData: !!result.data,
+      dataKeys: result.data ? Object.keys(result.data) : []
+    });
+
+    if (result.data) {
+      console.log('📋 RAW DATA STRUCTURE:', result.data);
+      console.log('📋 Extracted Data Summary:');
+      console.log('  Name:', result.data.basics?.name || result.data.personal_info?.full_name || 'Not found');
+      console.log('  Email:', result.data.basics?.email || result.data.personal_info?.email || 'Not found');
+      console.log('  Phone:', result.data.basics?.phone || result.data.personal_info?.phone || 'Not found');
+      console.log('  Work Experiences:', result.data.experience?.length || result.data.work_experiences?.length || 0);
+      console.log('  Education:', result.data.education?.length || 0);
+      console.log('  Projects:', result.data.projects?.length || 0);
+      console.log('  Skills Categories:', Array.isArray(result.data.skills)
+        ? result.data.skills.length
+        : (result.data.skills?.categories?.length || 0));
+      console.log('  Achievements:', result.data.achievements?.length || 0);
+      console.log('  Parser Used:', result.data._parser);
+    }
+    console.log('='.repeat(60) + '\n');
+    // ---------------------------------
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to extract resume');
     }
 
-    xhr.addEventListener("load", () => {
-      try {
-        console.log('\n' + '='.repeat(60));
-        console.log('📥 RESUME EXTRACTION RESPONSE');
-        console.log('='.repeat(60));
-        console.log('Status:', xhr.status);
+    return result.data;
 
-        if (xhr.status >= 400) {
-          console.error('❌ HTTP Error:', xhr.status, xhr.statusText);
-          let errorData: any;
-          try {
-            errorData = JSON.parse(xhr.responseText);
-            console.error('Error data:', errorData);
-          } catch {
-            reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
-            return;
-          }
-          reject(new Error(errorData.error || `HTTP ${xhr.status}`));
-          return;
-        }
-
-        const result = JSON.parse(xhr.responseText);
-        console.log('✅ Response received:', {
-          success: result.success,
-          hasData: !!result.data,
-          dataKeys: result.data ? Object.keys(result.data) : []
-        });
-
-        if (result.data) {
-          console.log('📋 RAW DATA STRUCTURE:', result.data);
-          console.log('📋 Extracted Data Summary:');
-          console.log('  Name:', result.data.basics?.name || result.data.personal_info?.full_name || 'Not found');
-          console.log('  Email:', result.data.basics?.email || result.data.personal_info?.email || 'Not found');
-          console.log('  Phone:', result.data.basics?.phone || result.data.personal_info?.phone || 'Not found');
-          console.log('  Work Experiences:', result.data.experience?.length || result.data.work_experiences?.length || 0);
-          console.log('  Education:', result.data.education?.length || 0);
-          console.log('  Projects:', result.data.projects?.length || 0);
-          console.log('  Skills Categories:', Array.isArray(result.data.skills)
-            ? result.data.skills.length
-            : (result.data.skills?.categories?.length || 0));
-          console.log('  Achievements:', result.data.achievements?.length || 0);
-          console.log('  Parser Used:', result.data._parser);
-        }
-        console.log('='.repeat(60) + '\n');
-
-        if (!result.success) {
-          reject(new Error(result.error || 'Failed to extract resume'));
-          return;
-        }
-
-        resolve(result.data);
-      } catch (error) {
-        console.error('❌ Error parsing response:', error);
-        reject(error);
-      }
-    });
-
-    xhr.addEventListener("error", () => {
-      reject(new Error("Network error during file upload. Please check your connection."));
-    });
-
-    xhr.addEventListener("timeout", () => {
-      reject(new Error("Upload timed out. Please try again."));
-    });
-
-    xhr.open("POST", url);
-    xhr.timeout = 60000; // 60 second timeout
-    xhr.send(formData);
-  });
+  } catch (error: any) {    
+    // If the request timed out
+    if (error.code === 'ECONNABORTED') {
+      throw new Error("Upload timed out. Please try again.");
+    }
+    toast.error(error?.response?.data?.message || "Network error during file upload. Please check your connection.");
+  }
 }
 
 // Mistral OCR hard-aborts at 90s, NVIDIA NIM at 120s. Real-world latency plus

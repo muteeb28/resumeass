@@ -7,6 +7,12 @@ import { useUserStore } from "@/stores/useUserStore";
 import axiosInstance from "@/lib/axios";
 import { toast } from "sonner";
 
+const TIER_WEIGHTS: Record<string, number> = {
+  basic: 1,
+  premium: 2,
+  ultra: 3,
+};
+
 const PricingCard = ({
   title,
   price,
@@ -17,6 +23,7 @@ const PricingCard = ({
   isPopular = false,
   comingSoon = false,
   buttonText = "Get Started",
+  buttonDisabled = false,
   saveBadge,
   delay = 0,
   className,
@@ -31,6 +38,7 @@ const PricingCard = ({
   isPopular?: boolean;
   comingSoon?: boolean;
   buttonText?: string;
+  buttonDisabled?: boolean;
   saveBadge?: string;
   delay?: number;
   className?: string;
@@ -97,13 +105,13 @@ const PricingCard = ({
 
       {/* CTA Button */}
       <button
-        disabled={comingSoon}
+        disabled={comingSoon || buttonDisabled}
         onClick={onClick}
         className={cn(
           "mb-6 w-full py-2.5 rounded-xl text-sm font-semibold transition-colors duration-200",
           isPopular
             ? "bg-neutral-900 text-white hover:bg-teal-600"
-            : comingSoon
+            : comingSoon || buttonDisabled
               ? "border border-neutral-200 bg-neutral-50 text-neutral-400 cursor-not-allowed"
               : "border border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-900 hover:text-white"
         )}
@@ -143,8 +151,37 @@ const PricingCard = ({
 };
 
 export const PaymentSection = () => {
-  const { user } = useUserStore();
+  const { user, membership } = useUserStore();
   const router = useRouter();
+
+  const currentTier = membership?.tier?.toLowerCase() || "none";
+  const currentWeight = TIER_WEIGHTS[currentTier] || 0;
+
+  const planState = (planTier: string) => {
+    const planWeight = TIER_WEIGHTS[planTier] || 0;
+    if (!membership) {
+      return {
+        disabled: false,
+        text: "Get Started",
+      };
+    }
+    if (currentWeight === planWeight) {
+      return {
+        disabled: true,
+        text: "Current plan",
+      };
+    }
+    if (currentWeight > planWeight) {
+      return {
+        disabled: true,
+        text: "Downgrade unavailable",
+      };
+    }
+    return {
+      disabled: false,
+      text: `Upgrade to ${planTier.charAt(0).toUpperCase() + planTier.slice(1)}`,
+    };
+  };
 
   const onClick = async (planId: string) => {
     if (!user) {
@@ -261,7 +298,8 @@ export const PaymentSection = () => {
               { text: "Resume Creator (rate limit)" },
               { text: "Jobs (only latest openings)" },
             ]}
-            buttonText="Get Started"
+            buttonText={planState('basic').text}
+            buttonDisabled={planState('basic').disabled}
             onClick={() => onClick('plan_ID_99')}
           />
 
@@ -282,25 +320,27 @@ export const PaymentSection = () => {
               { text: "Dubai HR emails" },
             ]}
             isPopular
-            buttonText="Unlock Full Access"
+            buttonText={planState('premium').text}
+            buttonDisabled={planState('premium').disabled}
             onClick={() => onClick('plan_ID_155')}
           />
 
           <PricingCard
             delay={0.3}
-            title="Pro Weekly"
-            price="₹999"
-            originalPrice="₹1,999"
-            period="week"
-            description="Best for short-term job search sprints."
+            title="Ultra"
+            price="₹349"
+            originalPrice="₹699"
+            period="month"
+            description="The ultimate plan for active job seekers with priority access and advanced features."
             features={[
-              { text: "Everything in HR Outreach" },
+              { text: "Everything in Growth" },
               { text: "Unlimited resume optimizations" },
               { text: "Priority support" },
-              { text: "AI Auto Apply", soon: true },
+              { text: "Search, filter, and premium job board access" },
             ]}
-            comingSoon
-            buttonText="Notify Me"
+            isPopular
+            buttonText={planState('ultra').text}
+            buttonDisabled={planState('ultra').disabled}
             onClick={() => onClick('plan_ID_349')}
           />
         </div>
