@@ -22,6 +22,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { motion } from "motion/react";
+import { useUserStore } from "@/stores/useUserStore";
+import axiosInstance from "@/lib/axios";
 
 /**
  * TYPES
@@ -170,8 +172,14 @@ const Dashboard = ({
   const [editForm, setEditForm] = useState<JobApplicationRow | null>(null);
 
   const draftCount = rows.filter((row) => row.isDraft).length;
-
+  const { membership } = useUserStore();
+  const validTier = (membership?.tier === 'premium' || membership?.tier === 'ultra')
+  const hasAccess = membership && membership.status === 'paid' && validTier;
   const addRow = () => {
+    if (hasAccess) {
+      toast.error('You need to have an active premium or ultra membership to add a row');
+      return;
+    }
     const tempId = createId("draft");
     const newRow: JobApplicationRow = {
       tempId,
@@ -196,6 +204,10 @@ const Dashboard = ({
   };
 
   const saveDraftRows = async () => {
+    if (hasAccess) {
+      toast.error('You need to have an active premium or ultra membership to add a row');
+      return;
+    }
     const draftRows = rows.filter((row) => row.isDraft);
     if (draftRows.length === 0) return;
 
@@ -207,16 +219,11 @@ const Dashboard = ({
 
     try {
       setSaveLoader(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_JOBFILX_APIURL}/job/applications`, {
-        method: "POST",
-        credentials: 'include',
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const response = await axiosInstance.post("/job/applications",
+        {
           applications: draftRows.map(cleanApplicationPayload),
-        }),
-      });
-
-      if (!response.ok) throw new Error();
+        },
+      );
       await reloadRows();
       toast.success(`${draftRows.length} application(s) saved.`);
     } catch (error) {
@@ -227,6 +234,10 @@ const Dashboard = ({
   };
 
   const saveSingleDraft = async (row: JobApplicationRow) => {
+    if (hasAccess) {
+      toast.error('You need to have an active premium or ultra membership to add a row');
+      return;
+    }
     if (!row.isDraft || !row.title.trim()) return;
 
     const rowKey = getRowKey(row);
@@ -235,14 +246,12 @@ const Dashboard = ({
     );
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_JOBFILX_APIURL}/job/applications`, {
-        method: "POST",
-        credentials: 'include',
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ application: cleanApplicationPayload(row) }),
-      });
+      const response = await axiosInstance.post("/job/applications",
+        {
+          application: cleanApplicationPayload(row),
+        },
+      );
 
-      if (!response.ok) throw new Error();
       await reloadRows();
       toast.success("Application saved.");
     } catch (error) {
@@ -255,17 +264,20 @@ const Dashboard = ({
   };
 
   const deleteRow = async (row: JobApplicationRow) => {
+    if (hasAccess) {
+      toast.error('You need to have an active premium or ultra membership to add a row');
+      return;
+    }
     if (row.isDraft) {
       setRows((prev) => prev.filter((entry) => getRowKey(entry) !== getRowKey(row)));
       return;
     }
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_JOBFILX_APIURL}/job/application/delete`, {
-        method: "POST",
-        credentials: 'include',
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: row._id }),
-      });
+      await axiosInstance.post("/job/application/delete",
+        {
+          id: row._id,
+        },
+      );
       setRows((prev) => prev.filter((entry) => entry._id !== row._id));
       toast.success("Deleted.");
     } catch (error) {
@@ -274,6 +286,10 @@ const Dashboard = ({
   };
 
   const updateRowStatus = async (row: JobApplicationRow, status: ApplicationStatus) => {
+    if (hasAccess) {
+      toast.error('You need to have an active premium or ultra membership to add a row');
+      return;
+    }
     if (row.isDraft) {
       setRows((prev) =>
         prev.map((entry) => (getRowKey(entry) === getRowKey(row) ? { ...entry, status } : entry))
@@ -281,12 +297,11 @@ const Dashboard = ({
       return;
     }
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_JOBFILX_APIURL}/job/application/status/update/${row._id}`, {
-        method: "PUT",
-        credentials: 'include',
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      });
+      await axiosInstance.put(`/job/application/status/update/${row._id}`,
+        {
+          status,
+        },
+      );
       setRows((prev) => prev.map((entry) => (entry._id === row._id ? { ...entry, status } : entry)));
     } catch (error) {
       toast.error("Status update failed.");
@@ -311,6 +326,10 @@ const Dashboard = ({
    * PARTIAL UPDATE LOGIC
    */
   const saveEditedRow = async () => {
+    if (hasAccess) {
+      toast.error('You need to have an active premium or ultra membership to add a row');
+      return;
+    }
     if (!editForm || !editForm.title.trim() || !editingRow) return;
 
     if (editForm.isDraft) {
@@ -335,15 +354,11 @@ const Dashboard = ({
 
     try {
       setSaveEditLoader(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_JOBFILX_APIURL}/job/applications/${editForm._id}`, {
-        method: "PUT",
-        credentials: 'include',
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ application: changedFields }),
-      });
-
-      if (!response.ok) throw new Error();
-
+      const response = await axiosInstance.put(`/job/applications/${editForm._id}`,
+        {
+          application: changedFields,
+        },
+      );
       setRows((prev) => prev.map((row) => (row._id === editForm._id ? { ...editForm } : row)));
       closeEditModal();
       toast.success("Updated successfully.");
@@ -698,7 +713,7 @@ const Dashboard = ({
               )}
             </>
           ) : (
-            <HrEmailsTable className="mt-4" />
+            <HrEmailsTable className="mt-4" country="india" />
           )}
         </div>
       </div>
