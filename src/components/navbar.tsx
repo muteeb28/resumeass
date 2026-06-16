@@ -22,7 +22,7 @@ export const Navbar = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navItems = [
-    { name: "Job Referrals", href: "/job-tracker" },
+    { name: "Job Referrals", href: "/referrals" },
     { name: "Jobs", href: "/job-tracker?tab=jobs" },
     { name: "Learn", href: "https://jobflix.in/courses", external: true },
     { name: "Pricing", href: "/#pricing" },

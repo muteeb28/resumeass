@@ -340,8 +340,8 @@ export default function JobBoard() {
 
   useEffect(() => {
     if (noAccess) {
-      setJobs(DEMO_JOBS);
-      setTotal(DEMO_JOBS.length);
+      // setJobs(DEMO_JOBS);
+      // setTotal(DEMO_JOBS.length);
       setLoading(false);
       return;
     }
