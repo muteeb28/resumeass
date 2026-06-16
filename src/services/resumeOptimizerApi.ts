@@ -133,7 +133,7 @@ export async function extractResumeData(
 
     return result.data;
 
-  } catch (error: any) {    
+  } catch (error: any) {
     // If the request timed out
     if (error.code === 'ECONNABORTED') {
       throw new Error("Upload timed out. Please try again.");
