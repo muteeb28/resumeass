@@ -82,7 +82,7 @@ export const useUserStore = create<UserStore>()(
       login: async (email, password) => {
         set({ loading: true });
         try {
-          const response = await api.post("/user/login", { email, password });
+          const response = await api.post("/auth/login", { email, password });
           const data = response.data;
 
           // Hydrates state, which triggers an automatic write to your shared cookie
@@ -100,7 +100,7 @@ export const useUserStore = create<UserStore>()(
       signup: async (payload) => {
         set({ loading: true });
         try {
-          const response = await api.post("/user/create", payload);
+          const response = await api.post("/auth/signup", payload);
           const data = response.data;
 
           // Hydrates state and syncing the data to the cookie

@@ -135,7 +135,7 @@ export const Navbar = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/login?next=${window.location.href}`}
+                  onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/login`}
                   className={cn(
                     isLight ? "text-slate-700 hover:text-slate-900 hover:bg-slate-100" : ""
                   )}
@@ -299,7 +299,7 @@ export const Navbar = ({
                             "w-full",
                             isLight ? "bg-slate-900 text-white hover:bg-slate-800" : ""
                           )}
-                          onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_AUTH_CLIENT_URL}/login?next=${window.location.href}`}
+                          onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/login`}
                         >
                           Login
                         </Button>

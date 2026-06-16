@@ -23,14 +23,10 @@ axiosInstance.interceptors.response.use(
       useUserStore.getState().setUser(null);
 
       if (typeof window !== "undefined") {
-        // 3. Smart Multi-Subdomain Redirect Configuration
-        // Captures the current subdomain URL so your login page knows exactly where to send them back after re-authenticating
-        const currentUrl = encodeURIComponent(window.location.href);
-        
         // Constructs a clean fallback pointing to your main login page
         // If your login logic is on account.jobflix.in, change this to match your central auth domain.
         const loginBaseUrl = `${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/login` || 'https://jobflix.in/login';
-        window.location.href = `${loginBaseUrl}?next=${currentUrl}`;
+        window.location.href = loginBaseUrl;
       }
       
       // Stop the error chain since we are forcing a window relocation redirect
