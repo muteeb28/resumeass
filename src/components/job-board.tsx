@@ -386,9 +386,6 @@ export default function JobBoard() {
           <p className="text-[12.5px] text-rose-900/90 leading-relaxed">
             You need an active Premium or Ultra membership to access the job board. This preview shows how job listings will appear.
           </p>
-          <p className="text-[12.5px] text-rose-900/90 leading-relaxed mt-2">
-            These are demo jobs only and not real vacancies.
-          </p>
         </div>
       )}
 
