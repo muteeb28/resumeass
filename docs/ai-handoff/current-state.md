@@ -1,6 +1,6 @@
 # Current State — AI Handoff
 
-_Last updated: 2026-05-24 (session 5, loop/request-spam diagnosis + jobs-empty root cause + ingestion trigger). Update this file at the end of each session._
+_Last updated: 2026-06-17 (sessions 7–9: login redirect fix, /referrals page redesign, referrer marketplace backend + frontend). Update this file at the end of each session._
 
 ---
 
@@ -314,22 +314,13 @@ restart and ran a second ingestion (newJobs: 14, updatedJobs: 281 — dedup corr
 - Removed hardcoded "Courses" block from desktop nav (was `HoverBorderGradient` with external link)
 - Removed hardcoded "Courses" block from mobile dropdown (same component, same external link)
 
-### Final nav order (desktop + mobile identical)
+### Final nav order as of session 6 (NOW OUTDATED — see session 7 below)
 Job Referrals | Fresh Jobs | Features | Pricing | Blog | [Contact Us] [Login/User]
-
-### Why "Fresh Jobs"
-Already the language used in the live UI ("313 fresh jobs"). Consistent with the 48h freshness
-story. Shorter than "Latest Jobs", more evocative than plain "Jobs".
 
 ### Tests added
 `src/__tests__/navbar.test.ts` — 16 tests (all passing):
 - Job Referrals present, linked to /job-tracker
-- Job Tracker (old name) absent
 - Fresh Jobs present, linked to /job-tracker?tab=jobs
-- Courses absent, no levelup URL in config
-- Features / Pricing / Blog preserved with correct anchors
-- Item order locked (Job Referrals first, Fresh Jobs second)
-- Desktop/mobile parity confirmed (single navItems array in component)
 
 ### Pre-existing issues NOT touched (noted for future cleanup)
 - `href="contact-us"` in mobile menu is relative (no leading `/`); desktop uses `/contact-us`
@@ -338,7 +329,128 @@ story. Shorter than "Latest Jobs", more evocative than plain "Jobs".
 
 ---
 
-## 11. Next Intended Task
+## 11. Sessions 7–9 — 2026-06-17 (Login fix + Referrer marketplace)
+
+### 11a. Login redirect fix (commit `2eef8cc`, pushed)
+
+**Bug:** Commit `839301a` had stripped the `?next=` param from both navbar login buttons,
+so post-login redirect always landed on the Jobflix homepage instead of returning to resumeassist.
+
+**Fix applied to `src/components/navbar.tsx`:**
+- Desktop login button (line ~138): `onClick={() => window.location.href = \`${NEXT_PUBLIC_JOBFLIX_VIEW}/login?next=${encodeURIComponent(window.location.origin)}\``
+- Mobile login button (line ~302): same pattern
+- Both buttons confirmed restored. Commit `2eef8cc`, pushed to origin/main.
+
+**CRITICAL commit rule established:** Never add `Co-Authored-By: Claude` to any commit message.
+
+---
+
+### 11b. `"Job Referrals"` nav link href changed to `/referrals`
+
+`navItems` in `src/components/navbar.tsx` now reads:
+```ts
+{ name: "Job Referrals", href: "/referrals" },
+{ name: "Jobs",          href: "/job-tracker?tab=jobs" },
+{ name: "Learn",         href: "https://jobflix.in/courses", external: true },
+```
+The href was changed from `/job-tracker` → `/referrals` as part of giving the referrals feature
+its own dedicated route. Note: the navbar test (`src/__tests__/navbar.test.ts`) asserts the old
+`/job-tracker` href and will now fail — update or delete the test.
+
+---
+
+### 11c. `/referrals` page redesign (`app/referrals/page.tsx`)
+
+**What exists at `/referrals`:** Two-sided referral marketplace page.
+
+**Additions in these sessions (all in `app/referrals/page.tsx`):**
+- Quick-action chip linking to `/referrals/list` ("Looking for referral →")
+- Hero CTA button color set to `#4353CF` (brand accent)
+- "Become a referrer →" text link below hero CTAs, links to `/referrals/become-referrer`
+- Full "Find people who can refer you" browse section:
+  - Search bar with `debounce 300ms` → `GET /api/referrers?search=&limit=12`
+  - Experience filter sidebar (chips, client-side filter via `matchesExperienceRange`)
+  - `CardSkeleton` for loading state
+  - Referrer cards: avatar (deterministic palette from company name hash), company, designation, skills pills, "Reveal contact" button
+  - `revealContact(id)` → `POST /api/referrers/:id/reveal-contact`, per-card `RevealState` (`loading | error | { name, email, phone }`)
+  - Auth guard: `if (!user) return` in useEffect — shows login prompt instead of skeleton when logged out
+
+**State additions:**
+```ts
+const [searchInput, setSearchInput] = useState("");
+const [referrerQuery, setReferrerQuery] = useState("");
+const [referrers, setReferrers] = useState<any[]>([]);
+const [referrerLoading, setReferrerLoading] = useState(false);
+const [revealed, setRevealed] = useState<Record<string, RevealState>>({});
+const [selectedExperience, setSelectedExperience] = useState<string[]>([]);
+const [experienceExpanded, setExperienceExpanded] = useState(true);
+```
+
+All existing content (hero, benefits, split CTA, modal form) is intact.
+
+---
+
+### 11d. `/referrals/become-referrer` page (new file)
+
+**File:** `app/referrals/become-referrer/page.tsx`
+
+Form for professionals to register as referrers. Fields:
+- Company email (required) — backend rejects personal domains (Gmail, Yahoo, etc.)
+- Company name (required)
+- Designation (required)
+- Skills — custom self-contained `SkillsInput` (Enter to add, Backspace removes last, × per pill). **No emblor dependency.**
+- Experience (optional, free text)
+
+Behavior:
+- If not logged in → redirects to `NEXT_PUBLIC_JOBFLIX_VIEW/login?next=<current URL>`
+- On 400 from backend → inline `emailError` under the company email field ("Please use your company email address.")
+- On success → success state: "You're now visible to job seekers at {company}" + "Back to referrals hub" + "Update profile" buttons
+
+---
+
+### 11e. Referrer marketplace backend (`jobflix-backend-js/` — the port 7005 backend, NOT `external/`)
+
+**Important:** All backend files below are in `C:\Users\mutee\Desktop\startup\jobflix-backend-js\`,
+NOT in `external/jobflix-backend-js`. These are separate backends serving different ports.
+
+**New files:**
+
+| File | Purpose |
+|---|---|
+| `models/referrer.model.js` | Mongoose schema — userId (unique), companyEmail, companyDomain, company, designation, skills[], experience, isVerified (default true), isActive (default true), contactRevealCount (default 0) |
+| `utils/validateCompanyDomain.js` | `isPersonalEmailDomain(email)` — Set of 10 personal providers. `extractDomain(email)` |
+| `controllers/resumeassist/referrer.controller.js` | `becomeReferrer` (upsert by userId), `getReferrers` (paginated + regex search), `revealContact` ($inc contactRevealCount, populate userId for name+phone) |
+| `routes/resumeassist/referrer.route.js` | POST `/` (isLoggedIn), GET `/` (isLoggedIn), POST `/:id/reveal-contact` (isLoggedIn) |
+
+**`server.js` mount added:**
+```js
+import referrerRoutes from "./routes/resumeassist/referrer.route.js";
+app.use('/api/referrers', referrerRoutes);  // after /api/referrals line
+```
+
+**API routes:**
+- `POST /api/referrers` — create/update referrer profile (upsert by userId)
+- `GET /api/referrers?search=&limit=&page=` — list active+verified referrers
+- `POST /api/referrers/:id/reveal-contact` — reveal contact info (increments counter)
+
+**Validation:** Personal email domains (gmail, yahoo, hotmail, outlook, etc.) → 400.
+**Security:** `companyEmail` and `userId` are excluded from all list/reveal responses.
+
+---
+
+### 11f. Pending — backend API tests for referrer routes
+
+Requested but not completed (need valid `jf_accessToken` cookie):
+1. `POST /api/referrers` with `gmail.com` → expect 400
+2. `POST /api/referrers` with company email → expect 200, profile saved
+3. `GET /api/referrers?search=react` → expect referrer in results
+4. `POST /api/referrers/:id/reveal-contact` → expect name/email, `contactRevealCount` incremented
+
+If resuming: ask user for test credentials or a valid `jf_accessToken` value before running.
+
+---
+
+## 12. Next Intended Task
 
 No next task defined. Ask the user.
 
