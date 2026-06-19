@@ -1,46 +1,14 @@
 'use client'
 
-import { useRef } from 'react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
-import { TABS, type TabId } from './tabs.config'
+import { TABS } from './tabs.config'
 import { TAB_INDICATOR, TAB_DOT } from '../../lib/motion'
 
-interface JobsHubNavProps {
-  active: TabId
-  onChange: (id: TabId) => void
-}
-
-export function JobsHubNav({ active, onChange }: JobsHubNavProps) {
-  const listRef = useRef<HTMLDivElement>(null)
+export function JobsHubNav() {
+  const pathname = usePathname()
   const reduced = useReducedMotion() ?? false
-
-  const focusTab = (index: number) => {
-    const buttons = listRef.current?.querySelectorAll<HTMLElement>('[role="tab"]')
-    buttons?.[index]?.focus()
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
-    const last = TABS.length - 1
-    if (e.key === 'ArrowRight') {
-      e.preventDefault()
-      const next = (index + 1) % TABS.length
-      onChange(TABS[next].id)
-      focusTab(next)
-    } else if (e.key === 'ArrowLeft') {
-      e.preventDefault()
-      const prev = (index - 1 + TABS.length) % TABS.length
-      onChange(TABS[prev].id)
-      focusTab(prev)
-    } else if (e.key === 'Home') {
-      e.preventDefault()
-      onChange(TABS[0].id)
-      focusTab(0)
-    } else if (e.key === 'End') {
-      e.preventDefault()
-      onChange(TABS[last].id)
-      focusTab(last)
-    }
-  }
 
   return (
     <nav
@@ -49,24 +17,16 @@ export function JobsHubNav({ active, onChange }: JobsHubNavProps) {
       style={{ fontFamily: 'var(--font-hub)' }}
     >
       <div className="max-w-[940px] mx-auto px-5">
-        <div
-          ref={listRef}
-          role="tablist"
-          className="flex items-end overflow-x-auto scrollbar-hide"
-        >
-          {TABS.map((tab, index) => {
-            const isActive = tab.id === active
+        <div className="flex items-end overflow-x-auto scrollbar-hide">
+          {TABS.map((tab) => {
+            const isActive = pathname === tab.path
 
             return (
-              <button
+              <Link
                 key={tab.id}
-                role="tab"
+                href={tab.path}
                 id={`tab-${tab.id}`}
-                aria-selected={isActive}
-                aria-controls={`panel-${tab.id}`}
-                tabIndex={isActive ? 0 : -1}
-                onClick={() => onChange(tab.id)}
-                onKeyDown={(e) => handleKeyDown(e, index)}
+                aria-current={isActive ? 'page' : undefined}
                 className={[
                   'relative flex items-center gap-[5px] px-[15px] py-[11px] shrink-0',
                   'text-[13px] transition-colors duration-[130ms] outline-none select-none',
@@ -104,7 +64,7 @@ export function JobsHubNav({ active, onChange }: JobsHubNavProps) {
                     transition={reduced ? { duration: 0 } : TAB_INDICATOR}
                   />
                 )}
-              </button>
+              </Link>
             )
           })}
         </div>

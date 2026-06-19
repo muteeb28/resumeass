@@ -35,6 +35,70 @@ const nextConfig: NextConfig = {
     return config
   },
 
+  async redirects() {
+    return [
+      // Old query-param URLs (?tab=*) → new top-level routes
+      // Note: ?tab=tracker is intentionally omitted — /job-tracker loads correctly
+      // without a redirect (the page ignores the unused query param)
+      {
+        source: '/job-tracker',
+        has: [{ type: 'query', key: 'tab', value: 'jobs' }],
+        destination: '/find-jobs',
+        permanent: false,
+      },
+      {
+        source: '/job-tracker',
+        has: [{ type: 'query', key: 'tab', value: 'emails' }],
+        destination: '/hr-emails',
+        permanent: false,
+      },
+      {
+        source: '/job-tracker',
+        has: [{ type: 'query', key: 'tab', value: 'dubai-hr' }],
+        destination: '/dubai-hr',
+        permanent: false,
+      },
+      {
+        source: '/job-tracker',
+        has: [{ type: 'query', key: 'tab', value: 'gulf-jobs' }],
+        destination: '/gulf-jobs',
+        permanent: false,
+      },
+      {
+        source: '/job-tracker',
+        has: [{ type: 'query', key: 'tab', value: 'au-nz' }],
+        destination: '/au-nz',
+        permanent: false,
+      },
+      // Old nested routes (/job-tracker/*) → new top-level routes
+      {
+        source: '/job-tracker/find-jobs',
+        destination: '/find-jobs',
+        permanent: false,
+      },
+      {
+        source: '/job-tracker/hr-emails',
+        destination: '/hr-emails',
+        permanent: false,
+      },
+      {
+        source: '/job-tracker/dubai-hr',
+        destination: '/dubai-hr',
+        permanent: false,
+      },
+      {
+        source: '/job-tracker/gulf-jobs',
+        destination: '/gulf-jobs',
+        permanent: false,
+      },
+      {
+        source: '/job-tracker/au-nz',
+        destination: '/au-nz',
+        permanent: false,
+      },
+    ]
+  },
+
   async rewrites() {
     return {
       beforeFiles: [],

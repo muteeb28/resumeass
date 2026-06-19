@@ -15,6 +15,7 @@ export interface TabConfig {
   dataStatus: DataStatus;
   description: string;
   feedType: "jobs" | "contacts";
+  path: string;
 }
 
 export const TABS: TabConfig[] = [
@@ -25,6 +26,7 @@ export const TABS: TabConfig[] = [
     dataStatus: "live",
     description: "Fresh job listings updated every 48 hours",
     feedType: "jobs",
+    path: "/find-jobs",
   },
   {
     id: "tracker",
@@ -33,6 +35,7 @@ export const TABS: TabConfig[] = [
     dataStatus: "live",
     description: "Track stages, export to Sheets, and manage every application",
     feedType: "jobs",
+    path: "/job-tracker",
   },
   {
     id: "emails",
@@ -41,6 +44,7 @@ export const TABS: TabConfig[] = [
     dataStatus: "live",
     description: "HR recruiter contacts for direct outreach",
     feedType: "contacts",
+    path: "/hr-emails",
   },
   {
     id: "dubai-hr",
@@ -49,6 +53,7 @@ export const TABS: TabConfig[] = [
     dataStatus: "live",
     description: "UAE-based HR recruiters and hiring contacts",
     feedType: "contacts",
+    path: "/dubai-hr",
   },
   {
     id: "gulf-jobs",
@@ -57,6 +62,7 @@ export const TABS: TabConfig[] = [
     dataStatus: "empty",
     description: "Job listings across Saudi Arabia, UAE, Qatar, and Kuwait",
     feedType: "jobs",
+    path: "/gulf-jobs",
   },
   {
     id: "au-nz",
@@ -65,5 +71,6 @@ export const TABS: TabConfig[] = [
     dataStatus: "empty",
     description: "Tech and professional roles across Australia and New Zealand",
     feedType: "jobs",
+    path: "/au-nz",
   },
 ];
