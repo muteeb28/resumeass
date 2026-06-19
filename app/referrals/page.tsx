@@ -1,18 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
-  BadgeCheck,
-  BriefcaseBusiness,
-  ChevronRight,
-  Handshake,
-  Mail,
-  Megaphone,
-  ShieldCheck,
-  Sparkles,
+  RefreshCw,
+  Search,
+  UserCheck,
   Users,
   X,
 } from "lucide-react";
@@ -27,29 +22,102 @@ import { toast } from "sonner";
 import { useUserStore } from "../../src/stores/useUserStore";
 import { useRouter } from "next/navigation";
 
-const benefits = [
+// ─── Constants ───────────────────────────────────────────────────────────────
+
+const TESTIMONIALS = [
   {
-    icon: BadgeCheck,
-    title: "Better shot at interviews",
-    description: "Get your profile in front of the right people with a clean, human-first referral request.",
+    quote: "Finally found a referral without awkward LinkedIn cold messages. Super easy and quick.",
+    name: "Ajay",
+    role: "Development Engineer",
+    company: "Zebronics",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&h=120&q=80",
   },
   {
-    icon: Handshake,
-    title: "Trusted introductions",
-    description: "A referral feels warmer than a cold application and can move your profile faster.",
+    quote: "Secured interviews at Microsoft within a week of asking. The community is incredibly helpful.",
+    name: "Neha Sharma",
+    role: "Software Engineer",
+    company: "Microsoft",
+    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&h=120&q=80",
   },
   {
-    icon: BriefcaseBusiness,
-    title: "Roles that match your goals",
-    description: "Tell us exactly what job you want and the kind of experience you bring to the table.",
+    quote: "As a referrer, I love how easy it is to find high-quality candidates without the clutter.",
+    name: "Rohan Gupta",
+    role: "Senior PM",
+    company: "Google",
+    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&h=120&q=80",
+  },
+  {
+    quote: "Simple, transparent, and direct. Got referred to Amazon and started my prep immediately.",
+    name: "Priya Nair",
+    role: "Data Scientist",
+    company: "Amazon",
+    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=120&h=120&q=80",
+  },
+  {
+    quote: "Highly recommend ResumeAssist referrals. Got referred to Razorpay and cracked the interview.",
+    name: "Vikram Malhotra",
+    role: "SDE-2",
+    company: "Razorpay",
+    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=120&h=120&q=80",
   },
 ];
 
-const highlights = [
-  "Quick referral requests",
-  "Curated opportunities",
-  "Easy referral tracking",
-  "Searchable referral board",
+
+const STATIC_PROFILES = [
+  {
+    name: "Swaroop Mishra",
+    designation: "Research Scientist",
+    company: "Google DeepMind",
+    about: "Researching advanced AI models and deep learning agents at DeepMind.",
+    email: "",
+    phone: "",
+    imageFile: "Swaroop Mishra.jpg",
+  },
+  {
+    name: "Saksham Arora",
+    designation: "SDE 2",
+    company: "Intuit",
+    about: "Building scalable financial software systems and fintech platform architectures.",
+    email: "",
+    phone: "",
+    imageFile: "Saksham Arora.jpg",
+  },
+  {
+    name: "Aditya Bendapudi",
+    designation: "Lead - Data",
+    company: "Aftershoot",
+    about: "Leading data engineering initiatives and intelligent pipeline optimization.",
+    email: "",
+    phone: "",
+    imageFile: "Aditya Bendapudi.jpg",
+  },
+  {
+    name: "Harshit Dwivedi",
+    designation: "Founder and CEO",
+    company: "Aftershoot",
+    about: "Driving AI innovation in photography and developer tooling workflows.",
+    email: "harshit@aftershoot.com",
+    phone: "",
+    imageFile: "Harshit Dwivedi.jpg",
+  },
+  {
+    name: "Subhash Gowani",
+    designation: "Workflow Scientist",
+    company: "RisaLabs",
+    about: "Designing intelligent automation and process optimization workflows.",
+    email: "subhash@risalabs.ai",
+    phone: "",
+    imageFile: "Subhash Gowani.png",
+  },
+  {
+    name: "Ranu Mishra",
+    designation: "Strategic Partnerships Manager",
+    company: "Saras AI",
+    about: "Managing strategic collaborations and industry integration for AI edtech.",
+    email: "ranu.m@sarasai.org",
+    phone: "",
+    imageFile: "Ranu Mishra.jpg",
+  },
 ];
 
 const initialForm = {
@@ -61,16 +129,61 @@ const initialForm = {
   experience: "",
 };
 
-function StatCard({ value, label } : {value: string, label: string}) {
+const AVATAR_PALETTES = [
+  { bg: "bg-neutral-100", text: "text-neutral-700" },
+  { bg: "bg-slate-100", text: "text-slate-700" },
+  { bg: "bg-emerald-100", text: "text-emerald-700" },
+  { bg: "bg-amber-100", text: "text-amber-700" },
+  { bg: "bg-rose-100", text: "text-rose-700" },
+  { bg: "bg-zinc-100", text: "text-zinc-700" },
+  { bg: "bg-cyan-100", text: "text-cyan-700" },
+  { bg: "bg-orange-100", text: "text-orange-700" },
+];
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function getAvatarPalette(name: string) {
+  const hash = [...(name || "?")].reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  return AVATAR_PALETTES[hash % AVATAR_PALETTES.length];
+}
+
+
+function matchesSearchQuery(profile: { name: string; designation: string; company: string; about: string }, query: string): boolean {
+  if (!query) return true;
+  const q = query.toLowerCase();
   return (
-    <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-md">
-      <div className="text-2xl font-black text-white">{value}</div>
-      <div className="mt-1 text-sm text-white/70">{label}</div>
+    profile.name.toLowerCase().includes(q) ||
+    profile.designation.toLowerCase().includes(q) ||
+    profile.company.toLowerCase().includes(q) ||
+    profile.about.toLowerCase().includes(q)
+  );
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function CardSkeleton() {
+  return (
+    <div className="animate-pulse rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+      <div className="flex flex-col items-center gap-3 pt-2">
+        <div className="h-16 w-16 rounded-full bg-neutral-100" />
+        <div className="h-4 w-3/4 rounded bg-neutral-100" />
+        <div className="h-3 w-1/2 rounded bg-neutral-100" />
+        <div className="h-3 w-2/3 rounded bg-neutral-100" />
+      </div>
+      <div className="mt-4 h-9 w-full rounded-xl bg-neutral-100" />
     </div>
   );
 }
 
-function Field({ label, children, required = false } : any) {
+function Field({
+  label,
+  children,
+  required = false,
+}: {
+  label: string;
+  children: React.ReactNode;
+  required?: boolean;
+}) {
   return (
     <div className="space-y-2">
       <Label className="text-sm font-semibold text-neutral-800">
@@ -82,29 +195,119 @@ function Field({ label, children, required = false } : any) {
   );
 }
 
+type RevealData = { name: string | null; email: string; phone: string | null };
+type RevealState = RevealData | "loading" | "error";
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default function ReferralsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState(initialForm);
-  const { user } = useUserStore();
+
+  const [searchInput, setSearchInput] = useState("");
+  const [referrerQuery, setReferrerQuery] = useState("");
+  const [referrers, setReferrers] = useState<any[]>([]);
+  const [referrerLoading, setReferrerLoading] = useState(false);
+  const [revealed, setRevealed] = useState<Record<string, RevealState>>({});
+
+const { user } = useUserStore();
   const router = useRouter();
 
-  const handleSubmit = async (e: any) => {
+  const [currentTestimonial, setCurrentTestimonial] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTestimonial((prev) => (prev + 1) % TESTIMONIALS.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const [contactModalData, setContactModalData] = useState<{
+    name: string;
+    email?: string;
+    phone?: string;
+  } | null>(null);
+
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+
+  const handleContactClick = (profile: any, isStatic: boolean) => {
+    if (isStatic) {
+      setContactModalData({
+        name: profile.name,
+        email: profile.email || undefined,
+        phone: profile.phone || undefined,
+      });
+    } else {
+      const revealState = revealed[profile._id];
+      if (revealState && typeof revealState === "object") {
+        setContactModalData({
+          name: profile.name || revealState.name || "Referrer",
+          email: revealState.email,
+          phone: revealState.phone ?? undefined,
+        });
+      } else {
+        revealContact(profile._id);
+      }
+    }
+  };
+
+  const fetchReferrers = useCallback(async (search: string) => {
+    setReferrerLoading(true);
+    try {
+      const res = await axiosInstance.get("/referrers", {
+        params: { search: search.trim(), limit: 12 },
+      });
+      setReferrers(res.data?.data?.referrers || []);
+    } catch {
+      setReferrers([]);
+    } finally {
+      setReferrerLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    const timer = setTimeout(
+      () => fetchReferrers(referrerQuery),
+      referrerQuery ? 300 : 0
+    );
+    return () => clearTimeout(timer);
+  }, [referrerQuery, fetchReferrers, user]);
+
+  const handleSearch = () => {
+    setReferrerQuery(searchInput);
+  };
+
+  const revealContact = async (id: string) => {
+    setRevealed((prev) => ({ ...prev, [id]: "loading" }));
+    try {
+      const res = await axiosInstance.post(`/referrers/${id}/reveal-contact`);
+      const data = res.data.data;
+      setRevealed((prev) => ({ ...prev, [id]: data }));
+      setContactModalData({
+        name: data.name || "Referrer",
+        email: data.email,
+        phone: data.phone,
+      });
+    } catch {
+      setRevealed((prev) => ({ ...prev, [id]: "error" }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
       router.replace(`${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/login`);
       return;
     }
-
     if (Object.values(formData).some((value) => !value.trim())) {
       toast.error("Please complete every field before sending your referral request.");
       return;
     }
-
     try {
       setSubmitting(true);
       const response = await axiosInstance.post("/referrals", formData);
-
       if (response.data?.success) {
         toast.success("Referral request sent successfully.");
         setFormData(initialForm);
@@ -119,36 +322,56 @@ export default function ReferralsPage() {
     }
   };
 
+  const hasActiveFilters = Boolean(referrerQuery);
+
+  // Static profiles are always shown. Tag them so per-card logic can identify them.
+  const taggedStatic = STATIC_PROFILES.map((p) => ({ ...p, _isStatic: true as const }));
+
+  // Filter static profiles client-side by search query (they have no experience field,
+  // so they bypass the experience filter intentionally — they are showcase profiles).
+  const filteredStatic = taggedStatic.filter((p) => matchesSearchQuery(p, referrerQuery));
+
+  // Deduplicate: drop any API referrer whose name already appears in STATIC_PROFILES.
+  const staticNames = new Set(STATIC_PROFILES.map((p) => p.name.toLowerCase()));
+  const deduplicatedApiReferrers = referrers.filter(
+    (r) => !staticNames.has((r.name || "").toLowerCase())
+  );
+
+  // Static profiles lead, API referrers append after.
+  const displayList = [...filteredStatic, ...deduplicatedApiReferrers];
+
   return (
-    <BackgroundRippleLayout tone="light" contentClassName="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.12),_transparent_30%),radial-gradient(circle_at_top_right,_rgba(16,185,129,0.12),_transparent_28%),linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)]">
+    <BackgroundRippleLayout tone="light" contentClassName="pt-6 sm:pt-8">
       <Navbar tone="light" />
 
-      <main className="mx-auto max-w-7xl px-4 pb-24 pt-28 sm:px-6 lg:px-8">
-        <section className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+      <main className="mx-auto max-w-7xl px-4 pb-24 pt-6 sm:pt-8 sm:px-6 lg:px-8">
+
+        {/* ── HERO ─────────────────────────────────────────────────────── */}
+        <section className="pt-4 pb-6 sm:pt-6 sm:pb-8 text-center">
           <motion.div
-            initial={{ opacity: 0, y: 18 }}
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55 }}
-            className="space-y-7"
+            transition={{ duration: 0.5 }}
+            className="space-y-5"
           >
-            <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.22em] text-blue-700">
-              <Sparkles className="h-3.5 w-3.5" />
-              Referral Hub
-            </div>
+            <Link
+              href="/referrals/list"
+              className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 px-4 py-1.5 text-xs font-semibold text-neutral-700 transition-colors hover:bg-neutral-100"
+            >
+              Looking for open referral opportunities? Browse Referral Opportunities
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+            <h1 className="mx-auto max-w-4xl text-4xl font-black tracking-tight text-neutral-950 sm:text-5xl lg:text-6xl">
+              Connect with professionals who are willing to refer &amp; guide you
+            </h1>
+            <p className="mx-auto max-w-2xl text-base leading-7 text-neutral-500">
+              Browse referrers at top companies, or submit your own referral request and let the right people find you.
+            </p>
 
-            <div className="space-y-4">
-              <h1 className="max-w-3xl text-4xl font-black tracking-tight text-neutral-950 sm:text-5xl lg:text-6xl">
-                Open the right doors with a referral that feels personal.
-              </h1>
-              <p className="max-w-2xl text-lg leading-8 text-neutral-600">
-                Share your background, target role, and experience. We’ll help surface your request in a way that is simple, polished, and easy to act on.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap justify-center gap-3 pt-2">
               <Button
                 onClick={() => setIsModalOpen(true)}
-                className="h-12 rounded-xl bg-neutral-950 px-6 text-white shadow-lg shadow-neutral-950/20 transition-transform hover:bg-neutral-800 active:scale-[0.98]"
+                className="h-11 rounded-xl bg-neutral-900 px-6 text-white shadow-sm hover:bg-neutral-700 active:scale-[0.98]"
               >
                 Ask for referral
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -156,160 +379,298 @@ export default function ReferralsPage() {
               <Button
                 asChild
                 variant="outline"
-                className="h-12 rounded-xl border-neutral-200 bg-white px-6 text-neutral-800 shadow-sm hover:bg-neutral-50"
+                className="h-11 rounded-xl border-neutral-200 bg-white px-6 text-neutral-800 shadow-sm hover:bg-neutral-50"
               >
                 <Link href="/referrals/list">
-                  Show referrals
-                  <ChevronRight className="ml-2 h-4 w-4" />
+                  View referrals board
                 </Link>
               </Button>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 lg:max-w-2xl">
-              {highlights.map((item) => (
-                <div key={item} className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white/80 px-4 py-3 shadow-sm backdrop-blur">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                    <ShieldCheck className="h-4 w-4" />
-                  </div>
-                  <span className="text-sm font-medium text-neutral-700">{item}</span>
-                </div>
-              ))}
-            </div>
+            <p className="text-sm text-neutral-500">
+              Work at a company and can refer?{" "}
+              <Link
+                href="/referrals/become-referrer"
+                className="font-semibold text-neutral-900 underline-offset-2 hover:underline"
+              >
+                Become a referrer →
+              </Link>
+            </p>
           </motion.div>
+        </section>
 
-          <motion.div
-            initial={{ opacity: 0, x: 24 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="relative"
-          >
-            <div className="absolute -left-6 top-8 h-24 w-24 rounded-full bg-blue-200/40 blur-2xl" />
-            <div className="absolute -right-6 bottom-8 h-28 w-28 rounded-full bg-emerald-200/40 blur-2xl" />
-            <div className="relative overflow-hidden rounded-[2rem] border border-white/40 bg-neutral-950 p-7 text-white shadow-2xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-white/60">Referral spotlight</p>
-                  <h2 className="mt-1 text-2xl font-black">Built for momentum</h2>
-                </div>
-                <div className="rounded-2xl bg-white/10 p-3">
-                  <Users className="h-6 w-6 text-cyan-300" />
-                </div>
-              </div>
-
-              <div className="mt-8 grid grid-cols-2 gap-4">
-                <StatCard value="Fast" label="Request capture" />
-                <StatCard value="Smart" label="Searchable board" />
-                <StatCard value="Clear" label="Role targeting" />
-                <StatCard value="Warm" label="Referral context" />
-              </div>
-
-              <div className="mt-6 rounded-3xl border border-white/10 bg-white/5 p-5">
-                <div className="flex items-start gap-3">
-                  <div className="rounded-2xl bg-cyan-400/15 p-3 text-cyan-300">
-                    <Megaphone className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold">Tell your story clearly</p>
-                    <p className="mt-1 text-sm leading-6 text-white/65">
-                      Include your experience and the job you want so the referral request feels relevant and easier to share.
+        {/* ── UNIFIED CENTER COLUMN ───────────────────────────────────── */}
+        <div className="mx-auto max-w-3xl w-full mb-8 space-y-5">
+          {/* ── ROTATING TESTIMONIAL ─────────────────────────────────────── */}
+          <div className="rounded-2xl border border-[#e6e6e3] bg-white px-6 py-5 text-center shadow-sm w-full min-h-[140px] sm:min-h-[120px] flex flex-col justify-between overflow-hidden">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentTestimonial}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="flex flex-col h-full justify-between"
+              >
+                <p className="text-sm italic leading-relaxed text-neutral-600">
+                  &ldquo;{TESTIMONIALS[currentTestimonial].quote}&rdquo;
+                </p>
+                <div className="mt-4 flex items-center justify-center gap-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={TESTIMONIALS[currentTestimonial].avatar}
+                    alt={TESTIMONIALS[currentTestimonial].name}
+                    className="h-8 w-8 flex-shrink-0 rounded-full object-cover border border-neutral-100"
+                  />
+                  <div className="text-left">
+                    <p className="text-sm font-semibold text-neutral-900">
+                      {TESTIMONIALS[currentTestimonial].name}
+                    </p>
+                    <p className="text-xs text-neutral-500">
+                      {TESTIMONIALS[currentTestimonial].role} @ {TESTIMONIALS[currentTestimonial].company}
                     </p>
                   </div>
                 </div>
-              </div>
-            </div>
-          </motion.div>
-        </section>
-
-        <section className="mt-20">
-          <div className="mb-8 flex items-end justify-between gap-4">
-            <div>
-              <p className="text-sm font-bold uppercase tracking-[0.24em] text-blue-600">Benefits</p>
-              <h2 className="mt-2 text-3xl font-black tracking-tight text-neutral-950">Why people use referrals</h2>
-            </div>
-            <p className="hidden max-w-xl text-sm leading-6 text-neutral-500 md:block">
-              A well-written referral request helps recruiters and referrers quickly understand what you do, what you want, and why you are worth introducing.
-            </p>
+              </motion.div>
+            </AnimatePresence>
           </div>
 
-          <div className="grid gap-5 md:grid-cols-3">
-            {benefits.map((item, index) => {
-              const Icon = item.icon;
-              return (
-                <motion.div
-                  key={item.title}
-                  initial={{ opacity: 0, y: 14 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.3 }}
-                  transition={{ duration: 0.45, delay: index * 0.08 }}
-                  className="rounded-[1.75rem] border border-neutral-200 bg-white p-6 shadow-sm"
-                >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <h3 className="mt-5 text-xl font-bold text-neutral-950">{item.title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-neutral-600">{item.description}</p>
-                </motion.div>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="mt-20 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-          <div className="rounded-[2rem] border border-neutral-200 bg-white p-8 shadow-sm">
-            <p className="text-sm font-bold uppercase tracking-[0.24em] text-emerald-600">More</p>
-            <h2 className="mt-3 text-3xl font-black tracking-tight text-neutral-950">Make the request easy to say yes to</h2>
-            <p className="mt-4 text-sm leading-7 text-neutral-600">
-              The strongest referral requests are short, specific, and respectful of someone’s time. This page is designed to help the user quickly submit the right details and browse existing referrals when needed.
-            </p>
-
-            <div className="mt-6 space-y-4">
-              {[
-                "Share exactly what role you want.",
-                "Add experience that helps the referrer position you.",
-                "Use the referrals list to review submissions in one place.",
-              ].map((point) => (
-                <div key={point} className="flex items-start gap-3 rounded-2xl bg-neutral-50 p-4">
-                  <div className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-                    <ShieldCheck className="h-3.5 w-3.5" />
-                  </div>
-                  <p className="text-sm leading-6 text-neutral-700">{point}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-[2rem] border border-neutral-200 bg-neutral-950 p-8 text-white shadow-2xl">
-            <div className="flex items-center gap-3">
-              <div className="rounded-2xl bg-white/10 p-3 text-cyan-300">
-                <Mail className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-white/60">Need help?</p>
-                <h3 className="text-xl font-bold">Send a referral request in under a minute</h3>
-              </div>
-            </div>
-
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-sm text-white/60">1. Open modal</p>
-                <p className="mt-1 text-base font-semibold">Click Ask for referral</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-sm text-white/60">2. Submit details</p>
-                <p className="mt-1 text-base font-semibold">Fill in your role and experience</p>
-              </div>
-            </div>
-
-            <Button
-              onClick={() => setIsModalOpen(true)}
-              className="mt-6 h-12 w-full rounded-xl bg-white text-neutral-950 hover:bg-neutral-100"
+          {/* ── SEARCH BAR ───────────────────────────────────────────────── */}
+          <div className="relative w-full">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-400" />
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              placeholder="Skills/Designation/Company"
+              className="h-14 w-full rounded-2xl border border-[#e6e6e3] bg-white pl-10 pr-24 sm:pl-12 sm:pr-36 text-sm text-neutral-900 placeholder:text-neutral-400 transition-colors focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
+            />
+            {searchInput && (
+              <button
+                onClick={() => {
+                  setSearchInput("");
+                  setReferrerQuery("");
+                }}
+                className="absolute right-[4.5rem] sm:right-[7.5rem] top-1/2 -translate-y-1/2 text-neutral-400 transition-colors hover:text-neutral-700"
+                aria-label="Clear search"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+            <button
+              onClick={handleSearch}
+              className="absolute right-2 top-1/2 -translate-y-1/2 h-10 rounded-xl bg-neutral-900 px-3 sm:px-5 text-sm font-semibold text-white transition hover:bg-neutral-700 active:scale-[0.98]"
             >
-              Start referral request
+              Search
+            </button>
+          </div>
+
+          {/* ── BECOME-A-REFERRER BANNER ──────────────────────────────────── */}
+          <div className="flex flex-col gap-3 rounded-2xl border border-[#e6e6e3] bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between w-full">
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-600">
+                <Users className="h-5 w-5" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-semibold text-neutral-900">
+                  Got openings? Refer candidates in 30 seconds
+                </p>
+                <p className="text-xs text-neutral-500">
+                  Share a referral, make an impact, earn recognition
+                </p>
+              </div>
+            </div>
+            <Button
+              asChild
+              className="h-10 flex-shrink-0 rounded-xl bg-neutral-900 px-5 text-sm text-white hover:bg-neutral-700"
+            >
+              <Link href="/referrals/become-referrer">
+                + Become a Referrer
+              </Link>
             </Button>
           </div>
-        </section>
+        </div>
+
+        {/* ── RESULTS AREA ──────────────────────────────────────────────── */}
+        <div>
+            {!user && (
+              <div className="mb-6 rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-center">
+                <p className="text-sm font-medium text-neutral-900">
+                  You are viewing featured referrers.{" "}
+                  <Link
+                    href={`${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/login?next=${typeof window !== "undefined" ? encodeURIComponent(window.location.href) : ""}`}
+                    className="font-semibold text-neutral-900 hover:underline"
+                  >
+                    Log in
+                  </Link>{" "}
+                  to search and unlock the full directory.
+                </p>
+              </div>
+            )}
+
+            {referrerLoading ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <CardSkeleton key={i} />
+                ))}
+              </div>
+            ) : displayList.length === 0 ? (
+              <div className="py-12 text-center">
+                <UserCheck className="mx-auto h-8 w-8 text-neutral-300" />
+                <p className="mt-3 text-sm font-medium text-neutral-900">
+                  No profiles relevant to this requirement found.
+                </p>
+                <p className="mt-1 text-sm text-neutral-500">
+                  Try different keywords or remove some filters.
+                </p>
+                {hasActiveFilters && (
+                  <button
+                    onClick={() => {
+                      setSearchInput("");
+                      setReferrerQuery("");
+                    }}
+                    className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-neutral-700 hover:underline"
+                    type="button"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" />
+                    Reset filters
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {displayList.map((item: any, index: number) => {
+                  const isStaticItem = Boolean(item._isStatic);
+                  const itemId = isStaticItem ? `static-${item.name}` : item._id;
+
+                  const name = isStaticItem ? item.name : (item.name || "Verified Referrer");
+                  const designation = item.designation;
+                  const company = item.company;
+                  const about = isStaticItem
+                    ? item.about
+                    : (item.description || `Professional willing to refer and guide candidates at ${company}.`);
+
+                  const imageFile = isStaticItem ? item.imageFile : null;
+                  const hasImage = imageFile && !imageErrors[imageFile];
+                  const imagePath = imageFile ? `/refer/${encodeURIComponent(imageFile)}` : "";
+
+                  const palette = getAvatarPalette(company || "");
+                  const initial = (name?.[0] || company?.[0] || "?").toUpperCase();
+
+                  const revealState = isStaticItem ? null : revealed[item._id];
+
+                  return (
+                    <motion.div
+                      key={itemId}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="flex flex-col rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm hover:shadow-md transition-all duration-200"
+                    >
+                      {/* Accent top bar */}
+                      <div className="h-1.5 w-full rounded-t-2xl -mt-5 -mx-5 mb-5 bg-gradient-to-r from-neutral-200 to-neutral-50" />
+
+                      <div className="flex flex-col items-center text-center flex-1">
+                        {/* Avatar */}
+                        <div className="mb-3 h-16 w-16 flex-shrink-0">
+                          {hasImage ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={imagePath}
+                              alt={name}
+                              onError={() =>
+                                setImageErrors((prev) => ({ ...prev, [imageFile!]: true }))
+                              }
+                              className="h-16 w-16 rounded-full object-cover border-2 border-white ring-2 ring-neutral-100 shadow-sm"
+                            />
+                          ) : (
+                            <div
+                              className={`flex h-16 w-16 items-center justify-center rounded-full text-lg font-bold border-2 border-white ring-2 ring-neutral-100 shadow-sm ${palette.bg} ${palette.text}`}
+                            >
+                              {initial}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Profile info */}
+                        <h4 className="text-sm font-bold text-neutral-900 line-clamp-1">
+                          {name}
+                        </h4>
+                        {designation && (
+                          <p className="text-xs font-semibold text-neutral-500 mt-0.5 line-clamp-1">
+                            {designation}
+                          </p>
+                        )}
+                        {company && (
+                          <p className="text-[11px] text-neutral-400 font-medium mt-0.5">
+                            {company}
+                          </p>
+                        )}
+
+                        {/* About */}
+                        <p className="text-xs text-neutral-500 leading-relaxed mt-3 mb-4 line-clamp-3 text-center w-full min-h-[48px]">
+                          {about}
+                        </p>
+                      </div>
+
+                      {/* Contact button */}
+                      <div className="mt-auto w-full">
+                        {isStaticItem ? (
+                          <button
+                            onClick={() => handleContactClick(item, true)}
+                            className="h-9 w-full rounded-xl bg-neutral-900 text-xs font-semibold text-white transition-colors hover:bg-neutral-700 active:scale-[0.98]"
+                          >
+                            Contact
+                          </button>
+                        ) : (
+                          <>
+                            {revealState === undefined && (
+                              <button
+                                onClick={() => handleContactClick(item, false)}
+                                className="h-9 w-full rounded-xl bg-neutral-900 text-xs font-semibold text-white transition-colors hover:bg-neutral-700 active:scale-[0.98]"
+                              >
+                                Contact
+                              </button>
+                            )}
+                            {revealState === "loading" && (
+                              <button
+                                disabled
+                                className="h-9 w-full rounded-xl bg-neutral-400 text-xs font-semibold text-white cursor-not-allowed"
+                              >
+                                Revealing...
+                              </button>
+                            )}
+                            {revealState === "error" && (
+                              <button
+                                onClick={() => handleContactClick(item, false)}
+                                className="h-9 w-full rounded-xl border border-rose-200 bg-rose-50 text-xs font-semibold text-rose-600 hover:bg-rose-100"
+                              >
+                                Failed — Retry
+                              </button>
+                            )}
+                            {revealState &&
+                              revealState !== "loading" &&
+                              revealState !== "error" && (
+                                <button
+                                  onClick={() => handleContactClick(item, false)}
+                                  className="h-9 w-full rounded-xl border border-neutral-200 bg-neutral-50 text-xs font-semibold text-neutral-700 hover:bg-neutral-100"
+                                >
+                                  Contact
+                                </button>
+                              )}
+                          </>
+                        )}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+        </div>
       </main>
 
+      {/* ── SEEKER MODAL ──────────────────────────────────────────────── */}
       {isModalOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/60 px-4 py-6 backdrop-blur-md">
           <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-neutral-200 bg-white p-6 shadow-2xl sm:p-8">
@@ -322,10 +683,14 @@ export default function ReferralsPage() {
             </button>
 
             <div className="pr-10">
-              <p className="text-sm font-bold uppercase tracking-[0.24em] text-blue-600">Ask for referral</p>
-              <h2 className="mt-2 text-3xl font-black tracking-tight text-neutral-950">Tell us about the opportunity you want</h2>
+              <p className="text-sm font-bold uppercase tracking-[0.24em] text-neutral-500">
+                Ask for referral
+              </p>
+              <h2 className="mt-2 text-3xl font-black tracking-tight text-neutral-950">
+                Tell us about the opportunity you want
+              </h2>
               <p className="mt-3 text-sm leading-6 text-neutral-600">
-                Share the basics and we’ll save it as a referral request.
+                Share the basics and we&apos;ll save it as a referral request.
               </p>
             </div>
 
@@ -334,18 +699,22 @@ export default function ReferralsPage() {
                 <Field label="Full name" required>
                   <Input
                     value={formData.fullName}
-                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, fullName: e.target.value })
+                    }
                     placeholder="Jane Doe"
-                    className="h-11 rounded-xl border-neutral-200 focus-visible:ring-blue-500"
+                    className="h-11 rounded-xl border-neutral-200 focus-visible:ring-neutral-900/10"
                   />
                 </Field>
                 <Field label="Email" required>
                   <Input
                     type="email"
                     value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
                     placeholder="jane@example.com"
-                    className="h-11 rounded-xl border-neutral-200 focus-visible:ring-blue-500"
+                    className="h-11 rounded-xl border-neutral-200 focus-visible:ring-neutral-900/10"
                   />
                 </Field>
               </div>
@@ -354,17 +723,21 @@ export default function ReferralsPage() {
                 <Field label="Phone number" required>
                   <Input
                     value={formData.phoneNumber}
-                    onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phoneNumber: e.target.value })
+                    }
                     placeholder="+91 98765 43210"
-                    className="h-11 rounded-xl border-neutral-200 focus-visible:ring-blue-500"
+                    className="h-11 rounded-xl border-neutral-200 focus-visible:ring-neutral-900/10"
                   />
                 </Field>
                 <Field label="Desired job" required>
                   <Input
                     value={formData.desiredJob}
-                    onChange={(e) => setFormData({ ...formData, desiredJob: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, desiredJob: e.target.value })
+                    }
                     placeholder="Frontend Developer"
-                    className="h-11 rounded-xl border-neutral-200 focus-visible:ring-blue-500"
+                    className="h-11 rounded-xl border-neutral-200 focus-visible:ring-neutral-900/10"
                   />
                 </Field>
               </div>
@@ -372,18 +745,22 @@ export default function ReferralsPage() {
               <Field label="Experience" required>
                 <Input
                   value={formData.experience}
-                  onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, experience: e.target.value })
+                  }
                   placeholder="3 years in React and Next.js"
-                  className="h-11 rounded-xl border-neutral-200 focus-visible:ring-blue-500"
+                  className="h-11 rounded-xl border-neutral-200 focus-visible:ring-neutral-900/10"
                 />
               </Field>
 
               <Field label="Description" required>
                 <Textarea
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Tell us about your background, what roles you’re targeting, and any useful context."
-                  className="min-h-[140px] rounded-2xl border-neutral-200 p-4 focus-visible:ring-blue-500"
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  placeholder="Tell us about your background, what roles you're targeting, and any useful context."
+                  className="min-h-[140px] rounded-2xl border-neutral-200 p-4 focus-visible:ring-neutral-900/10"
                 />
               </Field>
 
@@ -399,7 +776,7 @@ export default function ReferralsPage() {
                 <Button
                   type="submit"
                   disabled={submitting}
-                  className="h-11 rounded-xl bg-neutral-950 px-5 text-white hover:bg-neutral-800"
+                  className="h-11 rounded-xl bg-neutral-900 px-5 text-white hover:bg-neutral-700"
                 >
                   {submitting ? "Sending..." : "Submit referral request"}
                 </Button>
@@ -408,6 +785,72 @@ export default function ReferralsPage() {
           </div>
         </div>
       ) : null}
+
+      {/* ── CONTACT DETAILS MODAL ─────────────────────────────────────── */}
+      {contactModalData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/60 px-4 py-6 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-sm rounded-[2rem] border border-neutral-200 bg-white p-6 shadow-2xl">
+            <button
+              onClick={() => setContactModalData(null)}
+              className="absolute right-4 top-4 rounded-full border border-neutral-200 p-2 text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-800"
+              aria-label="Close modal"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div className="text-center mt-2">
+              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-neutral-500">
+                Contact Referrer
+              </p>
+              <h3 className="mt-2 text-lg font-black tracking-tight text-neutral-950 truncate px-4">
+                {contactModalData.name}
+              </h3>
+
+              <div className="mt-6 space-y-4 text-left border-t border-neutral-100 pt-4">
+                <div>
+                  <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
+                    Email
+                  </p>
+                  {contactModalData.email ? (
+                    <a
+                      href={`mailto:${contactModalData.email}`}
+                      className="mt-1 block text-sm font-semibold text-neutral-900 hover:underline break-all"
+                    >
+                      {contactModalData.email}
+                    </a>
+                  ) : (
+                    <p className="mt-1 text-sm text-neutral-500 italic font-medium">
+                      Not added yet
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
+                    Phone
+                  </p>
+                  {contactModalData.phone ? (
+                    <p className="mt-1 text-sm font-semibold text-neutral-900 break-all">
+                      {contactModalData.phone}
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-sm text-neutral-500 italic font-medium">
+                      Not added yet
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <Button
+                onClick={() => setContactModalData(null)}
+                className="mt-8 w-full h-10 rounded-xl bg-neutral-900 text-xs font-semibold text-white hover:bg-neutral-700"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </BackgroundRippleLayout>
   );
 }
