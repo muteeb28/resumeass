@@ -176,7 +176,7 @@ const Dashboard = ({
   const validTier = (membership?.tier === 'premium' || membership?.tier === 'ultra')
   const hasAccess = membership && membership.status === 'paid' && validTier;
   const addRow = () => {
-    if (hasAccess) {
+    if (!hasAccess) {
       toast.error('You need to have an active premium or ultra membership to add a row');
       return;
     }
@@ -204,7 +204,7 @@ const Dashboard = ({
   };
 
   const saveDraftRows = async () => {
-    if (hasAccess) {
+    if (!hasAccess) {
       toast.error('You need to have an active premium or ultra membership to add a row');
       return;
     }
@@ -234,7 +234,7 @@ const Dashboard = ({
   };
 
   const saveSingleDraft = async (row: JobApplicationRow) => {
-    if (hasAccess) {
+    if (!hasAccess) {
       toast.error('You need to have an active premium or ultra membership to add a row');
       return;
     }
@@ -264,7 +264,7 @@ const Dashboard = ({
   };
 
   const deleteRow = async (row: JobApplicationRow) => {
-    if (hasAccess) {
+    if (!hasAccess) {
       toast.error('You need to have an active premium or ultra membership to add a row');
       return;
     }
@@ -286,7 +286,7 @@ const Dashboard = ({
   };
 
   const updateRowStatus = async (row: JobApplicationRow, status: ApplicationStatus) => {
-    if (hasAccess) {
+    if (!hasAccess) {
       toast.error('You need to have an active premium or ultra membership to add a row');
       return;
     }
@@ -326,7 +326,7 @@ const Dashboard = ({
    * PARTIAL UPDATE LOGIC
    */
   const saveEditedRow = async () => {
-    if (hasAccess) {
+    if (!hasAccess) {
       toast.error('You need to have an active premium or ultra membership to add a row');
       return;
     }
