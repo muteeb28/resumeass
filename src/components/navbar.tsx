@@ -199,7 +199,7 @@ export const Navbar = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.7 }}
               href="/blog"
-              onClick={(e) => { e.preventDefault(); router.push("/blog"); }}
+              onClick={(e) => { e.preventDefault(); router.push("/blog/feed"); }}
               className={linkCls}
             >
               Blog
