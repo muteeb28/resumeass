@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Copy, Check, Linkedin, Globe, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Copy, Check, Linkedin, Globe, Search, ChevronLeft, ChevronRight, Lock, Sparkles, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { cn } from "../lib/utils";
 import { TABLE_ROWS, TABLE_ROW } from "../lib/motion";
 import axiosInstance from "@/lib/axios";
@@ -148,29 +148,48 @@ function LinkIcon({
 export default function HrEmailsTable({
   className,
   tableClassName,
-  country, // "india" or "dubai"
+  country,
+  loginHref = "/login",
+  membershipHref = "/pricing",
 }: {
   className?: string;
   tableClassName?: string;
   country: string;
+  loginHref?: string;
+  membershipHref?: string;
 }) {
   const [contacts, setContacts] = useState<HrContact[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   
-  // Pagination & Search States
+  // Track which row IDs have manually revealed their email addresses
+  const [revealedEmails, setRevealedEmails] = useState<Record<string, boolean>>({});
+
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   
-  // STATIC SEARCH LAYER
-  const [searchInput, setSearchInput] = useState(""); // Track keystrokes raw
-  const [searchTerm, setSearchTerm] = useState("");   // Only updates on form submission
+  const [searchInput, setSearchInput] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const { membership } = useUserStore();
+  const { user, membership } = useUserStore();
 
   const hasAccess = 
-  membership?.status === 'active' && 
-  ['premium', 'ultra'].includes(membership.tier?.toLowerCase());
+    membership?.status === 'active' && 
+    ['premium', 'ultra'].includes(membership.tier?.toLowerCase());
+
+  // Demo fallback rows
+  const demoContactsPlaceholder: HrContact[] = Array.from({ length: 6 }).map((_, i) => ({
+    id: `demo-${i}`,
+    name: i === 0 ? "Sarah Jenkins" : i === 1 ? "David Chen" : "John Doe",
+    title: i === 0 ? "Lead Recruiter" : i === 1 ? "Talent Acquisition Specialist" : "Senior Talent Acquisition Specialist",
+    company: i === 0 ? "Google" : i === 1 ? "Stripe" : "Acme Corporation",
+    email: i === 0 ? "sarah.j@google.com" : i === 1 ? "dchen@stripe.com" : "john.doe@acme.com",
+    location: country === "dubai" ? "Dubai, UAE" : "Bangalore, India",
+    linkedIn: "#",
+    website: "#",
+    status: i % 2 === 0 ? "opened" : "sent",
+    phone: "", social: "", twitter: "", createdAt: "", updateAt: ""
+  }));
 
   const fetchContacts = useCallback(async () => {
     setLoading(true);
@@ -181,12 +200,9 @@ export default function HrEmailsTable({
         url = "/hr/list/demo";
       } else {
         let targetCountry = "";
-
-        if (membership.tier === 'premium') {
-          targetCountry = "india";
-        } else if (membership.tier === 'ultra') {
-          targetCountry = "dubai";
-        }
+        if (membership.tier === 'premium') targetCountry = "india";
+        else if (membership.tier === 'ultra') targetCountry = "dubai";
+        
         if (targetCountry) {
           const shouldCount = page === 1 ? "&count=true" : "";
           url = `/hr/list/purchased/${targetCountry}?page=${page}&company=${searchTerm}${shouldCount}`;
@@ -200,8 +216,6 @@ export default function HrEmailsTable({
       if (res.data.success) {
         const data = hasAccess ? res.data.data : res.data.list;
         setContacts(data ?? []);
-        
-        // Update pagination only if backend provides it (Page 1 or new search queries)
         if (membership && res.data.pagination && res.data.pagination.totalPages !== null) {
           setTotalPages(res.data.pagination.totalPages);
         }
@@ -212,23 +226,30 @@ export default function HrEmailsTable({
     } finally {
       setLoading(false);
     }
-  }, [membership, page, searchTerm, country]);
+  }, [membership, page, searchTerm, country, hasAccess]);
 
   useEffect(() => {
     fetchContacts();
+    // Reset revealed maps when page transitions or keywords update
+    setRevealedEmails({});
   }, [fetchContacts]);
 
-  // Fires ONLY when submit button is clicked or user hits Enter
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setPage(1); // Crucial: Reset to page 1 for new search results
-    setSearchTerm(searchInput); // Syncing this states triggers the useCallback hook
+    setPage(1);
+    setSearchTerm(searchInput);
   };
 
+  const toggleEmailVisibility = (id: string) => {
+    setRevealedEmails(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const renderedRows = hasAccess ? contacts : (contacts.length > 0 ? contacts : demoContactsPlaceholder);
+
   return (
-    <div className={cn("bg-hub-surface border border-hub-border rounded-[14px] overflow-hidden flex flex-col", className)}>
+    <div className={cn("bg-hub-surface border border-hub-border rounded-[14px] overflow-hidden flex flex-col relative", className)}>
       
-      {/* ─── Search Bar (Only for Members) ─── */}
+      {/* ─── Search Bar ─── */}
       {hasAccess && (
         <div className="p-3 border-b border-hub-border bg-hub-bg-subtle/30">
           <form onSubmit={handleSearchSubmit} className="relative max-w-sm flex gap-2">
@@ -239,7 +260,7 @@ export default function HrEmailsTable({
                 placeholder="Type company name (e.g. Infosys)..."
                 className="w-full bg-hub-surface border border-hub-border rounded-md pl-9 pr-3 py-1.5 text-[13px] outline-none focus:border-hub-text-3 transition-colors"
                 value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)} // Safe live input tracking
+                onChange={(e) => setSearchInput(e.target.value)}
               />
             </div>
             <button 
@@ -252,10 +273,10 @@ export default function HrEmailsTable({
         </div>
       )}
 
-      {/* ─── Table Body ─── */}
-      <div className={cn("overflow-x-auto overflow-y-auto flex-grow", tableClassName)}>
-        <table className="min-w-full text-left">
-          <thead className="sticky top-0 z-10 bg-hub-bg-subtle">
+      {/* ─── Table Body Container ─── */}
+      <div className={cn("overflow-x-auto overflow-y-auto flex-grow relative", tableClassName)}>
+        <table className="min-w-full text-left table-fixed md:table-auto">
+          <thead className="sticky top-0 z-20 bg-hub-bg-subtle">
             <tr className="border-b border-hub-border">
               {["Contact", "Company", "Email", "Location", "Links", "Status"].map((col) => (
                 <th key={col} className="px-4 py-[9px] text-[11.5px] font-semibold text-hub-text-3 whitespace-nowrap">{col}</th>
@@ -266,41 +287,142 @@ export default function HrEmailsTable({
           <tbody>
             {loading ? (
               <TableSkeleton />
-            ) : contacts.length === 0 ? (
+            ) : renderedRows.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-4 py-16 text-center text-[13px] text-hub-text-3">No contacts found.</td>
               </tr>
             ) : (
-              contacts.map((row, index) => (
-                <motion.tr key={row.id ?? index} variants={TABLE_ROW} initial="hidden" animate="show" className="border-b border-hub-border last:border-b-0 hover:bg-hub-bg-subtle transition-colors">
-                  <td className="px-4 py-[11px] min-w-[160px]">
-                    <span className="block text-[13px] font-semibold text-hub-text-1 leading-snug">{row.name || "—"}</span>
-                    {row.title && <span className="block text-[12px] text-hub-text-3 mt-[2px] leading-snug">{row.title}</span>}
-                  </td>
-                  <td className="px-4 py-[11px] min-w-[140px]"><span className="text-[13px] text-hub-text-1">{row.company || "—"}</span></td>
-                  <td className="px-4 py-[11px] min-w-[200px]">
-                    <div className="flex items-center gap-1.5 group/email">
-                      <span className="text-[12.5px] text-hub-text-2 truncate max-w-[180px]">{row.email || "—"}</span>
-                      {row.email && row.email !== "-" && (
-                        <button onClick={() => { navigator.clipboard.writeText(row.email); setCopiedId(row.id); setTimeout(() => setCopiedId(null), 1500); }} className="flex-shrink-0 p-0.5 rounded-[3px] text-hub-text-3">
-                          {copiedId === row.id ? <Check size={11} className="text-green-500" /> : <Copy size={11} className="opacity-40 group-hover/email:opacity-100" />}
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-[11px] min-w-[120px]"><span className="text-[12.5px] text-hub-text-3">{row.location || "—"}</span></td>
-                  <td className="px-4 py-[11px] min-w-[80px]">
-                    <div className="flex items-center gap-0.5">
-                      <LinkIcon href={row.linkedIn} icon={Linkedin} label="LinkedIn" />
-                      <LinkIcon href={row.website} icon={Globe} label="Website" />
-                    </div>
-                  </td>
-                  <td className="px-4 py-[11px] min-w-[100px]"><StatusBadge raw={row.status} /></td>
-                </motion.tr>
-              ))
+              renderedRows.map((row, index) => {
+                const shouldBlurRow = !hasAccess && index >= 4;
+                const isDemoRow = row.id?.startsWith("demo-") || !hasAccess;
+                
+                // Determine layout string for email target
+                const isRevealed = revealedEmails[row.id] || false;
+                const displayEmail = isDemoRow 
+                  ? row.email 
+                  : (isRevealed ? row.email : "••••••••••••••••");
+
+                return (
+                  <motion.tr 
+                    key={row.id ?? index} 
+                    variants={TABLE_ROW} 
+                    initial="hidden" 
+                    animate="show" 
+                    className={cn(
+                      "border-b border-hub-border last:border-b-0 hover:bg-hub-bg-subtle transition-colors",
+                      shouldBlurRow && (index === 4 ? "blur-[3px] opacity-50 select-none pointer-events-none" : "blur-[8px] opacity-20 select-none pointer-events-none")
+                    )}
+                  >
+                    <td className="px-4 py-[11px] min-w-[160px]">
+                      <span className="block text-[13px] font-semibold text-hub-text-1 leading-snug">{row.name || "—"}</span>
+                      {row.title && <span className="block text-[12px] text-hub-text-3 mt-[2px] leading-snug">{row.title}</span>}
+                    </td>
+                    <td className="px-4 py-[11px] min-w-[140px]"><span className="text-[13px] text-hub-text-1">{row.company || "—"}</span></td>
+                    
+                    {/* ─── Email Column with Anti-Screenshot Eye Toggle ─── */}
+                    <td className="px-4 py-[11px] min-w-[220px]">
+                      <div className="flex items-center gap-2 group/email">
+                        <span className={cn(
+                          "text-[12.5px] truncate max-w-[160px]",
+                          !isDemoRow && !isRevealed ? "text-hub-text-3 tracking-widest font-mono select-none" : "text-hub-text-2"
+                        )}>
+                          {displayEmail || "—"}
+                        </span>
+                        
+                        {/* Control buttons inside dynamic validation parameters */}
+                        {row.email && row.email !== "-" && !shouldBlurRow && (
+                          <div className="flex items-center gap-1">
+                            {/* Toggle Eye Switcher: Rendered strictly for actual premium accounts layout rows */}
+                            {!isDemoRow && (
+                              <button 
+                                onClick={() => toggleEmailVisibility(row.id)}
+                                className="p-0.5 rounded-[3px] text-hub-text-3 hover:text-hub-text-1 transition-colors"
+                                title={isRevealed ? "Hide Email" : "Show Email"}
+                              >
+                                {isRevealed ? <EyeOff size={12} /> : <Eye size={12} />}
+                              </button>
+                            )}
+                            
+                            {/* Copy button appears if explicitly visible or if it is a demo environment row */}
+                            {(isDemoRow || isRevealed) && (
+                              <button 
+                                onClick={() => { navigator.clipboard.writeText(row.email); setCopiedId(row.id); setTimeout(() => setCopiedId(null), 1500); }} 
+                                className="p-0.5 rounded-[3px] text-hub-text-3 hover:text-hub-text-1 transition-colors"
+                              >
+                                {copiedId === row.id ? <Check size={11} className="text-green-500" /> : <Copy size={11} className="opacity-40 group-hover/email:opacity-100" />}
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+
+                    <td className="px-4 py-[11px] min-w-[120px]"><span className="text-[12.5px] text-hub-text-3">{row.location || "—"}</span></td>
+                    <td className="px-4 py-[11px] min-w-[80px]">
+                      <div className="flex items-center gap-0.5">
+                        <LinkIcon href={(hasAccess || !shouldBlurRow) ? row.linkedIn : "#"} icon={Linkedin} label="LinkedIn" />
+                        <LinkIcon href={(hasAccess || !shouldBlurRow) ? row.website : "#"} icon={Globe} label="Website" />
+                      </div>
+                    </td>
+                    <td className="px-4 py-[11px] min-w-[100px]"><StatusBadge raw={row.status} /></td>
+                  </motion.tr>
+                );
+              })
             )}
           </tbody>
         </table>
+
+        {/* ─── Medium-style Bottom 30% Paywall Lock Overlay ─── */}
+        {!hasAccess && !loading && (
+          <div className="absolute left-0 right-0 bottom-0 top-auto h-[45%] z-30 flex items-end justify-center bg-gradient-to-t from-hub-surface via-hub-surface/90 to-transparent p-4 pb-6 pointer-events-none">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: 0.05 }}
+              className="w-full max-w-xl rounded-xl border border-slate-200/90 bg-white p-4 shadow-[0_16px_48px_rgba(15,23,42,0.1)] backdrop-blur-sm sm:p-5 pointer-events-auto"
+            >
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-3.5">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-900 text-white shadow-sm">
+                    <Lock className="h-3.5 w-3.5" />
+                  </div>
+                  <div className="max-w-xs sm:max-w-sm">
+                    <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                      <Sparkles className="h-3 w-3 text-amber-500" />
+                      Members Only
+                    </div>
+                    <p className="mt-0.5 text-xs font-semibold text-slate-900">
+                      {user ? "Unlock remaining HR contacts" : "Sign in to access more contacts"}
+                    </p>
+                    <p className="mt-0.5 text-[11px] leading-4 text-slate-500">
+                      You are previewing live items. Active tier removes the bottom fade constraint instantly.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2 shrink-0 sm:items-end">
+                  {!user ? (
+                    <a
+                      href={loginHref}
+                      className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-slate-800 transition-colors"
+                    >
+                      Login
+                      <ArrowRight className="h-3 w-3" />
+                    </a>
+                  ) : (
+                    <a
+                      href={membershipHref}
+                      className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-amber-500 px-3.5 py-2 text-xs font-semibold text-slate-950 shadow-sm hover:bg-amber-400 transition-colors"
+                    >
+                      Unlock List
+                      <ArrowRight className="h-3 w-3" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
       </div>
 
       {/* ─── Pagination Footer ─── */}
@@ -327,14 +449,6 @@ export default function HrEmailsTable({
           </div>
         </div>
       )}
-
-      {/* ─── Upgrade Teaser ─── */}
-      {/* {!membership && (
-        <div className="p-4 bg-hub-bg-subtle/50 text-center border-t border-hub-border">
-          <p className="text-[13px] text-hub-text-2 mb-2">Upgrade to Premium to access 5,000+ verified HR contacts with pagination and search.</p>
-          <button className="text-[12px] font-bold text-blue-500 hover:underline">View Pricing →</button>
-        </div>
-      )} */}
     </div>
   );
 }

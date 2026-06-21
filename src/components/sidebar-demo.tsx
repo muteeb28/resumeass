@@ -2,11 +2,10 @@
 
 import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import HrEmailsTable from "./hr-emails-table";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, Lock, X } from "lucide-react";
+import { CalendarIcon, X } from "lucide-react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import {
@@ -113,14 +112,112 @@ const cleanApplicationPayload = (row: JobApplicationRow) => ({
   notes: row.notes,
 });
 
+const DEMO_APPLICATIONS: JobApplicationRow[] = [
+  {
+    tempId: "demo-1",
+    _id: "demo-1",
+    company: "Nova Labs",
+    title: "Frontend Engineer",
+    status: "Interview",
+    link: "#",
+    contact: "hr@novalabs.com",
+    date: new Date().toISOString(),
+    stage: "Technical Round",
+    salary: "$120k - $150k",
+    location: "Remote",
+    priority: "High",
+    referral: "referral",
+    notes: "Preview row for locked viewers.",
+    isDraft: false,
+  },
+  {
+    tempId: "demo-2",
+    _id: "demo-2",
+    company: "Orbit Systems",
+    title: "Product Designer",
+    status: "Applied",
+    link: "#",
+    contact: "talent@orbitsystems.com",
+    date: new Date().toISOString(),
+    stage: "Application Submitted",
+    salary: "$90k - $110k",
+    location: "Bangalore",
+    priority: "Medium",
+    referral: "none",
+    notes: "Preview row for locked viewers.",
+    isDraft: false,
+  },
+  {
+    tempId: "demo-3",
+    _id: "demo-3",
+    company: "Astra Health",
+    title: "Data Analyst",
+    status: "Interview",
+    link: "#",
+    contact: "jobs@astrahealth.com",
+    date: new Date().toISOString(),
+    stage: "Hiring Manager Round",
+    salary: "$70k - $85k",
+    location: "Mumbai",
+    priority: "High",
+    referral: "employee",
+    notes: "Preview row for locked viewers.",
+    isDraft: false,
+  },
+  {
+    tempId: "demo-4",
+    _id: "demo-4",
+    company: "Pulse Commerce",
+    title: "Backend Engineer",
+    status: "Rejected",
+    link: "#",
+    contact: "careers@pulsecommerce.com",
+    date: new Date().toISOString(),
+    stage: "Screening Complete",
+    salary: "$130k - $160k",
+    location: "Hyderabad",
+    priority: "Low",
+    referral: "none",
+    notes: "Preview row for locked viewers.",
+    isDraft: false,
+  },
+  {
+    tempId: "demo-5",
+    _id: "demo-5",
+    company: "Vertex AI",
+    title: "Growth Manager",
+    status: "Offer",
+    link: "#",
+    contact: "people@vertexai.com",
+    date: new Date().toISOString(),
+    stage: "Offer Discussion",
+    salary: "$140k - $175k",
+    location: "Delhi",
+    priority: "High",
+    referral: "referral",
+    notes: "Preview row for locked viewers.",
+    isDraft: false,
+  },
+];
+
 /**
  * MAIN COMPONENT
  */
 export default function SidebarDemo() {
   const [rows, setRows] = useState<JobApplicationRow[]>([]);
   const applicationAbortRef = useRef<AbortController | null>(null);
+  const { membership } = useUserStore();
+  const hasActiveMembership = Boolean(
+    membership &&
+      membership.status === "active" &&
+      ["premium", "ultra"].includes(membership.tier?.toLowerCase() ?? "")
+  );
 
   const getJobApplications = useCallback(async () => {
+    if (!hasActiveMembership) {
+      setRows(DEMO_APPLICATIONS);
+      return;
+    }
     applicationAbortRef.current?.abort();
     const controller = new AbortController();
     applicationAbortRef.current = controller;
@@ -141,8 +238,18 @@ export default function SidebarDemo() {
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') return;
       console.log("Error fetching job applications", error);
+      if (!hasActiveMembership) {
+        setRows(DEMO_APPLICATIONS);
+      } else {
+        setRows([]);
+      }
+    } finally {
+      if (!hasActiveMembership) {
+        // Keep the demo rows in place for locked viewers.
+        setRows(DEMO_APPLICATIONS);
+      }
     }
-  }, []);
+  }, [hasActiveMembership]);
 
   useEffect(() => {
     getJobApplications();
@@ -165,7 +272,6 @@ const Dashboard = ({
   setRows: Dispatch<SetStateAction<JobApplicationRow[]>>;
   reloadRows: () => Promise<void>;
 }) => {
-  const [view, setView] = useState<"tracker" | "emails">("tracker");
   const [saveLoader, setSaveLoader] = useState(false);
   const [saveEditLoader, setSaveEditLoader] = useState(false);
   const [editingRow, setEditingRow] = useState<JobApplicationRow | null>(null);
@@ -173,8 +279,12 @@ const Dashboard = ({
 
   const draftCount = rows.filter((row) => row.isDraft).length;
   const { membership } = useUserStore();
-  const validTier = (membership?.tier === 'premium' || membership?.tier === 'ultra')
-  const hasAccess = membership && membership.status === 'paid' && validTier;
+  const hasAccess = Boolean(
+    membership &&
+      membership.status === "active" &&
+      ["premium", "ultra"].includes(membership.tier?.toLowerCase() ?? "")
+  );
+  const isLockedPreview = !hasAccess;
   const addRow = () => {
     if (!hasAccess) {
       toast.error('You need to have an active premium or ultra membership to add a row');
@@ -373,57 +483,31 @@ const Dashboard = ({
 
   return (
     <div className="flex flex-1">
-      <div className="flex h-full w-full flex-1 flex-col gap-6 bg-neutral-50 p-4 md:p-6">
+      <div className="flex h-full w-full flex-1 flex-col gap-6 bg-neutral-50">
         <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between border-b pb-4">
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.3em] text-neutral-400 font-bold">Workspace</p>
-              <p className="text-lg font-semibold text-neutral-900">Job Tracker</p>
-            </div>
-            <div className="flex gap-4 items-center">
-              <div className="flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 p-1">
-                <button
-                  onClick={() => setView("tracker")}
-                  className={cn(
-                    "rounded-full px-4 py-1.5 text-[11px] font-semibold transition",
-                    view === "tracker" ? "bg-neutral-900 text-white shadow" : "text-neutral-500 hover:text-neutral-700"
-                  )}
-                >
-                  Job Tracker UI
-                </button>
-                <button
-                  onClick={() => setView("emails")}
-                  className={cn(
-                    "rounded-full px-4 py-1.5 text-[11px] font-semibold transition",
-                    view === "emails" ? "bg-neutral-900 text-white shadow" : "text-neutral-500 hover:text-neutral-700"
-                  )}
-                >
-                  HR Emails
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {view === "tracker" ? (
-            <>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <>
+              <div className="mt-6 max-w-7xl flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <p className="text-sm font-semibold text-neutral-900">Active Applications</p>
-                  <p className="text-xs text-neutral-500">Managing {rows.length} total applications.</p>
+                  <p className="text-xs text-neutral-500">
+                    {isLockedPreview ? "Showing 5 demo jobs in preview mode." : `Managing ${rows.length} total applications.`}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={saveDraftRows}
-                    disabled={saveLoader || draftCount === 0}
+                    disabled={saveLoader || draftCount === 0 || !hasAccess}
                     className="text-[11px] h-8 border-blue-200 text-blue-700 bg-blue-50/50 hover:bg-blue-50"
                   >
-                    {saveLoader ? "Saving..." : `Save Drafts (${draftCount})`}
+                    {saveLoader ? "Saving..." : hasAccess ? `Save Drafts (${draftCount})` : "Unlock to save"}
                   </Button>
-                  <Button size="sm" onClick={addRow} className="text-[11px] h-8 bg-neutral-900 text-white">
-                    Add Row
-                  </Button>
+                  {hasAccess && (
+                    <Button size="sm" onClick={addRow} className="text-[11px] h-8 bg-neutral-900 text-white">
+                      Add Row
+                    </Button>
+                  )}
                 </div>
               </div>
 
@@ -711,10 +795,7 @@ const Dashboard = ({
                   </motion.div>
                 </motion.div>
               )}
-            </>
-          ) : (
-            <HrEmailsTable className="mt-4" country="india" />
-          )}
+          </>
         </div>
       </div>
     </div>
