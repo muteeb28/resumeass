@@ -206,12 +206,21 @@ const DEMO_APPLICATIONS: JobApplicationRow[] = [
 export default function SidebarDemo() {
   const [rows, setRows] = useState<JobApplicationRow[]>([]);
   const applicationAbortRef = useRef<AbortController | null>(null);
-  const { membership } = useUserStore();
+  const { user, membership } = useUserStore();
   const hasActiveMembership = Boolean(
     membership &&
       membership.status === "active" &&
       ["premium", "ultra"].includes(membership.tier?.toLowerCase() ?? "")
   );
+  const isLoggedIn = Boolean(user);
+  const jobflixViewBase = process.env.NEXT_PUBLIC_JOBFLIX_VIEW || "";
+  const loginHref =
+    typeof window !== "undefined"
+      ? `${jobflixViewBase}/login?next=${encodeURIComponent(window.location.href)}`
+      : `${jobflixViewBase}/login`;
+  const membershipHref = jobflixViewBase
+    ? `${jobflixViewBase}/my-account/membership`
+    : "/my-account/membership";
 
   const getJobApplications = useCallback(async () => {
     if (!hasActiveMembership) {
@@ -278,13 +287,22 @@ const Dashboard = ({
   const [editForm, setEditForm] = useState<JobApplicationRow | null>(null);
 
   const draftCount = rows.filter((row) => row.isDraft).length;
-  const { membership } = useUserStore();
+  const { user, membership } = useUserStore();
+  const isLoggedIn = Boolean(user);
   const hasAccess = Boolean(
     membership &&
       membership.status === "active" &&
       ["premium", "ultra"].includes(membership.tier?.toLowerCase() ?? "")
   );
   const isLockedPreview = !hasAccess;
+  const jobflixViewBase = process.env.NEXT_PUBLIC_JOBFLIX_VIEW || "";
+  const loginHref =
+    typeof window !== "undefined"
+      ? `${jobflixViewBase}/login?next=${encodeURIComponent(window.location.href)}`
+      : `${jobflixViewBase}/login`;
+  const membershipHref = jobflixViewBase
+    ? `${jobflixViewBase}/my-account/membership`
+    : "/my-account/membership";
   const addRow = () => {
     if (!hasAccess) {
       toast.error('You need to have an active premium or ultra membership to add a row');
@@ -485,6 +503,35 @@ const Dashboard = ({
     <div className="flex flex-1">
       <div className="flex h-full w-full flex-1 flex-col gap-6 bg-neutral-50">
         <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+          {isLockedPreview && (
+            <div className="mb-5 rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 md:p-5 shadow-sm">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="max-w-2xl">
+                  <p className="text-[10px] uppercase tracking-[0.28em] text-slate-400 font-bold">
+                    Preview Mode
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-slate-900">
+                    {isLoggedIn ? "Purchase membership to unlock your full job tracker." : "Login to unlock your full job tracker."}
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                    You’re seeing 5 demo jobs already added so you can preview the tracker. Unlocking lets you create, edit, and save the real tracker.
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <a
+                    href={isLoggedIn ? membershipHref : loginHref}
+                    className={`inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-transform hover:-translate-y-0.5 ${
+                      isLoggedIn
+                        ? "bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 hover:bg-amber-400"
+                        : "bg-neutral-900 text-white shadow-lg shadow-neutral-900/20 hover:bg-neutral-800"
+                    }`}
+                  >
+                    {isLoggedIn ? "Purchase Membership" : "Login"}
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
           <>
               <div className="mt-6 max-w-7xl flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
