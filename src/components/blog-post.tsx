@@ -1,9 +1,11 @@
 "use client";
 
 import { motion } from "motion/react";
+import { ArrowRight, Lock, Sparkles } from "lucide-react";
 import { Navbar } from "./navbar";
 import { Button } from "./button";
-import { useState, useEffect } from "react";
+import { useUserStore } from "@/stores/useUserStore";
+import { useState, useEffect, useMemo } from "react";
 import "../styles/blog-prose.css";
 
 interface BlogPostProps {
@@ -14,18 +16,27 @@ interface BlogPost {
   _id: string;
   title: string;
   slug: string;
-  summary: string;     
-  htmlContent: string; 
+  summary: string;
+  htmlContent?: string | null;
+  demoContent?: string | null;
   category: string;
-  publishedAt: { $date: string } | string; 
+  publishedAt: { $date: string } | string;
   readTime: string;
   author: {
     name: string;
     bio: string;
-    avatar?: string;   
+    avatar?: string;
   };
   tags: string[];
   views: number;
+  premium?: boolean;
+  access?: {
+    locked: boolean;
+    canReadFullPost: boolean;
+    requiresLogin: boolean;
+    requiresMembership: boolean;
+    cta: "login" | "membership";
+  };
 }
 
 interface RelatedPost {
@@ -44,14 +55,19 @@ interface RenderHtmlProps {
 }
 function RenderHtml({ html, className = "" }: RenderHtmlProps) {
   return (
-    <div 
-      className={className} 
-      dangerouslySetInnerHTML={{ __html: html }} 
+    <div
+      className={className}
+      dangerouslySetInnerHTML={{ __html: html }}
     />
   );
 }
 
 export default function BlogPost({ slug }: BlogPostProps) {
+  const { user, membership } = useUserStore((state) => ({
+    user: state.user,
+    membership: state.membership,
+  }));
+
   const [post, setPost] = useState<BlogPost | null>(null);
   const [relatedPosts, setRelatedPosts] = useState<RelatedPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,6 +106,26 @@ export default function BlogPost({ slug }: BlogPostProps) {
       year: 'numeric'
     });
   };
+
+  const hasPremiumAccess = useMemo(() => {
+    if (!membership || membership.status !== 'active') return false;
+    return ['premium', 'ultra'].includes(membership.tier?.toLowerCase() ?? '');
+  }, [membership]);
+
+  const access = post?.access;
+  const isLocked = access?.locked ?? (!!post?.premium && !hasPremiumAccess);
+  const previewContent = isLocked
+    ? post?.demoContent || `<p class="text-slate-600">This article preview is locked. Sign in or upgrade to continue reading.</p>`
+    : post?.htmlContent || "";
+  const jobflixViewBase = process.env.NEXT_PUBLIC_JOBFLIX_VIEW || "";
+  const loginHref =
+    typeof window !== "undefined"
+      ? `${jobflixViewBase}/login?next=${encodeURIComponent(window.location.href)}`
+      : `${jobflixViewBase}/login`;
+  const membershipHref =
+    jobflixViewBase
+      ? `${jobflixViewBase}/my-account/membership`
+      : "/my-account/membership";
 
   if (loading) {
     return (
@@ -167,9 +203,9 @@ export default function BlogPost({ slug }: BlogPostProps) {
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full overflow-hidden bg-slate-900 flex items-center justify-center border-2 border-white ring-1 ring-slate-200 shadow-sm relative flex-shrink-0">
                   {post.author.avatar ? (
-                    <img 
-                      src={post.author.avatar} 
-                      alt={post.author.name} 
+                    <img
+                      src={post.author.avatar}
+                      alt={post.author.name}
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -182,9 +218,9 @@ export default function BlogPost({ slug }: BlogPostProps) {
                   <span className="block font-semibold text-slate-900 hover:underline cursor-pointer">{post.author.name}</span>
                 </div>
               </div>
-              
+
               <span className="hidden md:inline text-slate-300">|</span>
-              
+
               <div className="flex items-center gap-5">
                 <span className="flex items-center gap-1.5 font-medium">
                   <svg className="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -226,13 +262,88 @@ export default function BlogPost({ slug }: BlogPostProps) {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          {/* w-full strips wrapper compound problems, inner grid handles responsiveness perfectly */}
-          <RenderHtml html={post.htmlContent} className="w-full lg:max-w-5xl mx-auto" />
+          <div className="w-full lg:max-w-5xl mx-auto relative">
+            <div
+              className={
+                isLocked
+                  ? "relative overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white shadow-sm"
+                  : ""
+              }
+            >
+              <RenderHtml
+                html={previewContent}
+                className={`w-full ${isLocked ? "max-h-[920px] overflow-hidden px-6 md:px-10 pt-8 pb-24" : ""}`}
+              />
+
+              {isLocked && (
+                <>
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-white via-white/95 to-transparent backdrop-blur-[1.5px]" />
+                  <div className="absolute inset-x-0 bottom-0 z-10 px-4 pb-5 md:px-8 md:pb-8">
+                    <motion.div
+                      initial={{ opacity: 0, y: 18 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.35, delay: 0.15 }}
+                      className="mx-auto max-w-4xl rounded-[1.75rem] border border-slate-200/90 bg-white/92 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.16)] backdrop-blur-xl md:p-6"
+                    >
+                      <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                        <div className="flex items-start gap-4">
+                          {/* FIXED: Changed rounded-2xl to rounded-full and added shrink-0 */}
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-900 text-white shadow-sm">
+                            <Lock className="h-5 w-5" />
+                          </div>
+                          <div className="max-w-xl">
+                            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+                              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                              Members Only
+                            </div>
+                            <p className="mt-2 text-base font-semibold text-slate-900">
+                              {user ? "Unlock the rest of this article" : "Sign in to continue reading"}
+                            </p>
+                            <p className="mt-1 text-sm leading-6 text-slate-600">
+                              {user
+                                ? "Your preview ends here. Upgrade your membership to remove the lock, reveal the full article, and keep reading."
+                                : "This is only a demo preview. Log in to unlock the full article and finish reading it."}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* FIXED: Added items-center to keep buttons neat on mobile */}
+                        <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+                          {!user ? (
+                            <a
+                              href={loginHref}
+                              /* FIXED: Added whitespace-nowrap and increased padding to px-6 */
+                              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/20 transition-transform hover:-translate-y-0.5 hover:bg-slate-800"
+                            >
+                              Login
+                              <ArrowRight className="h-4 w-4" />
+                            </a>
+                          ) : (
+                            <a
+                              href={membershipHref}
+                              /* FIXED: Added whitespace-nowrap and increased padding to px-6 */
+                              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full bg-amber-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/25 transition-transform hover:-translate-y-0.5 hover:bg-amber-400"
+                            >
+                              Purchase Membership
+                              <ArrowRight className="h-4 w-4" />
+                            </a>
+                          )}
+                          <div className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-4 py-3 text-center text-xs font-medium text-slate-500 whitespace-nowrap">
+                            {user ? "Lock fades once your plan is active." : "No account needed to create one."}
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </motion.div>
 
         {/* Footer Dashboard Block (Bio + Actions Interaction Layer) */}
         <div className="max-w-4xl mx-auto mt-20 space-y-12">
-          
+
           {/* Luxury Card Author Bio block */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -245,9 +356,9 @@ export default function BlogPost({ slug }: BlogPostProps) {
             <div className="flex flex-col sm:flex-row items-start gap-6 relative">
               <div className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-900 flex items-center justify-center border border-slate-200 shadow-sm relative flex-shrink-0">
                 {post.author.avatar ? (
-                  <img 
-                    src={post.author.avatar} 
-                    alt={post.author.name} 
+                  <img
+                    src={post.author.avatar}
+                    alt={post.author.name}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 ) : (
@@ -342,7 +453,7 @@ export default function BlogPost({ slug }: BlogPostProps) {
                         {relatedPost.summary}
                       </p>
                     </div>
-                    
+
                     <div className="flex items-center gap-1.5 text-slate-700 font-semibold text-xs pt-5 group-hover:text-indigo-600 transition-colors mt-auto">
                       Read now
                       <svg className="w-3.5 h-3.5 transform group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -16,6 +16,7 @@ interface BlogPost {
   title: string;
   category: string;
   summary?: string;
+  demoContent?: string;
   tags: string[];
   author: Author;
   featured: boolean;
@@ -35,6 +36,7 @@ export default function EditMetaModal({ isOpen, post, onClose, onSuccess }: Edit
   const [formData, setFormData] = useState({
     title: "",
     summary: "",
+    demoContent: "",
     category: "",
     tags: "",
     authorName: "",
@@ -50,6 +52,7 @@ export default function EditMetaModal({ isOpen, post, onClose, onSuccess }: Edit
       setFormData({
         title: post.title || "",
         summary: post.summary || "",
+        demoContent: post.demoContent || "",
         category: post.category || "",
         tags: post.tags ? post.tags.join(", ") : "",
         authorName: post.author?.name || "",
@@ -84,6 +87,7 @@ export default function EditMetaModal({ isOpen, post, onClose, onSuccess }: Edit
       const payload = {
         title: formData.title.trim(),
         summary: formData.summary.trim(),
+        demoContent: formData.demoContent.trim(),
         category: formData.category.trim(),
         tags: formData.tags ? formData.tags.split(",").map((t) => t.trim()).filter(Boolean) : [],
         featured: formData.featured,
@@ -96,7 +100,7 @@ export default function EditMetaModal({ isOpen, post, onClose, onSuccess }: Edit
       };
 
       // Updates only metadata fields using the edit endpoint
-      const res = await api.put(`/posts/${post._id}`, payload);
+      const res = await api.put(`/blog/posts/${post._id}`, payload);
       
       if (res.data.success) {
         toast.success("Metadata configurations synced successfully!");
@@ -152,6 +156,11 @@ export default function EditMetaModal({ isOpen, post, onClose, onSuccess }: Edit
             <div className="col-span-2 flex flex-col gap-1">
               <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Summary / Excerpt Description</label>
               <textarea name="summary" value={formData.summary} onChange={handleInputChange} rows={3} className="p-3 border rounded-lg dark:bg-slate-950 dark:border-slate-800 focus:outline-none resize-none" />
+            </div>
+
+            <div className="col-span-2 flex flex-col gap-1">
+              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Demo Content Preview</label>
+              <textarea name="demoContent" value={formData.demoContent} onChange={handleInputChange} rows={4} className="p-3 border rounded-lg dark:bg-slate-950 dark:border-slate-800 focus:outline-none resize-none" placeholder="Enter the content preview to show locked users when a premium post is restricted." />
             </div>
 
             {/* Author Configuration Nesting Box */}

@@ -16,6 +16,7 @@ interface LiveEditorProps {
 interface BlogMetadata {
   title: string;
   summary: string;
+  demoContent: string;
   category: string;
   tags: string; // Comma separated string on input, split into array on submit
   authorName: string;
@@ -36,6 +37,7 @@ export default function LiveEditor({ initialCode }: LiveEditorProps) {
   const [metadata, setMetadata] = useState<BlogMetadata>({
     title: "",
     summary: "",
+    demoContent: "",
     category: "",
     tags: "",
     authorName: "",
@@ -84,6 +86,7 @@ export default function LiveEditor({ initialCode }: LiveEditorProps) {
       const finalPayload = {
         title: metadata.title.trim(),
         htmlContent: htmlCode,
+        demoContent: metadata.demoContent.trim(),
         summary: metadata.summary.trim(),
         category: metadata.category.trim(),
         tags: metadata.tags ? metadata.tags.split(",").map(t => t.trim()) : [],
@@ -289,6 +292,18 @@ export default function LiveEditor({ initialCode }: LiveEditorProps) {
                   <Textarea
                     name="summary" value={metadata.summary} onChange={handleInputChange} rows={3}
                     placeholder="Brief description summarizing the content context of this component canvas..."
+                    className={`p-3 rounded-md border focus:outline-none text-sm resize-none ${
+                      isDarkMode ? "bg-slate-950 border-slate-700" : "bg-slate-50 border-slate-200"
+                    }`}
+                  />
+                </div>
+
+                {/* Demo Content Preview Text */}
+                <div className="col-span-2 flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Demo Content (preview for locked users)</label>
+                  <Textarea
+                    name="demoContent" value={metadata.demoContent} onChange={handleInputChange} rows={4}
+                    placeholder="Add a short demo or preview snippet to display for locked premium content."
                     className={`p-3 rounded-md border focus:outline-none text-sm resize-none ${
                       isDarkMode ? "bg-slate-950 border-slate-700" : "bg-slate-50 border-slate-200"
                     }`}
