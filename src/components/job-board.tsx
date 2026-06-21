@@ -287,9 +287,7 @@ export default function JobBoard() {
     typeof window !== "undefined"
       ? `${jobflixViewBase}/login?next=${encodeURIComponent(window.location.href)}`
       : `${jobflixViewBase}/login`;
-  const membershipHref = jobflixViewBase
-    ? `${jobflixViewBase}/my-account/membership`
-    : "/my-account/membership";
+  const membershipHref = '/pricing';
 
   const debounceRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef     = useRef<AbortController | null>(null);
@@ -652,14 +650,6 @@ export default function JobBoard() {
                     {access?.cta === "membership" ? "Purchase Membership" : "Login"}
                     <ArrowRight className="h-4 w-4" />
                   </a>
-                  {access?.cta === "membership" && (
-                    <a
-                      href={loginHref}
-                      className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition-transform hover:-translate-y-0.5 hover:bg-slate-50"
-                    >
-                      Login instead
-                    </a>
-                  )}
                 </div>
               </div>
               <PreviewGhostStack />

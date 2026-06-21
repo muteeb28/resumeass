@@ -12,6 +12,13 @@ const TABLE_CLASS = "border border-hub-border bg-hub-surface rounded-[14px]"
 const config = TABS.find((t) => t.id === "emails")!
 
 export default function HrEmailsPage() {
+
+  const jobflixViewBase = process.env.NEXT_PUBLIC_JOBFLIX_VIEW || "";
+  const loginHref =
+    typeof window !== "undefined"
+      ? `${jobflixViewBase}/login?next=${encodeURIComponent(window.location.href)}`
+      : `${jobflixViewBase}/login`;
+
   return (
     <div className="min-h-screen bg-hub-bg pt-16" style={{ fontFamily: "var(--font-hub)" }}>
       <Navbar tone="light" />
@@ -22,6 +29,7 @@ export default function HrEmailsPage() {
             className={TABLE_CLASS}
             tableClassName="max-h-[520px]"
             country="india"
+            loginHref={loginHref}
           />
         </motion.div>
       </main>
