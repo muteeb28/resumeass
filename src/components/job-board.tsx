@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
-import { ExternalLink, RefreshCw, Search, SearchX, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, ExternalLink, Lock, RefreshCw, Search, SearchX, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { STAGGER_CONTAINER, STAGGER_ITEM, CARD_HOVER, PRESS } from "../lib/motion";
 import axiosInstance from "@/lib/axios";
 import { useUserStore } from "@/stores/useUserStore";
@@ -20,6 +20,26 @@ interface Job {
   salary?: string;
   tags?: string[];
   category?: string;
+}
+
+interface JobBoardAccess {
+  locked: boolean;
+  canReadFullBoard: boolean;
+  isLoggedIn: boolean;
+  requiresLogin: boolean;
+  requiresMembership: boolean;
+  cta: "login" | "membership";
+}
+
+interface JobBoardResponse {
+  success?: boolean;
+  jobs: Job[];
+  total: number;
+  visibleCount?: number;
+  lockedCount?: number;
+  access?: JobBoardAccess;
+  disabled?: boolean;
+  message?: string;
 }
 
 // "" = "All" (no category filter sent to API)
@@ -69,46 +89,7 @@ const LOGO_PALETTE: Array<{ bg: string; fg: string }> = [
   { bg: "oklch(0.94 0.03 320)", fg: "oklch(0.38 0.10 320)" }, // plum
 ];
 
-const DEMO_JOBS: Job[] = [
-  {
-    id: "demo-1",
-    title: "Software Engineer",
-    company: "Acme Labs",
-    location: "Remote",
-    platform: "Talentd",
-    postedDate: "1 day ago",
-    url: "#",
-    type: "Full Time",
-    salary: "$75k - $95k",
-    tags: ["React", "TypeScript", "Remote"],
-  },
-  {
-    id: "demo-2",
-    title: "Product Designer",
-    company: "Nova Studio",
-    location: "Bangalore",
-    platform: "Talentd",
-    postedDate: "3 days ago",
-    url: "#",
-    type: "Design",
-    salary: "$55k - $70k",
-    tags: ["Figma", "UX", "Cross-functional"],
-  },
-  {
-    id: "demo-3",
-    title: "Data Analyst",
-    company: "Orbit Works",
-    location: "Mumbai",
-    platform: "Talentd",
-    postedDate: "2 days ago",
-    url: "#",
-    type: "Fresher",
-    salary: "$35k - $45k",
-    tags: ["SQL", "Excel", "Analytics"],
-  },
-];
-
-const LIMIT = 9;
+const LIMIT = 30;
 
 function isNew(postedDate: string): boolean {
   const d = postedDate.toLowerCase();
@@ -132,6 +113,19 @@ function emptyHint(searchQuery: string, category: CategoryValue): string {
   if (searchQuery) return "Try different keywords or browse by category.";
   if (category) return "New listings arrive daily — try a broader category or check back soon.";
   return "New listings are added daily. Check back soon.";
+}
+
+function PreviewGhostStack() {
+  return (
+    <div className="relative overflow-hidden rounded-[22px] border border-slate-200 bg-white/85 p-4 shadow-sm">
+      <div className="absolute inset-0 bg-gradient-to-b from-white/0 via-white/20 to-white/95" />
+      <div className="space-y-3 blur-[2px] opacity-75">
+        <div className="h-[68px] rounded-[14px] bg-slate-100 border border-slate-200" />
+        <div className="h-[68px] rounded-[14px] bg-slate-100 border border-slate-200 translate-x-3" />
+        <div className="h-[68px] rounded-[14px] bg-slate-100 border border-slate-200 translate-x-6" />
+      </div>
+    </div>
+  );
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -268,13 +262,14 @@ export default function JobBoard() {
   const [jobs, setJobs]               = useState<Job[]>([]);
   const [loading, setLoading]         = useState(true);
   const [disabled, setDisabled]       = useState(false);
+  const [access, setAccess]           = useState<JobBoardAccess | null>(null);
   const [category, setCategory]       = useState<CategoryValue>("");
   const [page, setPage]               = useState(1);
   const [total, setTotal]             = useState(0);
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const reduced                       = useReducedMotion() ?? false;
-  const { membership } = useUserStore();
+  const { user, membership } = useUserStore();
 
   const isActiveMember = Boolean(
     membership &&
@@ -285,7 +280,16 @@ export default function JobBoard() {
   const hasUltraMembership = isActiveMember && membership?.tier === "ultra";
   const canSearch = hasUltraMembership;
   const canFilter = isActiveMember;
-  const noAccess = !isActiveMember;
+  const isPreviewLocked = access?.locked ?? !isActiveMember;
+  const isGuest = !user;
+  const jobflixViewBase = process.env.NEXT_PUBLIC_JOBFLIX_VIEW || "";
+  const loginHref =
+    typeof window !== "undefined"
+      ? `${jobflixViewBase}/login?next=${encodeURIComponent(window.location.href)}`
+      : `${jobflixViewBase}/login`;
+  const membershipHref = jobflixViewBase
+    ? `${jobflixViewBase}/my-account/membership`
+    : "/my-account/membership";
 
   const debounceRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef     = useRef<AbortController | null>(null);
@@ -312,7 +316,7 @@ export default function JobBoard() {
   }
 
   const fetchJobs = useCallback(async () => {
-    if (disabled || noAccess) return;
+    if (disabled) return;
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -326,30 +330,29 @@ export default function JobBoard() {
       });
       if (category) params.set("category", category);
       const res = await axiosInstance(`/jobs?${params}`, { signal: controller.signal });
-      const data = await res.data;
-      if (data.disabled) { setDisabled(true); setJobs([]); return; }
+      const data: JobBoardResponse = await res.data;
+      if (data.disabled) {
+        setDisabled(true);
+        setJobs([]);
+        setAccess(null);
+        return;
+      }
       setJobs(Array.isArray(data.jobs) ? data.jobs : []);
       setTotal(data.total ?? 0);
+      setAccess(data.access ?? null);
     } catch (err) {
       if (controller.signal.aborted) return;
       setJobs([]);
     } finally {
       if (!controller.signal.aborted) setLoading(false);
     }
-  }, [category, searchQuery, page, disabled, noAccess]);
+  }, [category, searchQuery, page, disabled]);
 
   useEffect(() => {
-    if (noAccess) {
-      // setJobs(DEMO_JOBS);
-      // setTotal(DEMO_JOBS.length);
-      setLoading(false);
-      return;
-    }
-
     fetchJobs();
-  }, [fetchJobs, noAccess]);
+  }, [fetchJobs]);
 
-  const totalPages = Math.ceil(total / LIMIT);
+  const totalPages = isPreviewLocked ? 1 : Math.ceil(total / LIMIT);
   const filterLabel = category === "" ? "fresh" : category;
 
   function handleSearch(e: React.FormEvent) {
@@ -380,12 +383,33 @@ export default function JobBoard() {
 
   return (
     <div className="w-full" style={{ fontFamily: "var(--font-hub)" }}>
-      {noAccess && (
-        <div className="rounded-[14px] border border-rose-200 bg-rose-50 p-4 mb-5 text-left">
-          <p className="text-[13px] font-semibold text-rose-900 mb-1">Job board access limited</p>
-          <p className="text-[12.5px] text-rose-900/90 leading-relaxed">
-            You need an active Premium or Ultra membership to access the job board. This preview shows how job listings will appear.
-          </p>
+      {isPreviewLocked && (
+        <div className="rounded-[18px] border border-slate-200 bg-white p-4 md:p-5 mb-5 text-left shadow-sm">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="max-w-2xl">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+                <Lock className="h-3.5 w-3.5 text-amber-500" />
+                Locked Preview
+              </div>
+              <p className="mt-2 text-[13px] font-semibold text-slate-900">
+                {isGuest ? "Login to unlock the full job board." : "Purchase membership to unlock the full job board."}
+              </p>
+              <p className="mt-1 text-[12.5px] text-slate-600 leading-relaxed">
+                You can browse the first 5 jobs. The rest stay blurred until you sign in or upgrade your membership.
+              </p>
+            </div>
+            <a
+              href={access?.cta === "membership" ? membershipHref : loginHref}
+              className={`inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-transform hover:-translate-y-0.5 ${
+                access?.cta === "membership"
+                  ? "bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 hover:bg-amber-400"
+                  : "bg-slate-900 text-white shadow-lg shadow-slate-900/20 hover:bg-slate-800"
+              }`}
+            >
+              {access?.cta === "membership" ? "Buy Membership" : "Login"}
+              <ArrowRight className="h-4 w-4" />
+            </a>
+          </div>
         </div>
       )}
 
@@ -409,16 +433,16 @@ export default function JobBoard() {
               transition: "color 150ms",
             }}
           />
-          <input
+            <input
             type="text"
             value={searchInput}
             onChange={handleSearchInput}
             placeholder={
-              noAccess
-                ? "Upgrade to Premium or Ultra to unlock jobs"
+              isGuest
+                ? "Login to unlock jobs"
                 : hasPremiumMembership
                 ? "Search reserved for Ultra members"
-                : "Search jobs, companies…"
+                : "Upgrade to unlock jobs"
             }
             disabled={!canSearch}
             className={
@@ -593,8 +617,59 @@ export default function JobBoard() {
         )}
       </AnimatePresence>
 
+      {isPreviewLocked && jobs.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+          className="mt-6"
+        >
+          <div className="relative overflow-hidden rounded-[24px] border border-slate-200 bg-white p-4 md:p-5 shadow-sm">
+            <div className="absolute inset-0 bg-gradient-to-b from-white/0 via-white/20 to-white/90 pointer-events-none" />
+            <div className="relative grid gap-4 md:grid-cols-[1.1fr_0.9fr] md:items-center">
+              <div className="space-y-3">
+                <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                  <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                  More jobs hidden
+                </div>
+                <p className="text-[14px] font-semibold text-slate-900">
+                  {access?.cta === "membership"
+                    ? "Upgrade your membership to reveal the rest of the board."
+                    : "Login to continue reading the job board."}
+                </p>
+                <p className="text-[12.5px] leading-relaxed text-slate-600">
+                  The preview stops here, with a soft blur just like Medium. Unlocking gives you the remaining jobs, search, and full filters.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 pt-1">
+                  <a
+                    href={access?.cta === "membership" ? membershipHref : loginHref}
+                    className={`inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-transform hover:-translate-y-0.5 ${
+                      access?.cta === "membership"
+                        ? "bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 hover:bg-amber-400"
+                        : "bg-slate-900 text-white shadow-lg shadow-slate-900/20 hover:bg-slate-800"
+                    }`}
+                  >
+                    {access?.cta === "membership" ? "Purchase Membership" : "Login"}
+                    <ArrowRight className="h-4 w-4" />
+                  </a>
+                  {access?.cta === "membership" && (
+                    <a
+                      href={loginHref}
+                      className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition-transform hover:-translate-y-0.5 hover:bg-slate-50"
+                    >
+                      Login instead
+                    </a>
+                  )}
+                </div>
+              </div>
+              <PreviewGhostStack />
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Pagination */}
-      {totalPages > 1 && (
+      {!isPreviewLocked && totalPages > 1 && (
         <div className="flex items-center justify-between mt-6 pt-5 border-t border-hub-border">
           <motion.button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
