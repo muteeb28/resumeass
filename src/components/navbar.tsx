@@ -185,8 +185,8 @@ export const Navbar = ({
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.6 }}
-              href="/#pricing"
-              onClick={(e) => { e.preventDefault(); router.push("/#pricing"); }}
+              href="/pricing"
+              onClick={(e) => { e.preventDefault(); router.push("/pricing"); }}
               className={linkCls}
             >
               Pricing
@@ -431,7 +431,7 @@ export const Navbar = ({
                 </a>
 
                 {/* Pricing */}
-                <a href="/#pricing" className={mobileLinkCls} onClick={() => setIsOpen(false)}>
+                <a href="/pricing" className={mobileLinkCls} onClick={() => setIsOpen(false)}>
                   Pricing
                 </a>
 
