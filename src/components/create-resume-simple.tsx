@@ -741,15 +741,14 @@ export const CreateResumeSimple = () => {
   const renderUploadStep = () => (
     <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
       <h1 className="text-4xl md:text-5xl font-bold text-neutral-900 tracking-tight">
-        Import Your Professional Data
+        Build Your AI Resume
       </h1>
       <p className="mt-4 text-neutral-500 text-lg">
-        Choose a source to get started — quick and easy. You can edit anytime.
+        Upload your PDF resume — AI extracts your experience and builds polished templates in seconds.
       </p>
 
-      {/* Source cards */}
-      <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-xl">
-        {/* Upload PDF card — clicking opens file picker directly */}
+      {/* Upload card */}
+      <div className="mt-10 w-full max-w-sm mx-auto">
         <label
           className={`group flex flex-col items-center gap-4 rounded-2xl border-2 bg-white p-8 transition-all hover:shadow-md cursor-pointer ${inputMode === "upload"
               ? "border-neutral-900 shadow-md"
@@ -776,39 +775,11 @@ export const CreateResumeSimple = () => {
             disabled={isExtracting}
           />
         </label>
-
-        {/* Create Portfolio card — clicking opens file picker directly */}
-        <label
-          className={`group flex flex-col items-center gap-4 rounded-2xl border-2 bg-white p-8 transition-all hover:shadow-md cursor-pointer ${inputMode === "portfolio"
-              ? "border-neutral-900 shadow-md"
-              : "border-neutral-200 hover:border-neutral-300"
-            }`}
-        >
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-600 group-hover:bg-neutral-200 transition-colors">
-            <Globe className="h-7 w-7" />
-          </div>
-          <div>
-            <div className="text-lg font-semibold text-neutral-900">Create Portfolio</div>
-            <p className="mt-1 text-sm text-neutral-500">
-              Turn your resume into a shareable portfolio page
-            </p>
-          </div>
-          <input
-            type="file"
-            className="hidden"
-            accept=".pdf"
-            onChange={(e) => {
-              setInputMode("portfolio");
-              handlePortfolioUpload(e);
-            }}
-            disabled={isPortfolioExtracting}
-          />
-        </label>
       </div>
 
       {/* Expanded input area */}
       {inputMode && (
-        <div className="mt-8 w-full max-w-xl text-left">
+        <div className="mt-8 w-full max-w-sm mx-auto text-left">
           <div className="rounded-2xl border border-neutral-200 bg-white p-6">
             {inputMode === "upload" && (
               <>
@@ -830,42 +801,6 @@ export const CreateResumeSimple = () => {
                   <div className="mt-3 flex items-center gap-2 text-sm text-neutral-600">
                     <FileText className="h-4 w-4" />
                     {uploadedFileName}
-                  </div>
-                )}
-              </>
-            )}
-
-            {inputMode === "portfolio" && (
-              <>
-                <label className="group relative flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-neutral-200 rounded-xl cursor-pointer bg-neutral-50 hover:bg-neutral-100 hover:border-neutral-300 transition-all">
-                  <Upload className="h-8 w-8 text-neutral-400 mb-2" />
-                  <div className="text-neutral-700 text-sm font-semibold">
-                    Drop your PDF resume here
-                  </div>
-                  <p className="text-neutral-400 text-xs mt-1">PDF up to 10MB</p>
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept=".pdf"
-                    onChange={handlePortfolioUpload}
-                    disabled={isPortfolioExtracting}
-                  />
-                </label>
-                {portfolioFileName && (
-                  <div className="mt-3 flex items-center gap-2 text-sm text-neutral-600">
-                    <FileText className="h-4 w-4" />
-                    {portfolioFileName}
-                  </div>
-                )}
-                {isPortfolioExtracting && (
-                  <div className="mt-3 flex items-center gap-2 text-sm text-neutral-500">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Extracting resume content...
-                  </div>
-                )}
-                {portfolioError && (
-                  <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-600">
-                    {portfolioError}
                   </div>
                 )}
               </>
@@ -907,17 +842,15 @@ export const CreateResumeSimple = () => {
               </div>
             )}
 
-            {inputMode !== "portfolio" && (
-              <div className="mt-6 flex justify-end">
-                <Button
-                  onClick={handleContinue}
-                  disabled={isExtracting || isGenerating}
-                  className="bg-neutral-900 text-white hover:bg-neutral-800 px-8"
-                >
-                  Get started
-                </Button>
-              </div>
-            )}
+            <div className="mt-6 flex justify-end">
+              <Button
+                onClick={handleContinue}
+                disabled={isExtracting || isGenerating}
+                className="bg-neutral-900 text-white hover:bg-neutral-800 px-8"
+              >
+                Get started
+              </Button>
+            </div>
           </div>
         </div>
       )}
