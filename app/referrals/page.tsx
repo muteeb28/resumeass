@@ -7,9 +7,11 @@ import {
   ArrowRight,
   RefreshCw,
   Search,
+  Sparkles,
   UserCheck,
   Users,
   X,
+  Lock,
 } from "lucide-react";
 import axiosInstance from "@/lib/axios";
 import { BackgroundRippleLayout } from "@/components/background-ripple-layout";
@@ -211,8 +213,15 @@ export default function ReferralsPage() {
   const [referrerLoading, setReferrerLoading] = useState(false);
   const [revealed, setRevealed] = useState<Record<string, RevealState>>({});
 
-const { user } = useUserStore();
+  const { user } = useUserStore();
   const router = useRouter();
+
+  // Assuming hasAccess and loading come from your subscription check logic/context
+  // Replace these with your actual state/hook values if necessary
+  const hasAccess = false; 
+  const loading = false;
+  const loginHref = `${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/login`;
+  const membershipHref = "/pricing"; 
 
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
 
@@ -298,9 +307,10 @@ const { user } = useUserStore();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
-      router.replace(`${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/login`);
+      router.replace(loginHref);
       return;
     }
+    if (!hasAccess) return; // Guard submission
     if (Object.values(formData).some((value) => !value.trim())) {
       toast.error("Please complete every field before sending your referral request.");
       return;
@@ -323,21 +333,12 @@ const { user } = useUserStore();
   };
 
   const hasActiveFilters = Boolean(referrerQuery);
-
-  // Static profiles are always shown. Tag them so per-card logic can identify them.
   const taggedStatic = STATIC_PROFILES.map((p) => ({ ...p, _isStatic: true as const }));
-
-  // Filter static profiles client-side by search query (they have no experience field,
-  // so they bypass the experience filter intentionally — they are showcase profiles).
   const filteredStatic = taggedStatic.filter((p) => matchesSearchQuery(p, referrerQuery));
-
-  // Deduplicate: drop any API referrer whose name already appears in STATIC_PROFILES.
   const staticNames = new Set(STATIC_PROFILES.map((p) => p.name.toLowerCase()));
   const deduplicatedApiReferrers = referrers.filter(
     (r) => !staticNames.has((r.name || "").toLowerCase())
   );
-
-  // Static profiles lead, API referrers append after.
   const displayList = [...filteredStatic, ...deduplicatedApiReferrers];
 
   return (
@@ -345,7 +346,6 @@ const { user } = useUserStore();
       <Navbar tone="light" />
 
       <main className="mx-auto max-w-7xl px-4 pb-24 pt-6 sm:pt-8 sm:px-6 lg:px-8">
-
         {/* ── HERO ─────────────────────────────────────────────────────── */}
         <section className="pt-4 pb-6 sm:pt-6 sm:pb-8 text-center">
           <motion.div
@@ -401,7 +401,7 @@ const { user } = useUserStore();
 
         {/* ── UNIFIED CENTER COLUMN ───────────────────────────────────── */}
         <div className="mx-auto max-w-3xl w-full mb-8 space-y-5">
-          {/* ── ROTATING TESTIMONIAL ─────────────────────────────────────── */}
+          {/* Rotating Testimonials */}
           <div className="rounded-2xl border border-[#e6e6e3] bg-white px-6 py-5 text-center shadow-sm w-full min-h-[140px] sm:min-h-[120px] flex flex-col justify-between overflow-hidden">
             <AnimatePresence mode="wait">
               <motion.div
@@ -416,7 +416,6 @@ const { user } = useUserStore();
                   &ldquo;{TESTIMONIALS[currentTestimonial].quote}&rdquo;
                 </p>
                 <div className="mt-4 flex items-center justify-center gap-3">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={TESTIMONIALS[currentTestimonial].avatar}
                     alt={TESTIMONIALS[currentTestimonial].name}
@@ -435,7 +434,7 @@ const { user } = useUserStore();
             </AnimatePresence>
           </div>
 
-          {/* ── SEARCH BAR ───────────────────────────────────────────────── */}
+          {/* Search bar */}
           <div className="relative w-full">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-400" />
             <input
@@ -466,7 +465,7 @@ const { user } = useUserStore();
             </button>
           </div>
 
-          {/* ── BECOME-A-REFERRER BANNER ──────────────────────────────────── */}
+          {/* Banner */}
           <div className="flex flex-col gap-3 rounded-2xl border border-[#e6e6e3] bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between w-full">
             <div className="flex items-center gap-4">
               <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-600">
@@ -494,195 +493,188 @@ const { user } = useUserStore();
 
         {/* ── RESULTS AREA ──────────────────────────────────────────────── */}
         <div>
-            {!user && (
-              <div className="mb-6 rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-center">
-                <p className="text-sm font-medium text-neutral-900">
-                  You are viewing featured referrers.{" "}
-                  <Link
-                    href={`${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/login?next=${typeof window !== "undefined" ? encodeURIComponent(window.location.href) : ""}`}
-                    className="font-semibold text-neutral-900 hover:underline"
+          {!user && (
+            <div className="mb-6 rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-center">
+              <p className="text-sm font-medium text-neutral-900">
+                You are viewing featured referrers.{" "}
+                <Link
+                  href={`${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/login?next=${typeof window !== "undefined" ? encodeURIComponent(window.location.href) : ""}`}
+                  className="font-semibold text-neutral-900 hover:underline"
+                >
+                  Log in
+                </Link>{" "}
+                to search and unlock the full directory.
+              </p>
+            </div>
+          )}
+
+          {referrerLoading ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <CardSkeleton key={i} />
+              ))}
+            </div>
+          ) : displayList.length === 0 ? (
+            <div className="py-12 text-center">
+              <UserCheck className="mx-auto h-8 w-8 text-neutral-300" />
+              <p className="mt-3 text-sm font-medium text-neutral-900">
+                No profiles relevant to this requirement found.
+              </p>
+              <p className="mt-1 text-sm text-neutral-500">
+                Try different keywords or remove some filters.
+              </p>
+              {hasActiveFilters && (
+                <button
+                  onClick={() => {
+                    setSearchInput("");
+                    setReferrerQuery("");
+                  }}
+                  className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-neutral-700 hover:underline"
+                  type="button"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  Reset filters
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {displayList.map((item: any, index: number) => {
+                const isStaticItem = Boolean(item._isStatic);
+                const itemId = isStaticItem ? `static-${item.name}` : item._id;
+                const name = isStaticItem ? item.name : (item.name || "Verified Referrer");
+                const designation = item.designation;
+                const company = item.company;
+                const about = isStaticItem
+                  ? item.about
+                  : (item.description || `Professional willing to refer and guide candidates at ${company}.`);
+
+                const imageFile = isStaticItem ? item.imageFile : null;
+                const hasImage = imageFile && !imageErrors[imageFile];
+                const imagePath = imageFile ? `/refer/${encodeURIComponent(imageFile)}` : "";
+
+                const palette = getAvatarPalette(company || "");
+                const initial = (name?.[0] || company?.[0] || "?").toUpperCase();
+                const revealState = isStaticItem ? null : revealed[item._id];
+
+                return (
+                  <motion.div
+                    key={itemId}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="flex flex-col rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm hover:shadow-md transition-all duration-200"
                   >
-                    Log in
-                  </Link>{" "}
-                  to search and unlock the full directory.
-                </p>
-              </div>
-            )}
-
-            {referrerLoading ? (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <CardSkeleton key={i} />
-                ))}
-              </div>
-            ) : displayList.length === 0 ? (
-              <div className="py-12 text-center">
-                <UserCheck className="mx-auto h-8 w-8 text-neutral-300" />
-                <p className="mt-3 text-sm font-medium text-neutral-900">
-                  No profiles relevant to this requirement found.
-                </p>
-                <p className="mt-1 text-sm text-neutral-500">
-                  Try different keywords or remove some filters.
-                </p>
-                {hasActiveFilters && (
-                  <button
-                    onClick={() => {
-                      setSearchInput("");
-                      setReferrerQuery("");
-                    }}
-                    className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-neutral-700 hover:underline"
-                    type="button"
-                  >
-                    <RefreshCw className="h-3.5 w-3.5" />
-                    Reset filters
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {displayList.map((item: any, index: number) => {
-                  const isStaticItem = Boolean(item._isStatic);
-                  const itemId = isStaticItem ? `static-${item.name}` : item._id;
-
-                  const name = isStaticItem ? item.name : (item.name || "Verified Referrer");
-                  const designation = item.designation;
-                  const company = item.company;
-                  const about = isStaticItem
-                    ? item.about
-                    : (item.description || `Professional willing to refer and guide candidates at ${company}.`);
-
-                  const imageFile = isStaticItem ? item.imageFile : null;
-                  const hasImage = imageFile && !imageErrors[imageFile];
-                  const imagePath = imageFile ? `/refer/${encodeURIComponent(imageFile)}` : "";
-
-                  const palette = getAvatarPalette(company || "");
-                  const initial = (name?.[0] || company?.[0] || "?").toUpperCase();
-
-                  const revealState = isStaticItem ? null : revealed[item._id];
-
-                  return (
-                    <motion.div
-                      key={itemId}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="flex flex-col rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm hover:shadow-md transition-all duration-200"
-                    >
-                      {/* Accent top bar */}
-                      <div className="h-1.5 w-full rounded-t-2xl -mt-5 -mx-5 mb-5 bg-gradient-to-r from-neutral-200 to-neutral-50" />
-
-                      <div className="flex flex-col items-center text-center flex-1">
-                        {/* Avatar */}
-                        <div className="mb-3 h-16 w-16 flex-shrink-0">
-                          {hasImage ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={imagePath}
-                              alt={name}
-                              onError={() =>
-                                setImageErrors((prev) => ({ ...prev, [imageFile!]: true }))
-                              }
-                              className="h-16 w-16 rounded-full object-cover border-2 border-white ring-2 ring-neutral-100 shadow-sm"
-                            />
-                          ) : (
-                            <div
-                              className={`flex h-16 w-16 items-center justify-center rounded-full text-lg font-bold border-2 border-white ring-2 ring-neutral-100 shadow-sm ${palette.bg} ${palette.text}`}
-                            >
-                              {initial}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Profile info */}
-                        <h4 className="text-sm font-bold text-neutral-900 line-clamp-1">
-                          {name}
-                        </h4>
-                        {designation && (
-                          <p className="text-xs font-semibold text-neutral-500 mt-0.5 line-clamp-1">
-                            {designation}
-                          </p>
+                    <div className="h-1.5 w-full rounded-t-2xl -mt-5 -mx-5 mb-5 bg-gradient-to-r from-neutral-200 to-neutral-50" />
+                    <div className="flex flex-col items-center text-center flex-1">
+                      <div className="mb-3 h-16 w-16 flex-shrink-0">
+                        {hasImage ? (
+                          <img
+                            src={imagePath}
+                            alt={name}
+                            onError={() =>
+                              setImageErrors((prev) => ({ ...prev, [imageFile!]: true }))
+                            }
+                            className="h-16 w-16 rounded-full object-cover border-2 border-white ring-2 ring-neutral-100 shadow-sm"
+                          />
+                        ) : (
+                          <div
+                            className={`flex h-16 w-16 items-center justify-center rounded-full text-lg font-bold border-2 border-white ring-2 ring-neutral-100 shadow-sm ${palette.bg} ${palette.text}`}
+                          >
+                            {initial}
+                          </div>
                         )}
-                        {company && (
-                          <p className="text-[11px] text-neutral-400 font-medium mt-0.5">
-                            {company}
-                          </p>
-                        )}
-
-                        {/* About */}
-                        <p className="text-xs text-neutral-500 leading-relaxed mt-3 mb-4 line-clamp-3 text-center w-full min-h-[48px]">
-                          {about}
-                        </p>
                       </div>
 
-                      {/* Contact button */}
-                      <div className="mt-auto w-full">
-                        {isStaticItem ? (
-                          <button
-                            onClick={() => handleContactClick(item, true)}
-                            className="h-9 w-full rounded-xl bg-neutral-900 text-xs font-semibold text-white transition-colors hover:bg-neutral-700 active:scale-[0.98]"
-                          >
-                            Contact
-                          </button>
-                        ) : (
-                          <>
-                            {revealState === undefined && (
+                      <h4 className="text-sm font-bold text-neutral-900 line-clamp-1">
+                        {name}
+                      </h4>
+                      {designation && (
+                        <p className="text-xs font-semibold text-neutral-500 mt-0.5 line-clamp-1">
+                          {designation}
+                        </p>
+                      )}
+                      {company && (
+                        <p className="text-[11px] text-neutral-400 font-medium mt-0.5">
+                          {company}
+                        </p>
+                      )}
+
+                      <p className="text-xs text-neutral-500 leading-relaxed mt-3 mb-4 line-clamp-3 text-center w-full min-h-[48px]">
+                        {about}
+                      </p>
+                    </div>
+
+                    <div className="mt-auto w-full">
+                      {isStaticItem ? (
+                        <button
+                          onClick={() => handleContactClick(item, true)}
+                          className="h-9 w-full rounded-xl bg-neutral-900 text-xs font-semibold text-white transition-colors hover:bg-neutral-700 active:scale-[0.98]"
+                        >
+                          Contact
+                        </button>
+                      ) : (
+                        <>
+                          {revealState === undefined && (
+                            <button
+                              onClick={() => handleContactClick(item, false)}
+                              className="h-9 w-full rounded-xl bg-neutral-900 text-xs font-semibold text-white transition-colors hover:bg-neutral-700 active:scale-[0.98]"
+                            >
+                              Contact
+                            </button>
+                          )}
+                          {revealState === "loading" && (
+                            <button
+                              disabled
+                              className="h-9 w-full rounded-xl bg-neutral-400 text-xs font-semibold text-white cursor-not-allowed"
+                            >
+                              Revealing...
+                            </button>
+                          )}
+                          {revealState === "error" && (
+                            <button
+                              onClick={() => handleContactClick(item, false)}
+                              className="h-9 w-full rounded-xl border border-rose-200 bg-rose-50 text-xs font-semibold text-rose-600 hover:bg-rose-100"
+                            >
+                              Failed — Retry
+                            </button>
+                          )}
+                          {revealState &&
+                            revealState !== "loading" &&
+                            revealState !== "error" && (
                               <button
                                 onClick={() => handleContactClick(item, false)}
-                                className="h-9 w-full rounded-xl bg-neutral-900 text-xs font-semibold text-white transition-colors hover:bg-neutral-700 active:scale-[0.98]"
+                                className="h-9 w-full rounded-xl border border-neutral-200 bg-neutral-50 text-xs font-semibold text-neutral-700 hover:bg-neutral-100"
                               >
                                 Contact
                               </button>
                             )}
-                            {revealState === "loading" && (
-                              <button
-                                disabled
-                                className="h-9 w-full rounded-xl bg-neutral-400 text-xs font-semibold text-white cursor-not-allowed"
-                              >
-                                Revealing...
-                              </button>
-                            )}
-                            {revealState === "error" && (
-                              <button
-                                onClick={() => handleContactClick(item, false)}
-                                className="h-9 w-full rounded-xl border border-rose-200 bg-rose-50 text-xs font-semibold text-rose-600 hover:bg-rose-100"
-                              >
-                                Failed — Retry
-                              </button>
-                            )}
-                            {revealState &&
-                              revealState !== "loading" &&
-                              revealState !== "error" && (
-                                <button
-                                  onClick={() => handleContactClick(item, false)}
-                                  className="h-9 w-full rounded-xl border border-neutral-200 bg-neutral-50 text-xs font-semibold text-neutral-700 hover:bg-neutral-100"
-                                >
-                                  Contact
-                                </button>
-                              )}
-                          </>
-                        )}
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            )}
+                        </>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </main>
 
-      {/* ── SEEKER MODAL ──────────────────────────────────────────────── */}
+      {/* ── SEEKER MODAL (ASK FOR REFERRAL) ───────────────────────────── */}
       {isModalOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/60 px-4 py-6 backdrop-blur-md">
-          <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-neutral-200 bg-white p-6 shadow-2xl sm:p-8">
+          <div className="relative max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-[2rem] border border-neutral-200 bg-white p-6 shadow-2xl sm:p-8 flex flex-col">
+            
+            {/* Clear Close Button (Always Active) */}
             <button
               onClick={() => setIsModalOpen(false)}
-              className="absolute right-4 top-4 rounded-full border border-neutral-200 p-2 text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-800"
+              className="absolute right-4 top-4 z-40 rounded-full border border-neutral-200 p-2 text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-800"
               aria-label="Close referral form"
             >
               <X className="h-4 w-4" />
             </button>
 
-            <div className="pr-10">
+            <div className="pr-10 flex-shrink-0">
               <p className="text-sm font-bold uppercase tracking-[0.24em] text-neutral-500">
                 Ask for referral
               </p>
@@ -694,94 +686,138 @@ const { user } = useUserStore();
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-              <div className="grid gap-5 sm:grid-cols-2">
-                <Field label="Full name" required>
+            {/* ── CONTAINER (Blurs and freezes input field stack if no membership) ── */}
+            <div className="relative flex-1 overflow-y-auto mt-6 pr-1">
+              <form 
+                onSubmit={handleSubmit} 
+                className={`space-y-5 pb-2 transition-all duration-300 ${!hasAccess && !loading ? 'blur-[1px] select-none opacity-70 pointer-events-none' : ''}`}
+              >
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <Field label="Full name" required>
+                    <Input
+                      value={formData.fullName}
+                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                      placeholder="Jane Doe"
+                      className="h-11 rounded-xl border-neutral-200 focus-visible:ring-neutral-900/10"
+                    />
+                  </Field>
+                  <Field label="Email" required>
+                    <Input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      placeholder="jane@example.com"
+                      className="h-11 rounded-xl border-neutral-200 focus-visible:ring-neutral-900/10"
+                    />
+                  </Field>
+                </div>
+
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <Field label="Phone number" required>
+                    <Input
+                      value={formData.phoneNumber}
+                      onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                      placeholder="+91 98765 43210"
+                      className="h-11 rounded-xl border-neutral-200 focus-visible:ring-neutral-900/10"
+                    />
+                  </Field>
+                  <Field label="Desired job" required>
+                    <Input
+                      value={formData.desiredJob}
+                      onChange={(e) => setFormData({ ...formData, desiredJob: e.target.value })}
+                      placeholder="Frontend Developer"
+                      className="h-11 rounded-xl border-neutral-200 focus-visible:ring-neutral-900/10"
+                    />
+                  </Field>
+                </div>
+
+                <Field label="Experience" required>
                   <Input
-                    value={formData.fullName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, fullName: e.target.value })
-                    }
-                    placeholder="Jane Doe"
+                    value={formData.experience}
+                    onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+                    placeholder="3 years in React and Next.js"
                     className="h-11 rounded-xl border-neutral-200 focus-visible:ring-neutral-900/10"
                   />
                 </Field>
-                <Field label="Email" required>
-                  <Input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
-                    placeholder="jane@example.com"
-                    className="h-11 rounded-xl border-neutral-200 focus-visible:ring-neutral-900/10"
+
+                <Field label="Description" required>
+                  <Textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Tell us about your background, what roles you're targeting, and any useful context."
+                    className="min-h-[140px] rounded-2xl border-neutral-200 p-4 focus-visible:ring-neutral-900/10"
                   />
                 </Field>
-              </div>
 
-              <div className="grid gap-5 sm:grid-cols-2">
-                <Field label="Phone number" required>
-                  <Input
-                    value={formData.phoneNumber}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phoneNumber: e.target.value })
-                    }
-                    placeholder="+91 98765 43210"
-                    className="h-11 rounded-xl border-neutral-200 focus-visible:ring-neutral-900/10"
-                  />
-                </Field>
-                <Field label="Desired job" required>
-                  <Input
-                    value={formData.desiredJob}
-                    onChange={(e) =>
-                      setFormData({ ...formData, desiredJob: e.target.value })
-                    }
-                    placeholder="Frontend Developer"
-                    className="h-11 rounded-xl border-neutral-200 focus-visible:ring-neutral-900/10"
-                  />
-                </Field>
-              </div>
+                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsModalOpen(false)}
+                    className="h-11 rounded-xl border-neutral-200 bg-white px-5 text-neutral-700 hover:bg-neutral-50"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={submitting}
+                    className="h-11 rounded-xl bg-neutral-900 px-5 text-white hover:bg-neutral-700"
+                  >
+                    {submitting ? "Sending..." : "Submit referral request"}
+                  </Button>
+                </div>
+              </form>
 
-              <Field label="Experience" required>
-                <Input
-                  value={formData.experience}
-                  onChange={(e) =>
-                    setFormData({ ...formData, experience: e.target.value })
-                  }
-                  placeholder="3 years in React and Next.js"
-                  className="h-11 rounded-xl border-neutral-200 focus-visible:ring-neutral-900/10"
-                />
-              </Field>
+              {/* ── LOCK OVERLAY CONTAINER ── */}
+              {!hasAccess && !loading && (
+                <div className="absolute inset-0 z-30 flex items-center justify-center bg-gradient-to-t from-white via-white/80 to-white/20 p-4">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.96, y: 15 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    className="w-full max-w-md rounded-2xl border border-neutral-200 bg-white/90 p-6 text-center shadow-[0_20px_50px_rgba(0,0,0,0.12)] backdrop-blur-md"
+                  >
+                    <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-neutral-950 text-white shadow-md mb-3">
+                      <Lock className="h-4 w-4" />
+                    </div>
 
-              <Field label="Description" required>
-                <Textarea
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  placeholder="Tell us about your background, what roles you're targeting, and any useful context."
-                  className="min-h-[140px] rounded-2xl border-neutral-200 p-4 focus-visible:ring-neutral-900/10"
-                />
-              </Field>
+                    <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600">
+                      <Sparkles className="h-3 w-3 fill-amber-500 text-amber-500" />
+                      Members Only
+                    </div>
 
-              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsModalOpen(false)}
-                  className="h-11 rounded-xl border-neutral-200 bg-white px-5 text-neutral-700 hover:bg-neutral-50"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={submitting}
-                  className="h-11 rounded-xl bg-neutral-900 px-5 text-white hover:bg-neutral-700"
-                >
-                  {submitting ? "Sending..." : "Submit referral request"}
-                </Button>
-              </div>
-            </form>
+                    <h3 className="mt-2 text-base font-black tracking-tight text-neutral-950">
+                      {user ? "Unlock Referral Matching" : "Sign in to request referrals"}
+                    </h3>
+                    
+                    <p className="mt-2 text-xs leading-relaxed text-neutral-500 px-4">
+                      Active membership tiers instantly lift the referral request constraint, matching your profile directly into the tracking pipeline of top internal referrers.
+                    </p>
+
+                    <div className="mt-5">
+                      {!user ? (
+                        <a
+                          href={loginHref}
+                          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-950 h-11 text-xs font-semibold text-white shadow-sm hover:bg-neutral-800 transition-colors"
+                        >
+                          Login to Unlock
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </a>
+                      ) : (
+                        <a
+                          href={membershipHref}
+                          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 h-11 text-xs font-bold text-neutral-950 shadow-sm hover:bg-amber-400 transition-colors tracking-wide"
+                        >
+                          Upgrade Tier Instantly
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </a>
+                      )}
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+            </div>
+
           </div>
         </div>
       ) : null}
@@ -789,16 +825,16 @@ const { user } = useUserStore();
       {/* ── CONTACT DETAILS MODAL ─────────────────────────────────────── */}
       {contactModalData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/60 px-4 py-6 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="relative w-full max-w-sm rounded-[2rem] border border-neutral-200 bg-white p-6 shadow-2xl">
+          <div className="relative w-full max-w-sm rounded-[2rem] border border-neutral-200 bg-white p-6 shadow-2xl overflow-hidden">
             <button
               onClick={() => setContactModalData(null)}
-              className="absolute right-4 top-4 rounded-full border border-neutral-200 p-2 text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-800"
+              className="absolute right-4 top-4 z-40 rounded-full border border-neutral-200 p-2 text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-800"
               aria-label="Close modal"
             >
               <X className="h-4 w-4" />
             </button>
 
-            <div className="text-center mt-2">
+            <div className="text-center mt-2 relative">
               <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-neutral-500">
                 Contact Referrer
               </p>
@@ -806,7 +842,7 @@ const { user } = useUserStore();
                 {contactModalData.name}
               </h3>
 
-              <div className="mt-6 space-y-4 text-left border-t border-neutral-100 pt-4">
+              <div className={`mt-6 space-y-4 text-left border-t border-neutral-100 pt-4 transition-all duration-300 ${!hasAccess && !loading ? 'blur-sm select-none opacity-40 pointer-events-none' : ''}`}>
                 <div>
                   <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
                     Email
@@ -839,14 +875,59 @@ const { user } = useUserStore();
                     </p>
                   )}
                 </div>
+
+                <Button
+                  onClick={() => setContactModalData(null)}
+                  className="mt-8 w-full h-10 rounded-xl bg-neutral-900 text-xs font-semibold text-white hover:bg-neutral-700"
+                >
+                  Close
+                </Button>
               </div>
 
-              <Button
-                onClick={() => setContactModalData(null)}
-                className="mt-8 w-full h-10 rounded-xl bg-neutral-900 text-xs font-semibold text-white hover:bg-neutral-700"
-              >
-                Close
-              </Button>
+              {!hasAccess && !loading && (
+                <div className="absolute inset-x-0 bottom-0 top-16 z-30 flex flex-col items-center justify-end bg-gradient-to-t from-white via-white/80 to-transparent pt-12">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    className="w-full rounded-2xl border border-neutral-200/80 bg-white/90 p-5 shadow-[0_12px_32px_rgba(0,0,0,0.08)] backdrop-blur-md text-center"
+                  >
+                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-neutral-950 text-white shadow-md mb-3">
+                      <Lock className="h-4 w-4" />
+                    </div>
+                    <div className="flex items-center justify-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.2em] text-amber-600">
+                      <Sparkles className="h-3 w-3 fill-amber-500 text-amber-500" />
+                      Premium Feature
+                    </div>
+                    <h4 className="mt-1 text-sm font-bold text-neutral-900">
+                      {user ? "Unlock Contact Information" : "Sign in to view details"}
+                    </h4>
+                    <p className="mt-1 text-[11px] leading-relaxed text-neutral-500 px-2">
+                      Gain instant access to verified direct emails, phone numbers, and hidden internal network tags.
+                    </p>
+                    <div className="mt-4">
+                      {!user ? (
+                        <a
+                          href={loginHref}
+                          className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-neutral-950 h-10 text-xs font-semibold text-white shadow-sm hover:bg-neutral-800 transition-colors"
+                        >
+                          Login to Unlock
+                          <ArrowRight className="h-3 w-3" />
+                        </a>
+                      ) : (
+                        <a
+                          href={membershipHref}
+                          className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-amber-500 h-10 text-xs font-bold text-neutral-950 shadow-sm hover:bg-amber-400 transition-colors tracking-wide"
+                        >
+                          Upgrade Tier Now
+                          <ArrowRight className="h-3 w-3" />
+                        </a>
+                      )}
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+
             </div>
           </div>
         </div>
