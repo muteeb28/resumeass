@@ -125,7 +125,7 @@ export default function BecomeReferrerPage() {
 
     try {
       setSubmitting(true);
-      await axiosInstance.post("/referrers", {
+      await axiosInstance.post("/referrals/add-referrer", {
         companyEmail: formData.companyEmail,
         company: formData.company,
         designation: formData.designation,
