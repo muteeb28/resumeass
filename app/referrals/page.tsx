@@ -23,6 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useUserStore } from "../../src/stores/useUserStore";
 import { useRouter } from "next/navigation";
+import { Calendar } from "@/components/ui/calendar";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -842,7 +843,21 @@ export default function ReferralsPage() {
                 {contactModalData.name}
               </h3>
 
-              <div className={`mt-6 space-y-4 text-left border-t border-neutral-100 pt-4 transition-all duration-300 ${!hasAccess && !loading ? 'blur-sm select-none opacity-40 pointer-events-none' : ''}`}>
+              {/* --- Added Book Appointment Header Feature --- */}
+              <div className="mt-3 mb-12 flex items-center justify-center gap-2 px-4 py-1.5 bg-neutral-50 border border-neutral-100 rounded-full w-fit mx-auto">
+                <span className="text-xs font-semibold text-neutral-600">Book Appointment</span>
+                <span className="text-[9px] font-bold uppercase tracking-wider bg-neutral-900 text-white px-2 py-0.5 rounded-full scale-90">
+                  Coming Soon
+                </span>
+              </div>
+
+              {/* --- Blurred Contact Details Container --- */}
+              <div
+                className={`mt-6 space-y-4 text-left border-t border-neutral-100 pt-4 transition-all duration-500 ${!hasAccess && !loading
+                    ? 'blur-md select-none opacity-40 pointer-events-none'
+                    : ''
+                  }`}
+              >
                 <div>
                   <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
                     Email
@@ -884,8 +899,9 @@ export default function ReferralsPage() {
                 </Button>
               </div>
 
+              {/* --- Premium Paywall Overlay --- */}
               {!hasAccess && !loading && (
-                <div className="absolute inset-x-0 bottom-0 top-16 z-30 flex flex-col items-center justify-end bg-gradient-to-t from-white via-white/80 to-transparent pt-12">
+                <div className="absolute inset-x-0 bottom-0 top-24 z-30 flex flex-col items-center justify-end bg-gradient-to-t from-white via-white/95 to-transparent pt-12">
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
