@@ -66,62 +66,7 @@ const TESTIMONIALS = [
 ];
 
 
-const STATIC_PROFILES = [
-  {
-    name: "Swaroop Mishra",
-    designation: "Research Scientist",
-    company: "Google DeepMind",
-    about: "Researching advanced AI models and deep learning agents at DeepMind.",
-    email: "",
-    phone: "",
-    imageFile: "Swaroop Mishra.jpg",
-  },
-  {
-    name: "Saksham Arora",
-    designation: "SDE 2",
-    company: "Intuit",
-    about: "Building scalable financial software systems and fintech platform architectures.",
-    email: "",
-    phone: "",
-    imageFile: "Saksham Arora.jpg",
-  },
-  {
-    name: "Aditya Bendapudi",
-    designation: "Lead - Data",
-    company: "Aftershoot",
-    about: "Leading data engineering initiatives and intelligent pipeline optimization.",
-    email: "",
-    phone: "",
-    imageFile: "Aditya Bendapudi.jpg",
-  },
-  {
-    name: "Harshit Dwivedi",
-    designation: "Founder and CEO",
-    company: "Aftershoot",
-    about: "Driving AI innovation in photography and developer tooling workflows.",
-    email: "harshit@aftershoot.com",
-    phone: "",
-    imageFile: "Harshit Dwivedi.jpg",
-  },
-  {
-    name: "Subhash Gowani",
-    designation: "Workflow Scientist",
-    company: "RisaLabs",
-    about: "Designing intelligent automation and process optimization workflows.",
-    email: "subhash@risalabs.ai",
-    phone: "",
-    imageFile: "Subhash Gowani.png",
-  },
-  {
-    name: "Ranu Mishra",
-    designation: "Strategic Partnerships Manager",
-    company: "Saras AI",
-    about: "Managing strategic collaborations and industry integration for AI edtech.",
-    email: "ranu.m@sarasai.org",
-    phone: "",
-    imageFile: "Ranu Mishra.jpg",
-  },
-];
+
 
 const initialForm = {
   fullName: "",
@@ -150,17 +95,6 @@ function getAvatarPalette(name: string) {
   return AVATAR_PALETTES[hash % AVATAR_PALETTES.length];
 }
 
-
-function matchesSearchQuery(profile: { name: string; designation: string; company: string; about: string }, query: string): boolean {
-  if (!query) return true;
-  const q = query.toLowerCase();
-  return (
-    profile.name.toLowerCase().includes(q) ||
-    profile.designation.toLowerCase().includes(q) ||
-    profile.company.toLowerCase().includes(q) ||
-    profile.about.toLowerCase().includes(q)
-  );
-}
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -241,32 +175,24 @@ export default function ReferralsPage() {
 
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
-  const handleContactClick = (profile: any, isStatic: boolean) => {
-    if (isStatic) {
+  const handleContactClick = (profile: any) => {
+    const revealState = revealed[profile._id];
+    if (revealState && typeof revealState === "object") {
       setContactModalData({
-        name: profile.name,
-        email: profile.email || undefined,
-        phone: profile.phone || undefined,
+        name: profile.name || revealState.name || "Referrer",
+        email: revealState.email,
+        phone: revealState.phone ?? undefined,
       });
     } else {
-      const revealState = revealed[profile._id];
-      if (revealState && typeof revealState === "object") {
-        setContactModalData({
-          name: profile.name || revealState.name || "Referrer",
-          email: revealState.email,
-          phone: revealState.phone ?? undefined,
-        });
-      } else {
-        revealContact(profile._id);
-      }
+      revealContact(profile._id);
     }
   };
 
-  const fetchReferrers = useCallback(async (search: string) => {
+  const fetchReferrers = useCallback(async (search: string, page = 1) => {
     setReferrerLoading(true);
     try {
       const res = await axiosInstance.get("/referrers", {
-        params: { search: search.trim(), limit: 12 },
+        params: { search: search.trim(), limit: 12, page, fetchFromFile: true },
       });
       setReferrers(res.data?.data?.referrers || []);
     } catch {
@@ -287,6 +213,7 @@ export default function ReferralsPage() {
 
   const handleSearch = () => {
     setReferrerQuery(searchInput);
+    setCurrentPage(1);
   };
 
   const revealContact = async (id: string) => {
@@ -333,14 +260,13 @@ export default function ReferralsPage() {
     }
   };
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 12;
+
   const hasActiveFilters = Boolean(referrerQuery);
-  const taggedStatic = STATIC_PROFILES.map((p) => ({ ...p, _isStatic: true as const }));
-  const filteredStatic = taggedStatic.filter((p) => matchesSearchQuery(p, referrerQuery));
-  const staticNames = new Set(STATIC_PROFILES.map((p) => p.name.toLowerCase()));
-  const deduplicatedApiReferrers = referrers.filter(
-    (r) => !staticNames.has((r.name || "").toLowerCase())
-  );
-  const displayList = [...filteredStatic, ...deduplicatedApiReferrers];
+  const displayList = referrers;
+  const totalPages = Math.ceil(displayList.length / PAGE_SIZE);
+  const paginatedList = displayList.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   return (
     <BackgroundRippleLayout tone="light" contentClassName="pt-6 sm:pt-8">
@@ -451,6 +377,7 @@ export default function ReferralsPage() {
                 onClick={() => {
                   setSearchInput("");
                   setReferrerQuery("");
+                  setCurrentPage(1);
                 }}
                 className="absolute right-[4.5rem] sm:right-[7.5rem] top-1/2 -translate-y-1/2 text-neutral-400 transition-colors hover:text-neutral-700"
                 aria-label="Clear search"
@@ -529,6 +456,7 @@ export default function ReferralsPage() {
                   onClick={() => {
                     setSearchInput("");
                     setReferrerQuery("");
+                    setCurrentPage(1);
                   }}
                   className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-neutral-700 hover:underline"
                   type="button"
@@ -540,23 +468,20 @@ export default function ReferralsPage() {
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {displayList.map((item: any, index: number) => {
-                const isStaticItem = Boolean(item._isStatic);
-                const itemId = isStaticItem ? `static-${item.name}` : item._id;
-                const name = isStaticItem ? item.name : (item.name || "Verified Referrer");
+              {paginatedList.map((item: any, index: number) => {
+                const itemId = item._id;
+                const name = item.name || "Verified Referrer";
                 const designation = item.designation;
                 const company = item.company;
-                const about = isStaticItem
-                  ? item.about
-                  : (item.description || `Professional willing to refer and guide candidates at ${company}.`);
+                const about = item.about || item.description || `Professional willing to refer and guide candidates at ${company}.`;
 
-                const imageFile = isStaticItem ? item.imageFile : null;
+                const imageFile = item.imageFile || null;
                 const hasImage = imageFile && !imageErrors[imageFile];
                 const imagePath = imageFile ? `/refer/${encodeURIComponent(imageFile)}` : "";
 
                 const palette = getAvatarPalette(company || "");
                 const initial = (name?.[0] || company?.[0] || "?").toUpperCase();
-                const revealState = isStaticItem ? null : revealed[item._id];
+                const revealState = revealed[item._id];
 
                 return (
                   <motion.div
@@ -607,55 +532,65 @@ export default function ReferralsPage() {
                     </div>
 
                     <div className="mt-auto w-full">
-                      {isStaticItem ? (
+                      {revealState === undefined && (
                         <button
-                          onClick={() => handleContactClick(item, true)}
+                          onClick={() => handleContactClick(item)}
                           className="h-9 w-full rounded-xl bg-neutral-900 text-xs font-semibold text-white transition-colors hover:bg-neutral-700 active:scale-[0.98]"
                         >
                           Contact
                         </button>
-                      ) : (
-                        <>
-                          {revealState === undefined && (
-                            <button
-                              onClick={() => handleContactClick(item, false)}
-                              className="h-9 w-full rounded-xl bg-neutral-900 text-xs font-semibold text-white transition-colors hover:bg-neutral-700 active:scale-[0.98]"
-                            >
-                              Contact
-                            </button>
-                          )}
-                          {revealState === "loading" && (
-                            <button
-                              disabled
-                              className="h-9 w-full rounded-xl bg-neutral-400 text-xs font-semibold text-white cursor-not-allowed"
-                            >
-                              Revealing...
-                            </button>
-                          )}
-                          {revealState === "error" && (
-                            <button
-                              onClick={() => handleContactClick(item, false)}
-                              className="h-9 w-full rounded-xl border border-rose-200 bg-rose-50 text-xs font-semibold text-rose-600 hover:bg-rose-100"
-                            >
-                              Failed — Retry
-                            </button>
-                          )}
-                          {revealState &&
-                            revealState !== "loading" &&
-                            revealState !== "error" && (
-                              <button
-                                onClick={() => handleContactClick(item, false)}
-                                className="h-9 w-full rounded-xl border border-neutral-200 bg-neutral-50 text-xs font-semibold text-neutral-700 hover:bg-neutral-100"
-                              >
-                                Contact
-                              </button>
-                            )}
-                        </>
                       )}
+                      {revealState === "loading" && (
+                        <button
+                          disabled
+                          className="h-9 w-full rounded-xl bg-neutral-400 text-xs font-semibold text-white cursor-not-allowed"
+                        >
+                          Revealing...
+                        </button>
+                      )}
+                      {revealState === "error" && (
+                        <button
+                          onClick={() => handleContactClick(item)}
+                          className="h-9 w-full rounded-xl border border-rose-200 bg-rose-50 text-xs font-semibold text-rose-600 hover:bg-rose-100"
+                        >
+                          Failed — Retry
+                        </button>
+                      )}
+                      {revealState &&
+                        revealState !== "loading" &&
+                        revealState !== "error" && (
+                          <button
+                            onClick={() => handleContactClick(item)}
+                          >
+                            Contact
+                          </button>
+                        )}
                     </div>
                   </motion.div>
                 );
               })}
+            </div>
+          )}
+
+          {totalPages > 1 && !referrerLoading && displayList.length > 0 && (
+            <div className="mt-8 flex items-center justify-center gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="h-9 rounded-xl border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              <span className="text-sm text-neutral-500">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="h-9 rounded-xl border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
             </div>
           )}
         </div>
