@@ -21,10 +21,8 @@ interface BlogPostMeta {
   _id: string;
   title: string;
   slug: string;
-  summary?: string;
-  description: string;
+  excerpt?: string;
   image?: BlogImage;
-  isPublished: boolean;
   author: BlogAuthor;
   category: string;
   tags: string[];
@@ -33,13 +31,19 @@ interface BlogPostMeta {
   readTime: string;
   views: number;
   likes: number;
-  premium: boolean;
+  premium?: boolean;
 }
 
 interface ApiResponse {
   success: boolean;
-  data: BlogPostMeta[];
-  hasMore: boolean;
+  data: {
+    posts: BlogPostMeta[];
+    pagination: {
+      current: number;
+      pages: number;
+      total: number;
+    };
+  };
   error?: string;
 }
 
@@ -71,18 +75,20 @@ export default function BlogFeed() {
     setLoading(true);
 
     try {
-      const res = await axiosInstance.get<ApiResponse>("/blog/feed", {
+      const res = await axiosInstance.get<ApiResponse>("/blog/posts", {
         params: { page: pageToLoad },
       });
 
       const result = res.data;
 
       if (result.success) {
+        const { posts, pagination } = result.data;
         setBlogs((prev) =>
-          pageToLoad === 1 ? result.data : [...prev, ...result.data]
+          pageToLoad === 1 ? posts : [...prev, ...posts]
         );
-        setHasMore(result.hasMore);
-        hasMoreRef.current = result.hasMore;
+        const more = pagination.current < pagination.pages;
+        setHasMore(more);
+        hasMoreRef.current = more;
         nextPageRef.current = pageToLoad + 1;
       }
     } catch (error) {
@@ -175,7 +181,7 @@ export default function BlogFeed() {
                       {blog.title}
                     </h2>
                     <p className="text-gray-500 text-sm mt-1 line-clamp-2 md:line-clamp-3 leading-relaxed">
-                      {blog.summary || blog.description}
+                      {blog.excerpt}
                     </p>
                   </div>
 
@@ -215,6 +221,11 @@ export default function BlogFeed() {
           </article>
         ))}
       </div>
+
+      {/* Empty state */}
+      {!loading && blogs.length === 0 && (
+        <p className="text-sm text-center text-gray-400 py-16 italic">No posts yet.</p>
+      )}
 
       {/* Trigger element for Infinite Scroll */}
       <div ref={loaderRef} className="w-full flex justify-center py-10 mt-4">
