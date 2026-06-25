@@ -183,7 +183,7 @@ export default function BecomeReferrerPage() {
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
                 <Button
                   asChild
-                  className="rounded-xl bg-[#4353CF] px-6 text-white hover:bg-[#3645b5]"
+                  variant="primary" className="rounded-xl px-6"
                 >
                   <Link href="/referrals">Back to referrals hub</Link>
                 </Button>
@@ -293,7 +293,7 @@ export default function BecomeReferrerPage() {
                   <Button
                     type="submit"
                     disabled={submitting || formData.skills.length === 0}
-                    className="rounded-xl bg-[#4353CF] px-6 text-white hover:bg-[#3645b5] disabled:opacity-50"
+                    variant="primary" className="rounded-xl px-6 disabled:opacity-50"
                   >
                     {submitting ? "Saving..." : "Become a referrer"}
                   </Button>

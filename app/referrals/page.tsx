@@ -297,8 +297,9 @@ export default function ReferralsPage() {
 
             <div className="flex flex-wrap justify-center gap-3 pt-2">
               <Button
+                variant="primary"
                 onClick={() => setIsModalOpen(true)}
-                className="h-11 rounded-xl bg-neutral-900 px-6 text-white shadow-sm hover:bg-neutral-700 active:scale-[0.98]"
+                className="h-11 rounded-xl px-6"
               >
                 Ask for referral
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -387,7 +388,7 @@ export default function ReferralsPage() {
             )}
             <button
               onClick={handleSearch}
-              className="absolute right-2 top-1/2 -translate-y-1/2 h-10 rounded-xl bg-neutral-900 px-3 sm:px-5 text-sm font-semibold text-white transition hover:bg-neutral-700 active:scale-[0.98]"
+              className="absolute right-2 top-1/2 -translate-y-1/2 h-10 rounded-xl bg-amber-500 px-3 sm:px-5 text-sm font-semibold text-slate-950 transition-colors hover:bg-amber-400 active:scale-[0.98]"
             >
               Search
             </button>
@@ -410,7 +411,8 @@ export default function ReferralsPage() {
             </div>
             <Button
               asChild
-              className="h-10 flex-shrink-0 rounded-xl bg-neutral-900 px-5 text-sm text-white hover:bg-neutral-700"
+              variant="primary"
+              className="h-10 flex-shrink-0 rounded-xl px-5 text-sm"
             >
               <Link href="/referrals/become-referrer">
                 + Become a Referrer
@@ -535,7 +537,7 @@ export default function ReferralsPage() {
                       {revealState === undefined && (
                         <button
                           onClick={() => handleContactClick(item)}
-                          className="h-9 w-full rounded-xl bg-neutral-900 text-xs font-semibold text-white transition-colors hover:bg-neutral-700 active:scale-[0.98]"
+                          className="h-9 w-full rounded-xl bg-amber-500 text-xs font-semibold text-slate-950 transition-colors hover:bg-amber-400 active:scale-[0.98]"
                         >
                           Contact
                         </button>
@@ -561,6 +563,7 @@ export default function ReferralsPage() {
                         revealState !== "error" && (
                           <button
                             onClick={() => handleContactClick(item)}
+                            className="h-9 w-full rounded-xl bg-amber-500 text-xs font-semibold text-slate-950 transition-colors hover:bg-amber-400 active:scale-[0.98]"
                           >
                             Contact
                           </button>
