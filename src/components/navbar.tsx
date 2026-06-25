@@ -448,7 +448,7 @@ export const Navbar = ({
                     {!user && (
                       <Button
                         size="sm"
-                        className={cn("w-full", isLight ? "bg-slate-900 text-white hover:bg-slate-800" : "")}
+                        className="w-full rounded-lg bg-amber-500 text-slate-950 hover:bg-amber-400"
                         onClick={() =>
                           window.location.href = `${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/login?next=${encodeURIComponent(window.location.origin)}`
                         }

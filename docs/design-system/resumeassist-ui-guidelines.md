@@ -131,9 +131,11 @@ Use `border-neutral-200` or `border` (shadcn) interchangeably for card/input bor
 
 | Token | CSS Variable | Hex | Usage |
 |---|---|---|---|
-| shadcn primary | `--primary` | `#18181b` | shadcn Button default, toggles |
-| App accent / CTA | `--app-accent` | `#111111` | Near-black CTAs, filled primary buttons |
-| Primary foreground | `--primary-foreground` | `#fafafa` | Text on primary/accent backgrounds |
+| App primary CTA | — | `#f59e0b` (`bg-amber-500`) | Primary action buttons — `variant="primary"` |
+| Primary CTA hover | — | `#fbbf24` (`bg-amber-400`) | Hover state on primary buttons |
+| Primary CTA text | — | `#020617` (`text-slate-950`) | Text on amber CTA backgrounds |
+| shadcn primary | `--primary` | `#18181b` | shadcn `variant="default"`, toggles only |
+| Primary foreground | `--primary-foreground` | `#fafafa` | Text on `variant="default"` backgrounds |
 
 #### Accent (Jobs Teal — use sparingly)
 
@@ -177,7 +179,7 @@ Two button systems are in use. Choose based on context.
 ### Which to use
 
 - **`src/components/button.tsx`** — custom button, designed for use on dark/colored backgrounds (hero, navbar). Variants: `default` (white), `outline`, `ghost`, `secondary`.
-- **`src/components/ui/button.tsx`** — shadcn button, for use on white/neutral page backgrounds. Variants: `default` (near-black), `outline`, `secondary`, `ghost`, `destructive`.
+- **`src/components/ui/button.tsx`** — shadcn button, for use on white/neutral page backgrounds. Variants: `primary` (amber), `default` (near-black, toggles only), `outline`, `secondary`, `ghost`, `destructive`.
 
 ### Rules
 
@@ -194,21 +196,21 @@ Two button systems are in use. Choose based on context.
 | Large (hero CTA) | `h-12` (48px) | `px-6` | `text-base` | `rounded-lg` |
 | XL (custom component lg) | `h-14` (56px) | `px-8` | `text-lg` | `rounded-xl` |
 
-### Primary CTA Pattern (landing page)
+### Primary CTA Pattern
+
+ResumeAssist primary CTAs use amber (`bg-amber-500 / #f59e0b`) via `variant="primary"` on `src/components/ui/button.tsx`. Near-black (`bg-neutral-900`) is no longer the default primary CTA color.
 
 ```tsx
-// Near-black primary — use on white/neutral backgrounds
-<Button className="bg-neutral-900 text-white hover:bg-jobs-teal rounded-lg h-11 px-6 font-semibold">
+// Amber primary — use for all primary CTA actions on white/neutral backgrounds
+<Button variant="primary" className="rounded-xl h-11 px-6">
   Get Started
 </Button>
 
 // Outline secondary
-<Button variant="outline" className="border-neutral-300 text-neutral-700 hover:bg-neutral-50 rounded-lg h-11 px-6 font-semibold">
+<Button variant="outline" className="border-neutral-200 text-neutral-700 hover:bg-neutral-50 rounded-xl h-11 px-6 font-semibold">
   Learn More
 </Button>
 ```
-
-For pages that intentionally feature the jobs teal (e.g. pricing "Most Popular" badge, jobs feature area), the hover CTA colour `hover:bg-jobs-teal` is acceptable.
 
 ---
 
@@ -418,7 +420,7 @@ The Referrals page (`/referrals`, `/referrals/become-referrer`, `/referrals/list
 
 ### Buttons
 
-- "Contact" / "Connect" buttons: use `bg-neutral-900 text-white hover:bg-neutral-700 rounded-lg font-semibold` — **not indigo, not purple, not violet**.
+- "Contact" / "Connect" / primary action buttons: use `variant="primary"` from `src/components/ui/button.tsx` with `className="rounded-xl"`. Do **not** use indigo, purple, violet, or near-black (`bg-neutral-900`) for primary actions.
 - Secondary actions: `border border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50 rounded-lg`.
 
 ### Known Inconsistency to Address
@@ -450,6 +452,48 @@ Before starting any UI work on a non-auth page:
 - [ ] If you make an unavoidable design inconsistency (e.g. a third-party embed that cannot be restyled), document it explicitly in your final report with the reason.
 - [ ] Do not modify `src/index.css` or `tailwind.config.*` to add new colour scales without approval.
 - [ ] After finishing, verify the page uses consistent spacing (no random `p-3` cards next to `p-7` cards on the same level).
+
+---
+
+## 13. Premium Unlock CTA
+
+Used for gated-feature unlock actions where a logged-in user needs an active membership to access content.
+
+**Current usage:** `src/components/hr-emails-table.tsx` — the "Unlock List" button shown in the paywall overlay on `/hr-emails` and `/dubai-hr`.
+
+Do not refactor `hr-emails-table.tsx` or extract a shared component yet — document here first, reuse later.
+
+### Token values
+
+| Property | Tailwind class | Hex |
+|---|---|---|
+| Background | `bg-amber-500` | `#f59e0b` |
+| Hover background | `hover:bg-amber-400` | `#fbbf24` |
+| Text | `text-slate-950` | `#020617` |
+| Border radius | `rounded-lg` | `8px` |
+| Shadow | `shadow-sm` | `0 1px 2px 0 rgb(0 0 0 / 0.05)` |
+
+### Reference implementation
+
+```tsx
+<a
+  href={membershipHref}
+  className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap
+             rounded-lg bg-amber-500 px-3.5 py-2 text-xs font-semibold
+             text-slate-950 shadow-sm hover:bg-amber-400 transition-colors"
+>
+  Unlock List
+  <ArrowRight className="h-3 w-3" />
+</a>
+```
+
+### Notes
+
+- This amber-on-near-black pairing is intentionally distinct from the primary `bg-neutral-900` CTA — it signals a **premium/monetisation action**, not a standard navigation action.
+- `text-slate-950` (`#020617`) provides WCAG AA contrast against `#f59e0b`.
+- `amber-500` is **not** remapped by the project's `@theme` block (only `teal-*`, `green-*`, `purple-*` are remapped). It resolves to the standard Tailwind value.
+- When this pattern is extracted into a shared component, name it `UnlockCta` or `PremiumCta` and accept `href` + `label` props.
+- The `variant="primary"` in `src/components/ui/button.tsx` uses the same amber fill. The distinction is semantic: `variant="primary"` is for all primary actions; the `UnlockCta` reference implementation is the specific membership paywall CTA shape (pill, `shadow-lg shadow-amber-500/20`, `hover:-translate-y-0.5`).
 
 ---
 
