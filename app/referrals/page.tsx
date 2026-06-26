@@ -148,15 +148,15 @@ export default function ReferralsPage() {
   const [referrerLoading, setReferrerLoading] = useState(false);
   const [revealed, setRevealed] = useState<Record<string, RevealState>>({});
 
-  const { user } = useUserStore();
+  const { user, membership } = useUserStore();
   const router = useRouter();
 
-  // Assuming hasAccess and loading come from your subscription check logic/context
-  // Replace these with your actual state/hook values if necessary
-  const hasAccess = false; 
+  const hasFullAccess = membership?.status === "active" &&
+    (membership?.tier === "premium" || membership?.tier === "ultra");
+  const hasAccess = hasFullAccess;
   const loading = false;
   const loginHref = `${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/login`;
-  const membershipHref = "/pricing"; 
+  const membershipHref = "/pricing";
 
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
 
@@ -192,7 +192,7 @@ export default function ReferralsPage() {
     setReferrerLoading(true);
     try {
       const res = await axiosInstance.get("/referrers", {
-        params: { search: search.trim(), limit: 12, page, fetchFromFile: true },
+        params: { search: search.trim(), limit: hasFullAccess ? 12 : 6, page, fetchFromFile: true },
       });
       setReferrers(res.data?.data?.referrers || []);
     } catch {
@@ -200,7 +200,7 @@ export default function ReferralsPage() {
     } finally {
       setReferrerLoading(false);
     }
-  }, []);
+  }, [hasFullAccess]);
 
   useEffect(() => {
     if (!user) return;
@@ -364,16 +364,21 @@ export default function ReferralsPage() {
 
           {/* Search bar */}
           <div className="relative w-full">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-400" />
+            <Search className={`pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 ${hasFullAccess ? "text-neutral-400" : "text-neutral-300"}`} />
             <input
               type="text"
               value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              placeholder="Skills/Designation/Company"
-              className="h-14 w-full rounded-2xl border border-[#e6e6e3] bg-white pl-10 pr-24 sm:pl-12 sm:pr-36 text-sm text-neutral-900 placeholder:text-neutral-400 transition-colors focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
+              onChange={(e) => hasFullAccess && setSearchInput(e.target.value)}
+              onKeyDown={(e) => hasFullAccess && e.key === "Enter" && handleSearch()}
+              placeholder={hasFullAccess ? "Skills/Designation/Company" : "Search requires Premium or Ultra membership"}
+              disabled={!hasFullAccess}
+              className={`h-14 w-full rounded-2xl border border-[#e6e6e3] bg-white pl-10 pr-24 sm:pl-12 sm:pr-36 text-sm placeholder:text-neutral-400 transition-colors focus:outline-none ${
+                hasFullAccess
+                  ? "text-neutral-900 focus:border-neutral-400 focus:ring-2 focus:ring-neutral-900/10"
+                  : "text-neutral-300 cursor-not-allowed bg-neutral-50 select-none"
+              }`}
             />
-            {searchInput && (
+            {searchInput && hasFullAccess && (
               <button
                 onClick={() => {
                   setSearchInput("");
@@ -386,12 +391,19 @@ export default function ReferralsPage() {
                 <X className="h-4 w-4" />
               </button>
             )}
-            <button
-              onClick={handleSearch}
-              className="absolute right-2 top-1/2 -translate-y-1/2 h-10 rounded-xl bg-amber-500 px-3 sm:px-5 text-sm font-semibold text-slate-950 transition-colors hover:bg-amber-400 active:scale-[0.98]"
-            >
-              Search
-            </button>
+            {!hasFullAccess && (
+              <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                <Lock className="h-4 w-4 text-neutral-300" />
+              </div>
+            )}
+            {hasFullAccess && (
+              <button
+                onClick={handleSearch}
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-10 rounded-xl bg-amber-500 px-3 sm:px-5 text-sm font-semibold text-slate-950 transition-colors hover:bg-amber-400 active:scale-[0.98]"
+              >
+                Search
+              </button>
+            )}
           </div>
 
           {/* Banner */}
@@ -423,18 +435,38 @@ export default function ReferralsPage() {
 
         {/* ── RESULTS AREA ──────────────────────────────────────────────── */}
         <div>
-          {!user && (
-            <div className="mb-6 rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-center">
-              <p className="text-sm font-medium text-neutral-900">
-                You are viewing featured referrers.{" "}
-                <Link
-                  href={`${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/login?next=${typeof window !== "undefined" ? encodeURIComponent(window.location.href) : ""}`}
-                  className="font-semibold text-neutral-900 hover:underline"
+          {!hasFullAccess && (
+            <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-amber-100">
+                  <Lock className="h-3.5 w-3.5 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-amber-900">
+                    {!user ? "Sign in to unlock the full referrer directory" : "Upgrade to Premium or Ultra to unlock the full directory"}
+                  </p>
+                  <p className="text-xs text-amber-700 mt-0.5">
+                    {!user
+                      ? "You're viewing 6 featured profiles. Log in and upgrade to search and browse all referrers."
+                      : "You're viewing 6 profiles. Premium & Ultra members get full search access and the complete referrer list."}
+                  </p>
+                </div>
+              </div>
+              {!user ? (
+                <a
+                  href={loginHref}
+                  className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-xl bg-amber-500 px-4 h-9 text-xs font-bold text-neutral-950 hover:bg-amber-400 transition-colors"
                 >
-                  Log in
-                </Link>{" "}
-                to search and unlock the full directory.
-              </p>
+                  Log in <ArrowRight className="h-3 w-3" />
+                </a>
+              ) : (
+                <Link
+                  href={membershipHref}
+                  className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-xl bg-amber-500 px-4 h-9 text-xs font-bold text-neutral-950 hover:bg-amber-400 transition-colors"
+                >
+                  Upgrade now <ArrowRight className="h-3 w-3" />
+                </Link>
+              )}
             </div>
           )}
 
@@ -575,7 +607,7 @@ export default function ReferralsPage() {
             </div>
           )}
 
-          {totalPages > 1 && !referrerLoading && displayList.length > 0 && (
+          {totalPages > 1 && !referrerLoading && displayList.length > 0 && hasFullAccess && (
             <div className="mt-8 flex items-center justify-center gap-2">
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
