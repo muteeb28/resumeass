@@ -191,7 +191,8 @@ export default function ReferralsPage() {
   const fetchReferrers = useCallback(async (search: string, page = 1) => {
     setReferrerLoading(true);
     try {
-      const res = await axiosInstance.get("/referrers", {
+      let url = user ? '/referrers' : '/referrers/demo';
+      const res = await axiosInstance.get(url, {
         params: { search: search.trim(), limit: hasFullAccess ? 12 : 6, page, fetchFromFile: true },
       });
       setReferrers(res.data?.data?.referrers || []);
@@ -203,7 +204,6 @@ export default function ReferralsPage() {
   }, [hasFullAccess]);
 
   useEffect(() => {
-    if (!user) return;
     const timer = setTimeout(
       () => fetchReferrers(referrerQuery),
       referrerQuery ? 300 : 0
