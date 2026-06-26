@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ChevronDown, Briefcase, ClipboardList, Mail, Building2, Globe, Plane } from "lucide-react";
+import { ChevronDown, Briefcase, ClipboardList, Mail, Building2, Globe, Plane, BookOpen, GraduationCap } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Button } from "./button";
 import AuthModal from "./auth-modal";
@@ -18,6 +18,11 @@ const JOB_LINKS = [
   { name: "AU & NZ", href: "/au-nz", description: "Australia and New Zealand roles.", icon: Plane },
 ];
 
+const LEARN_LINKS = [
+  { name: "Courses", href: "https://jobflix.in/courses", description: "Video courses and learning paths.", icon: GraduationCap, external: true },
+  { name: "Interview Questions", href: "/interview-questions", description: "Practice company-wise interview questions.", icon: BookOpen, external: false },
+];
+
 export const Navbar = ({
   className,
   tone = "dark",
@@ -31,6 +36,7 @@ export const Navbar = ({
   const isLight = tone === "light";
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [jobsOpen, setJobsOpen] = useState(false);
+  const [learnOpen, setLearnOpen] = useState(false);
 
   const router = useRouter();
 
@@ -166,19 +172,89 @@ export const Navbar = ({
               </div>
             </motion.div>
 
-            {/* Learn */}
-            <motion.a
+            {/* Learn dropdown */}
+            <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.5 }}
-              href="https://jobflix.in/courses"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={linkCls}
+              className="relative group"
             >
-              Learn
-              <span className={underline} />
-            </motion.a>
+              <button
+                className={cn(
+                  "flex items-center gap-1 transition-colors duration-200 text-sm font-medium",
+                  isLight ? "text-slate-600 hover:text-slate-900" : "text-slate-300 hover:text-white"
+                )}
+              >
+                Learn
+                <ChevronDown
+                  size={13}
+                  className="opacity-70 group-hover:rotate-180 transition-transform duration-200"
+                />
+              </button>
+              <div className="absolute top-full left-0 w-[280px] pt-3 opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200 z-50">
+                <div
+                  className={cn(
+                    "rounded-xl border p-3 grid grid-cols-1 gap-1",
+                    isLight
+                      ? "bg-white border-slate-200 shadow-xl shadow-slate-200/60"
+                      : "bg-slate-900 border-slate-700/80 shadow-xl shadow-black/30"
+                  )}
+                >
+                  {LEARN_LINKS.map((link) => {
+                    const Icon = link.icon;
+                    const inner = (
+                      <>
+                        <div
+                          className={cn(
+                            "flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center mt-0.5",
+                            isLight ? "bg-neutral-100 text-neutral-600" : "bg-neutral-500/10 text-neutral-400"
+                          )}
+                        >
+                          <Icon size={15} />
+                        </div>
+                        <div className="min-w-0">
+                          <div
+                            className={cn(
+                              "text-sm font-semibold leading-tight",
+                              isLight ? "text-neutral-900" : "text-neutral-100"
+                            )}
+                          >
+                            {link.name}
+                          </div>
+                          <div
+                            className={cn(
+                              "text-xs mt-0.5 leading-snug",
+                              isLight ? "text-slate-500" : "text-slate-400"
+                            )}
+                          >
+                            {link.description}
+                          </div>
+                        </div>
+                      </>
+                    );
+                    const itemCls = cn(
+                      "flex items-start gap-3 px-3 py-3 rounded-lg transition-colors duration-150",
+                      isLight ? "hover:bg-slate-50" : "hover:bg-slate-800/60"
+                    );
+                    return link.external ? (
+                      <a
+                        key={link.name}
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={itemCls}
+                      >
+                        {inner}
+                      </a>
+                    ) : (
+                      <Link key={link.name} href={link.href} className={itemCls}>
+                        {inner}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            </motion.div>
 
             {/* Pricing */}
             <motion.a
@@ -419,16 +495,67 @@ export const Navbar = ({
                   )}
                 </div>
 
-                {/* Learn */}
-                <a
-                  href="https://jobflix.in/courses"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={mobileLinkCls}
-                  onClick={() => setIsOpen(false)}
-                >
-                  Learn
-                </a>
+                {/* Learn section — expandable */}
+                <div>
+                  <button
+                    onClick={() => setLearnOpen(!learnOpen)}
+                    className={cn(
+                      "w-full flex items-center justify-between px-3 py-2 rounded-md transition-all duration-200 text-sm font-medium",
+                      isLight
+                        ? "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
+                        : "text-slate-300 hover:text-white hover:bg-slate-800/50"
+                    )}
+                  >
+                    <span>Learn</span>
+                    <ChevronDown
+                      size={14}
+                      className={cn("transition-transform duration-200", learnOpen && "rotate-180")}
+                    />
+                  </button>
+                  {learnOpen && (
+                    <div className="mt-1 ml-3 space-y-1">
+                      {LEARN_LINKS.map((link) =>
+                        link.external ? (
+                          <a
+                            key={link.name}
+                            href={link.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={cn(
+                              "block px-3 py-2 rounded-md transition-all duration-200 text-sm font-medium",
+                              isLight
+                                ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                                : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                            )}
+                            onClick={() => { setIsOpen(false); setLearnOpen(false); }}
+                          >
+                            <span className="block">{link.name}</span>
+                            <span className={cn("block text-xs font-normal mt-0.5", isLight ? "text-slate-400" : "text-slate-500")}>
+                              {link.description}
+                            </span>
+                          </a>
+                        ) : (
+                          <Link
+                            key={link.name}
+                            href={link.href}
+                            className={cn(
+                              "block px-3 py-2 rounded-md transition-all duration-200 text-sm font-medium",
+                              isLight
+                                ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                                : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                            )}
+                            onClick={() => { setIsOpen(false); setLearnOpen(false); }}
+                          >
+                            <span className="block">{link.name}</span>
+                            <span className={cn("block text-xs font-normal mt-0.5", isLight ? "text-slate-400" : "text-slate-500")}>
+                              {link.description}
+                            </span>
+                          </Link>
+                        )
+                      )}
+                    </div>
+                  )}
+                </div>
 
                 {/* Pricing */}
                 <a href="/pricing" className={mobileLinkCls} onClick={() => setIsOpen(false)}>
