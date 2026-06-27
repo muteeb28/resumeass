@@ -279,7 +279,7 @@ export default function JobBoard() {
   const hasPremiumMembership = isActiveMember && membership?.tier === "premium";
   const hasUltraMembership = isActiveMember && membership?.tier === "ultra";
   const canSearch = hasUltraMembership;
-  const canFilter = isActiveMember;
+  const canFilter = true;
   const isPreviewLocked = access?.locked ?? !isActiveMember;
   const isGuest = !user;
   const jobflixViewBase = process.env.NEXT_PUBLIC_JOBFLIX_VIEW || "";
