@@ -8,6 +8,7 @@ import axios from "@/lib/axios";
 import { BackgroundRippleLayout } from "@/components/background-ripple-layout";
 import { Navbar } from "@/components/navbar";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -69,6 +70,7 @@ export default function InterviewQuestionsPage() {
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [modal, setModal] = useState<ModalState>(null);
+  const router = useRouter();
 
   // Debounce search parameters to avoid aggressive query spikes
   useEffect(() => {
@@ -251,6 +253,9 @@ export default function InterviewQuestionsPage() {
                         </button>
                         <button onClick={() => setModal({ type: "topics", company })} className="flex items-center gap-1 rounded-lg border border-neutral-200 px-3 py-2.5 text-xs font-semibold text-neutral-600 transition-colors hover:border-neutral-400 hover:bg-neutral-50">
                           <BookOpen size={12} /> Browse Topics
+                        </button>
+                         <button onClick={() => router.push(`/interview-questions/${company.id}`)} className="flex items-center gap-1 rounded-lg border border-neutral-200 px-3 py-2.5 text-xs font-semibold text-neutral-600 transition-colors hover:border-neutral-400 hover:bg-neutral-50">
+                          <BookOpen size={12} /> Go to Prepration
                         </button>
                       </div>
                     </div>
