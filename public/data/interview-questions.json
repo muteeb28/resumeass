@@ -1,0 +1,334 @@
+{
+  "version": 1,
+  "generatedAt": "2026-06-27T17:53:52.579320+00:00",
+  "companies": [
+    {
+      "id": "adobe",
+      "name": "Adobe",
+      "category": null,
+      "difficulty": null,
+      "topics": [
+        "dsa",
+        "lld",
+        "system-design"
+      ],
+      "questionCount": 19,
+      "source": {
+        "name": "Get SDE Ready",
+        "url": "https://getsdeready.com/interview/adobe/"
+      },
+      "lastUpdated": null
+    },
+    {
+      "id": "amazon-interview-questions-and-answers",
+      "name": "Amazon",
+      "category": null,
+      "difficulty": null,
+      "topics": [
+        "dsa",
+        "system-design"
+      ],
+      "questionCount": 97,
+      "source": {
+        "name": "Get SDE Ready",
+        "url": "https://getsdeready.com/interview/amazon-interview-questions-and-answers/"
+      },
+      "lastUpdated": null
+    },
+    {
+      "id": "atlassian",
+      "name": "Atlassian",
+      "category": null,
+      "difficulty": null,
+      "topics": [
+        "dsa",
+        "system-design"
+      ],
+      "questionCount": 124,
+      "source": {
+        "name": "Get SDE Ready",
+        "url": "https://getsdeready.com/interview/atlassian/"
+      },
+      "lastUpdated": null
+    },
+    {
+      "id": "databricks",
+      "name": "Databricks",
+      "category": null,
+      "difficulty": null,
+      "topics": [
+        "dsa",
+        "system-design",
+        "lld"
+      ],
+      "questionCount": 99,
+      "source": {
+        "name": "Get SDE Ready",
+        "url": "https://getsdeready.com/interview/databricks/"
+      },
+      "lastUpdated": null
+    },
+    {
+      "id": "expedia",
+      "name": "Expedia",
+      "category": null,
+      "difficulty": null,
+      "topics": [
+        "dsa",
+        "system-design",
+        "lld"
+      ],
+      "questionCount": 108,
+      "source": {
+        "name": "Get SDE Ready",
+        "url": "https://getsdeready.com/interview/expedia/"
+      },
+      "lastUpdated": null
+    },
+    {
+      "id": "flipkart-interview-questions-and-answers",
+      "name": "Flipkart",
+      "category": null,
+      "difficulty": null,
+      "topics": [
+        "dsa",
+        "system-design",
+        "lld"
+      ],
+      "questionCount": 92,
+      "source": {
+        "name": "Get SDE Ready",
+        "url": "https://getsdeready.com/interview/flipkart-interview-questions-and-answers/"
+      },
+      "lastUpdated": null
+    },
+    {
+      "id": "google",
+      "name": "Google",
+      "category": null,
+      "difficulty": null,
+      "topics": [
+        "dsa",
+        "system-design"
+      ],
+      "questionCount": 25,
+      "source": {
+        "name": "Get SDE Ready",
+        "url": "https://getsdeready.com/interview/google/"
+      },
+      "lastUpdated": null
+    },
+    {
+      "id": "intuit-interview-questions-and-answers",
+      "name": "Intuit",
+      "category": null,
+      "difficulty": null,
+      "topics": [
+        "dsa",
+        "system-design"
+      ],
+      "questionCount": 23,
+      "source": {
+        "name": "Get SDE Ready",
+        "url": "https://getsdeready.com/interview/intuit-interview-questions-and-answers/"
+      },
+      "lastUpdated": null
+    },
+    {
+      "id": "jiohotstar",
+      "name": "Jiohotstar",
+      "category": null,
+      "difficulty": null,
+      "topics": [
+        "dsa",
+        "system-design"
+      ],
+      "questionCount": 23,
+      "source": {
+        "name": "Get SDE Ready",
+        "url": "https://getsdeready.com/interview/jiohotstar/"
+      },
+      "lastUpdated": null
+    },
+    {
+      "id": "linkedin-questions",
+      "name": "Linkedin",
+      "category": null,
+      "difficulty": null,
+      "topics": [
+        "dsa",
+        "system-design"
+      ],
+      "questionCount": 174,
+      "source": {
+        "name": "Get SDE Ready",
+        "url": "https://getsdeready.com/interview/linkedin-questions/"
+      },
+      "lastUpdated": null
+    },
+    {
+      "id": "meta",
+      "name": "Meta",
+      "category": null,
+      "difficulty": null,
+      "topics": [
+        "dsa",
+        "system-design"
+      ],
+      "questionCount": 16,
+      "source": {
+        "name": "Get SDE Ready",
+        "url": "https://getsdeready.com/interview/meta/"
+      },
+      "lastUpdated": null
+    },
+    {
+      "id": "microsoft",
+      "name": "Microsoft",
+      "category": null,
+      "difficulty": null,
+      "topics": [
+        "dsa",
+        "lld",
+        "system-design"
+      ],
+      "questionCount": 18,
+      "source": {
+        "name": "Get SDE Ready",
+        "url": "https://getsdeready.com/interview/microsoft/"
+      },
+      "lastUpdated": null
+    },
+    {
+      "id": "phonepe",
+      "name": "Phonepe",
+      "category": null,
+      "difficulty": null,
+      "topics": [
+        "dsa",
+        "system-design"
+      ],
+      "questionCount": 21,
+      "source": {
+        "name": "Get SDE Ready",
+        "url": "https://getsdeready.com/interview/phonepe/"
+      },
+      "lastUpdated": null
+    },
+    {
+      "id": "rippling-interview-questions-and-answers",
+      "name": "Rippling",
+      "category": null,
+      "difficulty": null,
+      "topics": [
+        "dsa",
+        "system-design"
+      ],
+      "questionCount": 9,
+      "source": {
+        "name": "Get SDE Ready",
+        "url": "https://getsdeready.com/interview/rippling-interview-questions-and-answers/"
+      },
+      "lastUpdated": null
+    },
+    {
+      "id": "salesforce",
+      "name": "Salesforce",
+      "category": null,
+      "difficulty": null,
+      "topics": [
+        "dsa",
+        "lld",
+        "system-design"
+      ],
+      "questionCount": 20,
+      "source": {
+        "name": "Get SDE Ready",
+        "url": "https://getsdeready.com/interview/salesforce/"
+      },
+      "lastUpdated": null
+    },
+    {
+      "id": "stripe",
+      "name": "Stripe",
+      "category": null,
+      "difficulty": null,
+      "topics": [
+        "dsa",
+        "system-design"
+      ],
+      "questionCount": 13,
+      "source": {
+        "name": "Get SDE Ready",
+        "url": "https://getsdeready.com/interview/stripe/"
+      },
+      "lastUpdated": null
+    },
+    {
+      "id": "swiggy",
+      "name": "Swiggy",
+      "category": null,
+      "difficulty": null,
+      "topics": [
+        "dsa",
+        "system-design"
+      ],
+      "questionCount": 93,
+      "source": {
+        "name": "Get SDE Ready",
+        "url": "https://getsdeready.com/interview/swiggy/"
+      },
+      "lastUpdated": null
+    },
+    {
+      "id": "uber-interview-questions-and-answers",
+      "name": "Uber",
+      "category": null,
+      "difficulty": null,
+      "topics": [
+        "dsa",
+        "lld",
+        "system-design"
+      ],
+      "questionCount": 149,
+      "source": {
+        "name": "Get SDE Ready",
+        "url": "https://getsdeready.com/interview/uber-interview-questions-and-answers/"
+      },
+      "lastUpdated": null
+    },
+    {
+      "id": "wayfair",
+      "name": "Wayfair",
+      "category": null,
+      "difficulty": null,
+      "topics": [
+        "dsa",
+        "system-design",
+        "lld"
+      ],
+      "questionCount": 39,
+      "source": {
+        "name": "Get SDE Ready",
+        "url": "https://getsdeready.com/interview/wayfair/"
+      },
+      "lastUpdated": null
+    },
+    {
+      "id": "zoho",
+      "name": "Zoho",
+      "category": null,
+      "difficulty": null,
+      "topics": [
+        "dsa",
+        "system-design"
+      ],
+      "questionCount": 25,
+      "source": {
+        "name": "Get SDE Ready",
+        "url": "https://getsdeready.com/interview/zoho/"
+      },
+      "lastUpdated": null
+    }
+  ]
+}

@@ -1,3 +1,10 @@
+// TEMPORARY:
+// This page currently reads from public/data/interview-questions.json
+// as a compatibility layer until the Interview Questions backend API
+// is available.
+// Replace the static JSON import with backend API calls once the
+// backend integration is complete.
+
 "use client";
 
 import { useState, useMemo } from "react";
