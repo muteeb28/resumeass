@@ -1,0 +1,112 @@
+{
+  "generatedAt": "2026-06-27T17:53:52.605651+00:00",
+  "runtimeSeconds": 70.9,
+  "totalCompaniesDiscovered": 20,
+  "companiesScrapedOk": 20,
+  "companiesFailed": 0,
+  "companiesEmpty": 0,
+  "totalQuestions": 1187,
+  "failedCompanies": [],
+  "emptyCompanies": [],
+  "sampleCompanies": [
+    {
+      "company": "Adobe",
+      "slug": "adobe",
+      "questionCount": 19,
+      "sample3": [
+        {
+          "title": "Find the middle node of a singly linked list. This is a classic pointer problem that helps test your",
+          "topic": "dsa"
+        },
+        {
+          "title": "Reverse a singly linked list in place—useful for testing loop logic and understanding of pointer man",
+          "topic": "dsa"
+        },
+        {
+          "title": "Find the sum of the contiguous subarray within a one-dimensional array of numbers which has the larg",
+          "topic": "dsa"
+        }
+      ]
+    },
+    {
+      "company": "Amazon",
+      "slug": "amazon-interview-questions-and-answers",
+      "questionCount": 97,
+      "sample3": [
+        {
+          "title": "This problem focuses on converting an integer into its full English word representation. It tests st",
+          "topic": "dsa"
+        },
+        {
+          "title": "This question combined sliding window and two-pointer techniques—common in real-world optimization s",
+          "topic": "dsa"
+        },
+        {
+          "title": "This classic problem evaluates understanding of tree traversal, recursion, and data representation. ",
+          "topic": "dsa"
+        }
+      ]
+    },
+    {
+      "company": "Atlassian",
+      "slug": "atlassian",
+      "questionCount": 124,
+      "sample3": [
+        {
+          "title": "In a large company like Atlassian, employees are organized into groups and subgroups (e.g., \"Fronten",
+          "topic": "dsa"
+        },
+        {
+          "title": "In a robotic factory, delivery robots follow specific one-way paths between rooms. Each path is repr",
+          "topic": "dsa"
+        },
+        {
+          "title": "You’re managing a network of services with different connection latencies between them. For multiple",
+          "topic": "dsa"
+        }
+      ]
+    },
+    {
+      "company": "Databricks",
+      "slug": "databricks",
+      "questionCount": 99,
+      "sample3": [
+        {
+          "title": "Given a recursively defined Fibonacci tree where T_0 is empty, T_1 contains a single node, and T_n c",
+          "topic": "dsa"
+        },
+        {
+          "title": "Given a set of ordered firewall rules containing ALLOW and DENY actions with IP addresses in CIDR no",
+          "topic": "dsa"
+        },
+        {
+          "title": "Given a directory structure represented as a tree where each Directory contains nested subdirectorie",
+          "topic": "dsa"
+        }
+      ]
+    },
+    {
+      "company": "Expedia",
+      "slug": "expedia",
+      "questionCount": 108,
+      "sample3": [
+        {
+          "title": "Given three sets of distinct coordinates that form a triangle, calculate the area of the triangle. A",
+          "topic": null
+        },
+        {
+          "title": "Decrypt a given string by shifting each uppercase English letter k steps counterclockwise (Z → A). E",
+          "topic": "dsa"
+        },
+        {
+          "title": "Given a binary relationship matrix where related[i][j] = 1 means person i knows person j , determine",
+          "topic": null
+        }
+      ]
+    }
+  ],
+  "filesWritten": [
+    "C:\\Users\\mutee\\Desktop\\startup\\resumeassist\\data\\interview-questions.scraped.json",
+    "C:\\Users\\mutee\\Desktop\\startup\\resumeassist\\data\\interview-questions.scrape-report.json"
+  ]
+}
