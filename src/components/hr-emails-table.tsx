@@ -149,7 +149,7 @@ export default function HrEmailsTable({
   className,
   tableClassName,
   country,
-  loginHref = "/login",
+  loginHref = `${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/login?next=${window?.location.href}`,
   membershipHref = "/pricing",
 }: {
   className?: string;

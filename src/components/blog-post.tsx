@@ -27,6 +27,11 @@ interface BlogPost {
     bio: string;
     avatar?: string;
   };
+  image: {
+    url: string,
+    size: string,
+    type: string,
+  };
   tags: string[];
   views: number;
   premium?: boolean;

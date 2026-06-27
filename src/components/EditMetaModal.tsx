@@ -22,6 +22,11 @@ interface BlogPost {
   featured: boolean;
   isPublished: boolean;
   readTime: string;
+  image: {
+    url: string,
+    size: string,
+    type: string,
+  };
 }
 
 interface EditMetaModalProps {
@@ -44,6 +49,11 @@ export default function EditMetaModal({ isOpen, post, onClose, onSuccess }: Edit
     authorAvatar: "",
     featured: false,
     readTime: "5 min read",
+    image: {
+      url: "",
+      size: "",
+      type: "",
+    }
   });
 
   // Sync state parameters cleanly when a post target passes down
@@ -60,6 +70,7 @@ export default function EditMetaModal({ isOpen, post, onClose, onSuccess }: Edit
         authorAvatar: post.author?.avatar || "",
         featured: post.featured || false,
         readTime: post.readTime || "5 min read",
+        image: post.image || { url: "", size: "", type: "" }
       });
     }
   }, [post]);
@@ -97,6 +108,11 @@ export default function EditMetaModal({ isOpen, post, onClose, onSuccess }: Edit
           bio: formData.authorBio.trim(),
           avatar: formData.authorAvatar.trim(),
         },
+        image: {
+          url: formData.image.url,
+          size: formData.image.size,
+          type: formData.image.type,
+        }
       };
 
       // Updates only metadata fields using the edit endpoint
@@ -179,6 +195,56 @@ export default function EditMetaModal({ isOpen, post, onClose, onSuccess }: Edit
                   <label className="text-xs font-semibold text-slate-400">Author Bio</label>
                   <input type="text" name="authorBio" value={formData.authorBio} onChange={handleInputChange} className="px-3 py-2 border rounded-lg dark:bg-slate-950 dark:border-slate-800 focus:outline-none" />
                 </div>
+              </div>
+            </div>
+
+            {/* Image Configuration */}
+<div className="col-span-2 border-t border-slate-100 dark:border-slate-800 pt-3 mt-1">
+  <h4 className="text-xs font-bold uppercase tracking-widest text-blue-500 mb-3">Author Structural Context</h4>
+  <div className="grid grid-cols-2 gap-4">
+    
+    {/* Image URL Input */}
+    <div className="flex flex-col gap-1">
+      <label className="text-xs font-semibold text-slate-400">Image URL *</label>
+      <input 
+        type="text" 
+        value={formData.image.url} 
+        onChange={(e) => setFormData(prev => ({
+          ...prev,
+          image: { ...prev.image, url: e.target.value }
+        }))} 
+        className="px-3 py-2 border rounded-lg dark:bg-slate-950 dark:border-slate-800 focus:outline-none" 
+      />
+    </div>
+
+                {/* Image Size Input */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-slate-400">Image Size</label>
+                  <input
+                    type="text"
+                    value={formData.image.size}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      image: { ...prev.image, size: e.target.value }
+                    }))}
+                    className="px-3 py-2 border rounded-lg dark:bg-slate-950 dark:border-slate-800 focus:outline-none"
+                  />
+                </div>
+
+                {/* Image Type Input */}
+                <div className="col-span-2 flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-slate-400">Image Type</label>
+                  <input
+                    type="text"
+                    value={formData.image.type}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      image: { ...prev.image, type: e.target.value }
+                    }))}
+                    className="px-3 py-2 border rounded-lg dark:bg-slate-950 dark:border-slate-800 focus:outline-none"
+                  />
+                </div>
+
               </div>
             </div>
 
