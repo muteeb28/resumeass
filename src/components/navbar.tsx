@@ -20,6 +20,8 @@ const JOB_LINKS = [
 
 const LEARN_LINKS = [
   { name: "Courses", href: "https://jobflix.in/courses", description: "Video courses and learning paths.", icon: GraduationCap, external: true },
+  { name: "Opportunities", href: "http://localhost:3000/opportunities", description: "Explore job and career opportunities.", icon: Briefcase, external: true },
+  { name: "Prepare", href: "http://localhost:3000/prepare", description: "Practice problems and interview prep.", icon: ClipboardList, external: true },
   { name: "Interview Questions", href: "/interview-questions", description: "Practice company-wise interview questions.", icon: BookOpen, external: false },
 ];
 
@@ -191,10 +193,10 @@ export const Navbar = ({
                   className="opacity-70 group-hover:rotate-180 transition-transform duration-200"
                 />
               </button>
-              <div className="absolute top-full left-0 w-[280px] pt-3 opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200 z-50">
+              <div className="absolute top-full left-0 w-[480px] pt-3 opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200 z-50">
                 <div
                   className={cn(
-                    "rounded-xl border p-3 grid grid-cols-1 gap-1",
+                    "rounded-xl border p-3 grid grid-cols-2 gap-1",
                     isLight
                       ? "bg-white border-slate-200 shadow-xl shadow-slate-200/60"
                       : "bg-slate-900 border-slate-700/80 shadow-xl shadow-black/30"

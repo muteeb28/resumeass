@@ -5,7 +5,6 @@ import '@/App.css'
 import AuthProvider from './AuthProvider'
 import Providers from './Providers'
 import { Toaster } from "@/components/ui/sonner";
-import { useEffect } from 'react'
 import MembershipSync from '@/components/MembershipSync';
 
 export const metadata: Metadata = {

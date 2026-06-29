@@ -52,7 +52,7 @@ export default function HtmlContentEditor({
     setIsSaving(true);
     try {
       // Production pattern: Send ONLY the changed field over the network
-      const res = await api.put(`/posts/${postId}`, {
+      const res = await api.put(`/blog/posts/${postId}`, {
         htmlContent: htmlCode,
       });
 

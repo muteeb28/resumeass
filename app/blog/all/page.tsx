@@ -40,8 +40,8 @@ export default function AdminBlogManagement() {
   const fetchAdminPosts = async (search: string = "") => {
     setLoading(true);
     try {
-      const res = await api.get("/blog/posts", {
-        params: { limit: 10, ...(search && { search }) }
+      const res = await api.get("/blog/admin/posts", {
+        params: { limit: 20, ...(search && { search }) }
       });
       if (res.data.success) {
         setPosts(res.data.data.posts || []);
@@ -60,7 +60,7 @@ export default function AdminBlogManagement() {
 
   const handleToggleStatus = async (id: string, currentStatus: boolean) => {
     try {
-      const res = await api.patch(`/posts/${id}/status`, { isPublished: !currentStatus });
+      const res = await api.patch(`/blog/posts/${id}/status`, { isPublished: !currentStatus });
       if (res.data.success) {
         setPosts((prev) => prev.map((p) => (p._id === id ? { ...p, isPublished: !currentStatus } : p)));
       }
