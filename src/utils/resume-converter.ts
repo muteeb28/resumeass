@@ -4,6 +4,7 @@
 
 import type { ResumeJSON, ResumeJSONv2, TimelineItem, ProjectItem, EducationItem, ListItem } from "@/types/resume";
 import type { ResumeData, ResumeWork, ResumeEducation, ResumeSkill, ResumeProject, ResumeAward, ResumeVolunteer } from "@/types/portfolioly-resume";
+import { generateId } from "./id";
 
 const normalizeUrl = (value: string): string => {
   const trimmed = value.trim().replace(/[),.;]+$/, "");
@@ -99,6 +100,7 @@ export function convertToPortfoliolyFormat(resume: ResumeJSON | ResumeJSONv2): R
         work = items
           .filter((item): item is TimelineItem => item.type === 'timeline')
           .map(item => ({
+            id: generateId(),
             company: item.organization || "",
             position: item.title || "",
             startDate: (item.dates || "").split(/[-–—]/)[0]?.trim() || "",
@@ -115,6 +117,7 @@ export function convertToPortfoliolyFormat(resume: ResumeJSON | ResumeJSONv2): R
             const scoreNumeric = cgpaDetail?.match(/\d+(?:\.\d+)?(?:\s*\/\s*\d+(?:\.\d+)?)?/)?.[0] ?? "";
             const otherDetails = details.filter((d: string) => d !== cgpaDetail);
             return {
+              id: generateId(),
               institution: item.school || "",
               area: item.degree || "",
               studyType: "Degree",
@@ -135,12 +138,13 @@ export function convertToPortfoliolyFormat(resume: ResumeJSON | ResumeJSONv2): R
             if (!grouped[category]) grouped[category] = [];
             grouped[category].push(item.value);
           });
-        skills = Object.entries(grouped).map(([name, keywords]) => ({ name, keywords }));
+        skills = Object.entries(grouped).map(([name, keywords]) => ({ id: generateId(), name, keywords }));
 
       } else if (id === 'projects') {
         projects = items
           .filter((item): item is ProjectItem => item.type === 'project')
           .map(item => ({
+            id: generateId(),
             name: item.name || "",
             description: item.description || "",
             entity: "Personal",
@@ -158,11 +162,12 @@ export function convertToPortfoliolyFormat(resume: ResumeJSON | ResumeJSONv2): R
           .map((item: any): ResumeAward | null => {
             if (item.type === 'list') {
               const text = (item.value || "").trim();
-              return text ? { title: text, date: "", awarder: item.category || "", summary: "" } : null;
+              return text ? { id: generateId(), title: text, date: "", awarder: item.category || "", summary: "" } : null;
             }
             if (item.type === 'timeline') {
               const title = (item.title || "").trim();
               return title ? {
+                id: generateId(),
                 title,
                 date: item.dates || "",
                 awarder: item.organization || "",
@@ -177,6 +182,7 @@ export function convertToPortfoliolyFormat(resume: ResumeJSON | ResumeJSONv2): R
         volunteer = items
           .filter((item): item is TimelineItem => item.type === 'timeline')
           .map(item => ({
+            id: generateId(),
             organization: item.organization || "",
             position: item.title || "",
             url: "",
@@ -221,6 +227,7 @@ export function convertToPortfoliolyFormat(resume: ResumeJSON | ResumeJSONv2): R
   } else {
     // ── V1 Format ──
     work = (resume.experience || []).map(exp => ({
+      id: generateId(),
       company: exp.company || "",
       position: exp.role || "",
       startDate: (exp.dates || "").split(/[-–—]/)[0]?.trim() || "",
@@ -238,6 +245,7 @@ export function convertToPortfoliolyFormat(resume: ResumeJSON | ResumeJSONv2): R
       const dates: string = (edu as any).dates || "";
       const dateParts = dates.split(/\s*[-–—]\s*/);
       return {
+        id: generateId(),
         institution: edu.school || "",
         area: edu.degree || "",
         studyType: "Degree",
@@ -251,6 +259,7 @@ export function convertToPortfoliolyFormat(resume: ResumeJSON | ResumeJSONv2): R
     });
 
     skills = (resume.skills || []).map(s => ({
+      id: generateId(),
       name: s.name || "Skills",
       keywords: s.items || [],
     }));
@@ -260,6 +269,7 @@ export function convertToPortfoliolyFormat(resume: ResumeJSON | ResumeJSONv2): R
       const dates: string = proj.dates || "";
       const dateParts = dates.split(/\s*[-–—]\s*/);
       return {
+        id: generateId(),
         name: p.name || "",
         description: p.description || "",
         entity: "Personal",
@@ -279,11 +289,12 @@ export function convertToPortfoliolyFormat(resume: ResumeJSON | ResumeJSONv2): R
       .map((item: any): ResumeAward | null => {
         if (typeof item === "string") {
           const text = item.trim();
-          return text ? { title: text, date: "", awarder: "", summary: "" } : null;
+          return text ? { id: generateId(), title: text, date: "", awarder: "", summary: "" } : null;
         }
         if (item && typeof item === "object") {
           const title = (item.name || item.title || "").toString().trim();
           return title ? {
+            id: generateId(),
             title,
             date: (item.date || "").toString(),
             awarder: (item.issuer || item.awarder || "").toString(),
@@ -298,6 +309,7 @@ export function convertToPortfoliolyFormat(resume: ResumeJSON | ResumeJSONv2): R
     volunteer = rawVolunteer
       .filter((v: any) => v && (v.organization || v.role))
       .map((v: any) => ({
+        id: generateId(),
         organization: (v.organization || "").toString().trim(),
         position: (v.role || "").toString().trim(),
         url: "",

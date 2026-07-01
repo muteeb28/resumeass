@@ -6,6 +6,7 @@ import { TagInput } from "./TagInput";
 import { ActionButton } from "./ActionButton";
 import { FormSection } from "./FormSection";
 import type { ResumeSkill } from "@/types/portfolioly-resume";
+import { generateId } from "@/utils/id";
 
 export interface SkillsFormProps {
   value: ResumeSkill[];
@@ -19,7 +20,7 @@ const emptySkill: ResumeSkill = {
 
 export function SkillsForm({ value, onChange }: SkillsFormProps) {
   const items = value || [];
-  const add = () => onChange([...items, { ...emptySkill }]);
+  const add = () => onChange([...items, { ...emptySkill, id: generateId() }]);
   const remove = (idx: number) => onChange(items.filter((_, i) => i !== idx));
   const update = (idx: number, next: Partial<ResumeSkill>) =>
     onChange(items.map((it, i) => (i === idx ? { ...it, ...next } : it)));
@@ -38,7 +39,7 @@ export function SkillsForm({ value, onChange }: SkillsFormProps) {
           </p>
         )}
         {items.map((skillCat, idx) => (
-          <div key={idx} className="grid gap-4 p-4 rounded-md border">
+          <div key={skillCat.id ?? idx} className="grid gap-4 p-4 rounded-md border">
             <div className="grid gap-2">
               <Label>Category Name</Label>
               <Input

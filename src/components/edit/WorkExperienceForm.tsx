@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ActionButton } from "./ActionButton";
 import { FormSection } from "./FormSection";
 import type { ResumeWork } from "@/types/portfolioly-resume";
+import { generateId } from "@/utils/id";
 
 export interface WorkExperienceFormProps {
   value: ResumeWork[];
@@ -28,7 +29,7 @@ export function WorkExperienceForm({
   const items = value || [];
   const canAdd = useMemo(() => items.length < 10, [items.length]);
 
-  const add = () => onChange([...items, { ...emptyWork }]);
+  const add = () => onChange([...items, { ...emptyWork, id: generateId() }]);
   const remove = (idx: number) => onChange(items.filter((_, i) => i !== idx));
   const update = (idx: number, next: Partial<ResumeWork>) =>
     onChange(items.map((it, i) => (i === idx ? { ...it, ...next } : it)));
@@ -52,7 +53,7 @@ export function WorkExperienceForm({
           </p>
         )}
         {items.map((exp, idx) => (
-          <div key={idx} className="grid gap-4 p-4 rounded-md border">
+          <div key={exp.id ?? idx} className="grid gap-4 p-4 rounded-md border">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label>Company</Label>

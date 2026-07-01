@@ -249,4 +249,16 @@ describe('parserToV2 → convertToPortfoliolyFormat (full pipeline)', () => {
     expect(certSection).toBeDefined();
     expect(certSection!.items.length).toBeGreaterThan(0);
   });
+
+  it('assigns a unique id to every work, education, project, skill and award item', () => {
+    const allIds = [
+      ...portfolio.work.map(w => w.id),
+      ...portfolio.education.map(e => e.id),
+      ...portfolio.projects.map(p => p.id),
+      ...portfolio.skills.map(s => s.id),
+      ...portfolio.awards.map(a => a.id),
+    ];
+    expect(allIds.every(id => typeof id === 'string' && id.length > 0)).toBe(true);
+    expect(new Set(allIds).size).toBe(allIds.length); // all unique
+  });
 });

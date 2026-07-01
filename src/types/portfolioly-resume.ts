@@ -23,6 +23,7 @@ export interface ResumeBasics {
 }
 
 export interface ResumeWork {
+  id?: string;
   company: string;
   position: string;
   startDate: string; // Raw string, no Date objects
@@ -31,11 +32,13 @@ export interface ResumeWork {
 }
 
 export interface ResumeSkill {
+  id?: string;
   name: string;
   keywords: string[];
 }
 
 export interface ResumeProject {
+  id?: string;
   name: string;
   description: string;
   entity: string;
@@ -50,6 +53,7 @@ export interface ResumeProject {
 }
 
 export interface ResumeEducation {
+  id?: string;
   institution: string;
   area: string;
   studyType: string;
@@ -62,6 +66,7 @@ export interface ResumeEducation {
 }
 
 export interface ResumeAward {
+  id?: string;
   title: string;
   date: string;
   awarder: string;
@@ -69,6 +74,7 @@ export interface ResumeAward {
 }
 
 export interface ResumeVolunteer {
+  id?: string;
   organization: string;
   position: string;
   url: string;

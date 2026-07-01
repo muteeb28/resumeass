@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ActionButton } from "./ActionButton";
 import { FormSection } from "./FormSection";
 import type { ResumeEducation } from "@/types/portfolioly-resume";
+import { generateId } from "@/utils/id";
 
 export interface EducationFormProps {
   value: ResumeEducation[];
@@ -26,7 +27,7 @@ const emptyEdu: ResumeEducation = {
 export function EducationForm({ value, onChange }: EducationFormProps) {
   const items = value || [];
 
-  const add = () => onChange([...items, { ...emptyEdu }]);
+  const add = () => onChange([...items, { ...emptyEdu, id: generateId() }]);
   const remove = (idx: number) => onChange(items.filter((_, i) => i !== idx));
   const update = (idx: number, next: Partial<ResumeEducation>) =>
     onChange(items.map((it, i) => (i === idx ? { ...it, ...next } : it)));
@@ -45,7 +46,7 @@ export function EducationForm({ value, onChange }: EducationFormProps) {
           </p>
         )}
         {items.map((ed, idx) => (
-          <div key={idx} className="grid gap-4 p-4 rounded-md border">
+          <div key={ed.id ?? idx} className="grid gap-4 p-4 rounded-md border">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label>Institution</Label>

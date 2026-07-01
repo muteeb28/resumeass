@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ActionButton } from "./ActionButton";
 import { FormSection } from "./FormSection";
 import type { ResumeAward } from "@/types/portfolioly-resume";
+import { generateId } from "@/utils/id";
 
 export interface AwardsFormProps {
   value: ResumeAward[];
@@ -21,7 +22,7 @@ const emptyAward: ResumeAward = {
 
 export function AwardsForm({ value, onChange }: AwardsFormProps) {
   const items = value || [];
-  const add = () => onChange([...items, { ...emptyAward }]);
+  const add = () => onChange([...items, { ...emptyAward, id: generateId() }]);
   const remove = (idx: number) => onChange(items.filter((_, i) => i !== idx));
   const update = (idx: number, next: Partial<ResumeAward>) =>
     onChange(items.map((it, i) => (i === idx ? { ...it, ...next } : it)));
@@ -38,7 +39,7 @@ export function AwardsForm({ value, onChange }: AwardsFormProps) {
           </p>
         )}
         {items.map((award, idx) => (
-          <div key={idx} className="grid gap-4 p-4 rounded-md border">
+          <div key={award.id ?? idx} className="grid gap-4 p-4 rounded-md border">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label>Title</Label>
