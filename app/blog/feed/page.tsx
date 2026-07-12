@@ -3,6 +3,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import axiosInstance from '@/lib/axios';
 import { Navbar } from '@/components/navbar';
+import { BackgroundRippleLayout } from '@/components/background-ripple-layout';
+import { Button } from '@/components/ui/button';
 import CategoryTabs from '@/components/blog/CategoryTabs';
 import FeaturedPost from '@/components/blog/FeaturedPost';
 import SidebarTopPosts from '@/components/blog/SidebarTopPosts';
@@ -74,10 +76,10 @@ export default function BlogFeedPage() {
   const isLastPage = currentPage >= totalPages;
 
   return (
-    <>
+    <BackgroundRippleLayout tone="light" showRipple={false} contentClassName="pt-[74px]">
       <Navbar tone="light" />
 
-      <main className="pt-16 bg-[#fbfbf8] min-h-screen">
+      <main className="bg-page min-h-screen">
 
         {/* ── Category navigation — editorial strip ───────────────────── */}
         <CategoryTabs
@@ -90,12 +92,12 @@ export default function BlogFeedPage() {
         {isFirstLoad && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-10">
             <div className="grid lg:grid-cols-[1fr_300px] gap-12">
-              <div className="animate-pulse bg-[#e6e6e3] rounded-2xl h-[420px]" />
-              <div className="animate-pulse bg-[#e6e6e3] rounded-2xl h-[420px]" />
+              <div className="animate-pulse bg-border-soft rounded-(--jf-radius-panel) h-[420px]" />
+              <div className="animate-pulse bg-border-soft rounded-(--jf-radius-panel) h-[420px]" />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="animate-pulse bg-[#e6e6e3] rounded-xl h-64" />
+                <div key={i} className="animate-pulse bg-border-soft rounded-(--jf-radius-frame) h-64" />
               ))}
             </div>
           </div>
@@ -122,7 +124,7 @@ export default function BlogFeedPage() {
         {/* Thin section divider */}
         {!isFirstLoad && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="border-t border-[#e6e6e3]" />
+            <div className="border-t border-border-soft" />
           </div>
         )}
 
@@ -138,29 +140,22 @@ export default function BlogFeedPage() {
             ) : (
               /* Empty state */
               <div className="flex flex-col items-center justify-center py-28 gap-5 text-center">
-                <p className="text-xl font-bold text-[#0b0b0b] tracking-tight">
+                <p className="text-xl font-medium text-ink-900 tracking-tight">
                   You&apos;re all caught up.
                 </p>
-                <p className="text-sm text-[#6b6b6b] max-w-sm leading-relaxed">
+                <p className="text-sm text-ink-500 max-w-sm leading-relaxed">
                   Explore more career resources or check back soon for new articles.
                 </p>
-                <button
-                  onClick={() => setActiveCategory('All')}
-                  className="mt-1 border border-amber-500 text-amber-600 hover:bg-amber-50 px-6 py-2.5 text-sm font-medium transition-colors"
-                >
+                <Button variant="outline" size="sm" onClick={() => setActiveCategory('All')} className="mt-1">
                   ← Browse all topics
-                </button>
+                </Button>
               </div>
             )}
 
             {/* Load More */}
             {filteredPosts.length > 0 && !isLastPage && (
               <div className="flex justify-center mt-16">
-                <button
-                  onClick={handleLoadMore}
-                  disabled={loading}
-                  className="px-10 py-3.5 border border-[#0b0b0b] text-[#0b0b0b] text-[11px] font-bold uppercase tracking-[0.15em] hover:bg-[#0b0b0b] hover:text-white transition-all disabled:opacity-40"
-                >
+                <Button variant="outline" size="lg" onClick={handleLoadMore} disabled={loading}>
                   {loading ? (
                     <span className="flex items-center gap-2">
                       <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -169,13 +164,13 @@ export default function BlogFeedPage() {
                   ) : (
                     'Load more articles'
                   )}
-                </button>
+                </Button>
               </div>
             )}
 
             {/* Caught-up */}
             {filteredPosts.length > 0 && isLastPage && !loading && (
-              <p className="text-center text-xs text-[#6b6b6b] italic tracking-wide mt-16">
+              <p className="text-center text-xs text-ink-500 italic tracking-wide mt-16">
                 — You&apos;ve read everything in this category —
               </p>
             )}
@@ -184,6 +179,6 @@ export default function BlogFeedPage() {
         )}
 
       </main>
-    </>
+    </BackgroundRippleLayout>
   );
 }
