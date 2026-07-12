@@ -1,6 +1,6 @@
 /* Blog Post Prose Styles */
 .prose {
-  color: rgb(71 85 105);
+  color: rgb(62 85 107);
   max-width: none;
 }
 
@@ -52,8 +52,8 @@
 }
 
 .prose h1 {
-  color: rgb(15 23 42);
-  font-weight: 800;
+  color: rgb(11 42 60);
+  font-weight: 500;
   font-size: 2.25rem;
   margin-top: 0;
   margin-bottom: 2rem;
@@ -61,8 +61,8 @@
 }
 
 .prose h2 {
-  color: rgb(15 23 42);
-  font-weight: 700;
+  color: rgb(11 42 60);
+  font-weight: 500;
   font-size: 1.875rem;
   margin-top: 3rem;
   margin-bottom: 1.5rem;
@@ -70,8 +70,8 @@
 }
 
 .prose h3 {
-  color: rgb(15 23 42);
-  font-weight: 600;
+  color: rgb(11 42 60);
+  font-weight: 500;
   font-size: 1.5rem;
   margin-top: 2.5rem;
   margin-bottom: 1rem;
@@ -79,8 +79,8 @@
 }
 
 .prose h4 {
-  color: rgb(15 23 42);
-  font-weight: 600;
+  color: rgb(11 42 60);
+  font-weight: 500;
   font-size: 1.25rem;
   margin-top: 2rem;
   margin-bottom: 0.75rem;
@@ -127,7 +127,7 @@
 .prose ul > li::before {
   content: "";
   position: absolute;
-  background-color: rgb(148 163 184);
+  background-color: rgb(147 165 178);
   border-radius: 50%;
   width: 0.375rem;
   height: 0.375rem;
@@ -144,16 +144,16 @@
   content: counter(list-item, decimal) ".";
   position: absolute;
   font-weight: 400;
-  color: rgb(100 116 139);
+  color: rgb(100 123 142);
   left: -1.625rem;
 }
 
 .prose blockquote {
   font-weight: 500;
   font-style: italic;
-  color: rgb(15 23 42);
+  color: rgb(11 42 60);
   border-left-width: 0.25rem;
-  border-left-color: rgb(226 232 240);
+  border-left-color: rgb(238 242 241);
   quotes: "\201C""\201D""\2018""\2019";
   margin-top: 1.6rem;
   margin-bottom: 1.6rem;
@@ -169,32 +169,32 @@
 }
 
 .prose strong {
-  color: rgb(15 23 42);
+  color: rgb(11 42 60);
   font-weight: 600;
 }
 
 .prose a {
-  color: rgb(20 184 166);
+  color: rgb(29 95 216);
   text-decoration: underline;
   font-weight: 500;
 }
 
 .prose a:hover {
-  color: rgb(13 148 136);
+  color: rgb(22 63 140);
 }
 
 .prose code {
-  color: rgb(15 23 42);
+  color: rgb(11 42 60);
   font-weight: 600;
   font-size: 0.875rem;
-  background-color: rgb(241 245 249);
+  background-color: rgb(245 248 247);
   padding: 0.25rem 0.375rem;
   border-radius: 0.25rem;
 }
 
 .prose pre {
-  color: rgb(226 232 240);
-  background-color: rgb(15 23 42);
+  color: rgb(192 207 218);
+  background-color: rgb(7 30 43);
   overflow-x: auto;
   font-weight: 400;
   font-size: 0.875rem;
@@ -229,11 +229,11 @@
 
 .prose thead {
   border-bottom-width: 1px;
-  border-bottom-color: rgb(148 163 184);
+  border-bottom-color: rgb(147 165 178);
 }
 
 .prose thead th {
-  color: rgb(15 23 42);
+  color: rgb(11 42 60);
   font-weight: 600;
   vertical-align: bottom;
   padding-right: 0.5714286em;
@@ -243,7 +243,7 @@
 
 .prose tbody tr {
   border-bottom-width: 1px;
-  border-bottom-color: rgb(226 232 240);
+  border-bottom-color: rgb(238 242 241);
 }
 
 .prose tbody tr:last-child {
@@ -256,7 +256,7 @@
 }
 
 .prose hr {
-  border-color: rgb(226 232 240);
+  border-color: rgb(238 242 241);
   border-top-width: 1px;
   margin-top: 3rem;
   margin-bottom: 3rem;
