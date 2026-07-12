@@ -1,116 +1,148 @@
 "use client";
 
-import { PinContainer } from "./3d-pin";
-import { ResumeOptimizationDemo } from "./resume-demo";
 import { Navbar } from "./navbar";
-import { PaymentSection } from "./payment-section";
 import { BackgroundRippleLayout } from "./background-ripple-layout";
-import SidebarDemo from "./sidebar-demo";
-import { HeroSection } from "./hero-section";
-import { WhyUsSection, FAQSection } from "./why-us-faq";
-import Link from "next/link";
+import { JobflixHero } from "./marketing/JobflixHero";
+import { Container, SectionHeader, Stat, Button } from "./marketing/primitives";
+import { FeatureRow } from "./marketing/FeatureRow";
+import { TestimonialQuote } from "./marketing/TestimonialQuote";
+import { Footer } from "./marketing/Footer";
+import { ResumeATSPanel } from "./marketing/panels/ResumeATSPanel";
+import { JobsReferralsPanel } from "./marketing/panels/JobsReferralsPanel";
+import { InterviewPrepPanel } from "./marketing/panels/InterviewPrepPanel";
+import { CareerTrackerPanel } from "./marketing/panels/CareerTrackerPanel";
+
+const stats = [
+  { value: "3×", label: "more recruiter callbacks with an ATS-optimized resume" },
+  { value: "92", label: "average resume readiness score after one pass" },
+  { value: "2.4k", label: "warm referral paths unlocked each week" },
+  { value: "21 days", label: "median time from first match to offer" },
+];
 
 export function AnimatedPinDemo() {
   return (
     <BackgroundRippleLayout tone="dark">
-      {/* Navigation */}
       <Navbar tone="light" />
-      {/* Hero Section */}
-      <HeroSection />
 
-      {/* Features Section */}
-      <section id="features" className="py-12 px-4 scroll-mt-24 bg-neutral-50 text-neutral-900">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-5xl font-bold text-neutral-900 mb-4">
-              Keep every application organized
-            </h2>
-            <p className="text-neutral-500 text-lg max-w-2xl mx-auto">
-              Track stages, and manage HR outreach from a single workspace.
-            </p>
-          </div>
+      {/* Onest applies to the whole migrated marketing body (not Navbar,
+          which stays out of font-migration scope until its own sprint). */}
+      <div>
+      <JobflixHero />
 
-          <SidebarDemo />
-        </div>
+      {/* Why JobFlix */}
+      <section className="bg-page py-[var(--jf-space-section)]" id="features">
+        <Container width="prose">
+          <SectionHeader
+            align="center"
+            eyebrow="Why JobFlix"
+            heading="A job search is not a to-do list. It's a system — and most people are running it by hand."
+            intro="JobFlix connects every moving part — resume, portfolio, applications, referrals, interview prep — into one operating system, so progress compounds instead of scattering across a dozen tabs."
+          />
+        </Container>
       </section>
 
-      <ResumeOptimizationDemo />
+      <FeatureRow
+        eyebrow="Resume & ATS"
+        heading="A resume that clears the filter, every time"
+        copy="JobFlix scores your resume against the exact job description, then rewrites the weak lines — so a human actually sees it."
+        checklist={[
+          "Real-time ATS match scoring",
+          "AI rewrites with quantified impact",
+          "Tailored per application, in one click",
+        ]}
+        linkHref="/optimize"
+        linkLabel="Explore the resume builder"
+        panel={<ResumeATSPanel />}
+      />
 
-      {/* Payment Section with Lamp Effect */}
-      <div id="pricing" className="relative z-10 isolate scroll-mt-24">
-        <PaymentSection />
-      </div>
+      <FeatureRow
+        reverse
+        eyebrow="Jobs & Referrals"
+        heading="Discover roles — and the people who can vouch for you"
+        copy="Matches ranked by fit, each surfacing the warm referral paths hidden in your extended network."
+        checklist={[
+          "Fit-ranked role discovery",
+          "Warm intro paths from the JobFlix network",
+          "One-tap referral requests",
+        ]}
+        linkHref="/find-jobs"
+        linkLabel="See job discovery"
+        panel={<JobsReferralsPanel />}
+      />
 
-      {/* Why Us */}
-      <WhyUsSection />
+      <FeatureRow
+        eyebrow="Interview Prep"
+        heading="Rehearse the hard rounds before they count"
+        copy="Mock interviews and coding practice with an AI that probes like a senior interviewer and tells you exactly where you fell short."
+        checklist={[
+          "Role-specific mock interviews",
+          "Live coding practice with hints",
+          "Actionable feedback after every round",
+        ]}
+        linkHref="/interview-questions"
+        linkLabel="Practice an interview"
+        panel={<InterviewPrepPanel />}
+      />
 
-      {/* FAQ */}
-      <FAQSection />
+      <FeatureRow
+        reverse
+        eyebrow="Career Tracker"
+        heading="Every application, in one calm view"
+        copy="A single board tracks every role, stage, and follow-up — so nothing slips and momentum stays visible."
+        checklist={[
+          "Kanban stages from applied to offer",
+          "Automatic follow-up reminders",
+          "Progress you can actually measure",
+        ]}
+        linkHref="/job-tracker"
+        linkLabel="Open the tracker"
+        panel={<CareerTrackerPanel />}
+      />
 
-      {/* CTA Section with 3D Pin */}
-      <div className="bg-white py-12 px-4 text-neutral-900">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold text-neutral-900 mb-4">
-            Ready to Land Your Dream Job?
+      {/* Stats band */}
+      <section className="bg-surface-alt py-[var(--jf-space-section)]">
+        <Container width="content">
+          <h3 className="text-center text-2xl font-medium tracking-[-0.018em] text-ink-900 sm:text-3xl">
+            Measurable momentum, not busywork
+          </h3>
+          <div className="mt-[var(--jf-gap-stats)] grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-4">
+            {stats.map((s) => (
+              <Stat key={s.label} value={s.value} label={s.label} className="text-center" />
+            ))}
+          </div>
+        </Container>
+      </section>
+
+      <TestimonialQuote
+        eyebrow="From our members"
+        quote="I went from rewriting my resume for every posting to running one system that told me exactly what to fix. Three weeks later I had two offers — one through a referral I didn't know I could reach."
+        name="Elena Ramírez"
+        role="Product Designer, hired at Stripe"
+      />
+
+      {/* Final CTA */}
+      <section className="bg-navy-900 py-[var(--jf-space-section)] text-center">
+        <Container width="prose">
+          <h2 className="text-3xl font-medium tracking-[-0.025em] text-white sm:text-4xl">
+            Your next role is a system away
           </h2>
-          <p className="text-neutral-500 text-lg max-w-2xl mx-auto">
-            Join thousands of professionals who have successfully landed interviews with ResumeAssist AI
+          <p className="mx-auto mt-4 max-w-md text-lg leading-relaxed text-dark-body">
+            Bring your resume, or build one in minutes. JobFlix runs the
+            system from there — every step, until it&rsquo;s real.
           </p>
-        </div>
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Button href="/create" size="lg">
+              Create Resume
+            </Button>
+            <Button href="/optimize" variant="ghost" size="lg" className="text-white hover:bg-white/10">
+              Optimize Resume
+            </Button>
+          </div>
+        </Container>
+      </section>
 
-        <div className="flex justify-center">
-          <PinContainer
-            title="careerSprint"
-            href="https://jobflix.in/jobs"
-            cardClassName="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 border-white/10"
-          >
-            <div className="flex w-[26rem] flex-col gap-4 p-6 text-slate-100 sm:w-[28rem]">
-              <div>
-                <h3 className="text-2xl font-semibold text-white">
-                  Our Career, End-to-End
-                </h3>
-                <p className="mt-2 text-sm text-slate-200">
-                  Everything you need to build, prepare, and execute your
-                  career - inside careerSprint.
-                </p>
-              </div>
-              <div className="space-y-2 text-sm text-slate-200">
-                <div>Courses - Learn skills that matter</div>
-                <div>Prepare - Interview and assessment prep</div>
-                <div>Hackathons & Study Abroad - Real challenges, real exposure</div>
-                <div>Jobs - Curated opportunities</div>
-                <div>Mentors - Learn from people who&apos;ve done it</div>
-                <div>Ask - Instant AI help</div>
-              </div>
-            </div>
-          </PinContainer>
-        </div>
+      <Footer />
       </div>
-
-      {/* Footer */}
-      <footer className="border-t border-neutral-200 bg-white py-12 px-4 text-neutral-600">
-        <div className="max-w-7xl mx-auto text-center">
-          <div className="flex items-center justify-center mb-4">
-            <img
-              src="/logo.png"
-              alt="ResumeAssist AI"
-              className="h-40 w-auto object-contain"
-            />
-          </div>
-          <p className="text-neutral-500 mb-8">
-            The future of resume building is here
-          </p>
-          <div className="flex justify-center gap-8 text-neutral-500 text-sm">
-            <Link href="/privacy-policy" className="hover:text-neutral-900 transition-colors">Privacy</Link>
-            <Link href="/terms-of-service" className="hover:text-neutral-900 transition-colors">Terms</Link>
-            <Link href="/refund-policy" className="hover:text-neutral-900 transition-colors">Refund Policy</Link>
-            <Link href="/contact-us" className="hover:text-neutral-900 transition-colors">Contact</Link>
-          </div>
-          <div className="mt-8 text-neutral-400 text-xs">
-            © 2024 ResumeAssist AI. All rights reserved.
-          </div>
-        </div>
-      </footer>
     </BackgroundRippleLayout>
   );
 }
