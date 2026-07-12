@@ -3,9 +3,12 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { ArrowRight, ExternalLink, Lock, RefreshCw, Search, SearchX, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
-import { STAGGER_CONTAINER, STAGGER_ITEM, CARD_HOVER, PRESS } from "../lib/motion";
+import { STAGGER_CONTAINER, STAGGER_ITEM } from "../lib/motion";
 import axiosInstance from "@/lib/axios";
 import { useUserStore } from "@/stores/useUserStore";
+import { JobRow } from "./jobs-hub/JobRow";
+import { Stat } from "./marketing/primitives";
+import { Button } from "./ui/button";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Job {
@@ -77,18 +80,6 @@ const TALENTD_CATEGORIES: { label: string; value: CategoryValue }[] = [
   { label: "Sales & Marketing", value: "Sales & Marketing" },
 ];
 
-// Cool-tinted OKLCH palette — keyed by company name's first char code
-const LOGO_PALETTE: Array<{ bg: string; fg: string }> = [
-  { bg: "oklch(0.94 0.03 278)", fg: "oklch(0.38 0.14 278)" }, // indigo
-  { bg: "oklch(0.94 0.03 240)", fg: "oklch(0.38 0.12 240)" }, // blue
-  { bg: "oklch(0.94 0.03 200)", fg: "oklch(0.38 0.10 200)" }, // cyan
-  { bg: "oklch(0.94 0.03 300)", fg: "oklch(0.38 0.12 300)" }, // violet
-  { bg: "oklch(0.94 0.04 148)", fg: "oklch(0.38 0.14 148)" }, // green
-  { bg: "oklch(0.94 0.03 180)", fg: "oklch(0.38 0.10 180)" }, // teal
-  { bg: "oklch(0.94 0.03 260)", fg: "oklch(0.38 0.08 260)" }, // slate
-  { bg: "oklch(0.94 0.03 320)", fg: "oklch(0.38 0.10 320)" }, // plum
-];
-
 const LIMIT = 30;
 
 function isNew(postedDate: string): boolean {
@@ -115,144 +106,57 @@ function emptyHint(searchQuery: string, category: CategoryValue): string {
   return "New listings are added daily. Check back soon.";
 }
 
-function PreviewGhostStack() {
-  return (
-    <div className="relative overflow-hidden rounded-[22px] border border-slate-200 bg-white/85 p-4 shadow-sm">
-      <div className="absolute inset-0 bg-gradient-to-b from-white/0 via-white/20 to-white/95" />
-      <div className="space-y-3 blur-[2px] opacity-75">
-        <div className="h-[68px] rounded-[14px] bg-slate-100 border border-slate-200" />
-        <div className="h-[68px] rounded-[14px] bg-slate-100 border border-slate-200 translate-x-3" />
-        <div className="h-[68px] rounded-[14px] bg-slate-100 border border-slate-200 translate-x-6" />
-      </div>
-    </div>
-  );
-}
-
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function JobCardSkeleton() {
   return (
-    <div className="bg-hub-surface border border-hub-border rounded-[10px] px-4 py-[13px] animate-pulse">
+    <div className="bg-page border border-border-soft rounded-(--jf-radius-row) px-4 py-[13px] animate-pulse">
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-[6px] bg-hub-bg-subtle flex-shrink-0" />
+        <div className="w-9 h-9 rounded-(--jf-radius-mini) bg-surface-alt flex-shrink-0" />
         <div className="flex-1 min-w-0 space-y-[6px]">
-          <div className="h-[13px] bg-hub-bg-subtle rounded w-2/3" />
-          <div className="h-[11px] bg-hub-bg-subtle rounded w-1/2" />
+          <div className="h-[13px] bg-surface-alt rounded w-2/3" />
+          <div className="h-[11px] bg-surface-alt rounded w-1/2" />
         </div>
-        <div className="h-[13px] bg-hub-bg-subtle rounded w-16 flex-shrink-0" />
+        <div className="h-[13px] bg-surface-alt rounded w-16 flex-shrink-0" />
       </div>
     </div>
   );
 }
 
-function CompanyLogo({ name }: { name: string }) {
-  const { bg, fg } = LOGO_PALETTE[name.charCodeAt(0) % LOGO_PALETTE.length];
-  const initials =
-    name
-      .split(/\s+/)
-      .slice(0, 2)
-      .map((w) => w[0]?.toUpperCase() ?? "")
-      .join("") || "?";
+/**
+ * Renders JobRow (RowChip-derived, src/components/jobs-hub/JobRow.tsx) inside
+ * the same motion.div stagger-entrance + tap-scale wrapper the previous
+ * hand-rolled JobCard used. JobRow owns the visual treatment (including
+ * hover shadow) via CSS/token classes now, replacing the old raw-JS
+ * onMouseEnter/onMouseLeave oklch() color assignments.
+ *
+ * Known visual change: JobRow's avatar is RowChip's flat sapphire letter
+ * chip, not the previous per-company OKLCH-hashed color palette — that
+ * palette was a hardcoded-value pattern the token migration is removing,
+ * not something RowChip's API currently supports reproducing.
+ */
+function JobCard({ job, reduced }: { job: Job; reduced: boolean }) {
   return (
-    <div
-      className="w-9 h-9 rounded-[6px] border border-hub-border flex items-center justify-center text-[11px] font-bold flex-shrink-0"
-      style={{ backgroundColor: bg, color: fg }}
-    >
-      {initials}
-    </div>
-  );
-}
-
-function JobCard({ job, reduced, canHoverRef }: { job: Job; reduced: boolean; canHoverRef: { current: boolean } }) {
-  return (
-    <motion.a
-      href={job.url}
-      target="_blank"
-      rel="noopener noreferrer"
+    <motion.div
       variants={reduced ? undefined : STAGGER_ITEM}
       initial={reduced ? { opacity: 0 } : undefined}
       animate={reduced ? { opacity: 1 } : undefined}
-      whileHover={reduced ? undefined : CARD_HOVER}
-      whileTap={reduced ? undefined : { scale: 0.995, transition: { duration: 0.1 } }}
-      className="group block bg-hub-surface border border-hub-border rounded-[10px] px-4 py-[13px]
-                 outline-none focus-visible:ring-2 focus-visible:ring-hub-accent/30 focus-visible:rounded-[10px]"
-      style={{ transition: "border-color 150ms, box-shadow 180ms" }}
-      onMouseEnter={(e) => {
-        if (!canHoverRef.current) return;
-        const el = e.currentTarget as HTMLAnchorElement;
-        el.style.borderColor = "var(--color-hub-border-strong)";
-        el.style.boxShadow = "var(--shadow-hub)";
-      }}
-      onMouseLeave={(e) => {
-        if (!canHoverRef.current) return;
-        const el = e.currentTarget as HTMLAnchorElement;
-        el.style.borderColor = "";
-        el.style.boxShadow = "";
-      }}
     >
-      <div className="flex items-start gap-3">
-        <CompanyLogo name={job.company} />
-
-        <div className="flex-1 min-w-0">
-          {/* Title + salary */}
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <h3 className="text-[14px] font-semibold text-hub-text-1 leading-snug tracking-[-0.01em] truncate">
-                {job.title}
-              </h3>
-              {isNew(job.postedDate) && (
-                <span className="flex-shrink-0 bg-hub-accent-soft text-hub-accent-fg border border-hub-accent/20 text-[10px] font-semibold rounded-full px-1.5 py-0.5 leading-none">
-                  New
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-2 flex-shrink-0 pt-px">
-              {job.salary && (
-                <span className="text-[13px] font-semibold text-hub-salary">{job.salary}</span>
-              )}
-              <ExternalLink
-                size={12}
-                className="text-hub-text-3 opacity-0 group-hover:opacity-100"
-                style={{ transition: "opacity 150ms" }}
-              />
-            </div>
-          </div>
-
-          {/* Meta row */}
-          <div className="flex items-center flex-wrap mt-[3px]" style={{ gap: "0 8px" }}>
-            <span className="text-[12.5px] text-hub-text-2">{job.company}</span>
-            {job.location && (
-              <>
-                <span className="text-hub-border text-[10px] leading-none select-none">·</span>
-                <span className="text-[12.5px] text-hub-text-3">{job.location}</span>
-              </>
-            )}
-            {job.type && (
-              <>
-                <span className="text-hub-border text-[10px] leading-none select-none">·</span>
-                <span className="text-[11.5px] text-hub-text-3">{job.type}</span>
-              </>
-            )}
-            <span className="text-hub-border text-[10px] leading-none select-none">·</span>
-            <span className="text-[11.5px] text-hub-text-3">{job.postedDate}</span>
-          </div>
-
-          {/* Skill tags */}
-          {job.tags && job.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-[7px]">
-              {job.tags.slice(0, 5).map((tag) => (
-                <span
-                  key={tag}
-                  className="text-[11.5px] font-medium text-hub-text-3 bg-hub-bg-subtle border border-hub-border rounded-[4px] px-1.5 py-px leading-none"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </motion.a>
+      <JobRow
+        job={{
+          id: job.id,
+          title: job.title,
+          company: job.company,
+          location: job.location,
+          postedDate: job.postedDate,
+          url: job.url,
+          type: job.type,
+          salary: job.salary,
+          tags: job.tags,
+          isNew: isNew(job.postedDate),
+        }}
+      />
+    </motion.div>
   );
 }
 
@@ -291,12 +195,8 @@ export default function JobBoard() {
 
   const debounceRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef     = useRef<AbortController | null>(null);
-  const canHover     = useRef(false);
   const [searchFocused, setSearchFocused] = useState(false);
 
-  useEffect(() => {
-    canHover.current = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  }, []);
   useEffect(() => () => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     abortRef.current?.abort();
@@ -368,11 +268,11 @@ export default function JobBoard() {
 
   if (disabled) {
     return (
-      <div className="py-16 text-center" style={{ fontFamily: "var(--font-hub)" }}>
-        <p className="text-[14px] font-semibold text-hub-text-1 mb-1">
+      <div className="py-16 text-center">
+        <p className="text-[14px] font-semibold text-ink-900 mb-1">
           Job discovery temporarily paused
         </p>
-        <p className="text-[13px] text-hub-text-3 max-w-sm mx-auto">
+        <p className="text-[13px] text-ink-500 max-w-sm mx-auto">
           We're rebuilding this feature. Check back soon.
         </p>
       </div>
@@ -380,41 +280,36 @@ export default function JobBoard() {
   }
 
   return (
-    <div className="w-full" style={{ fontFamily: "var(--font-hub)" }}>
+    <div className="w-full">
       {isPreviewLocked && (
-        <div className="rounded-[18px] border border-slate-200 bg-white p-4 md:p-5 mb-5 text-left shadow-sm">
+        <div className="rounded-(--jf-radius-frame) border border-border-soft bg-page p-4 md:p-5 mb-5 text-left shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="max-w-2xl">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-                <Lock className="h-3.5 w-3.5 text-amber-500" />
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-ink-400">
+                <Lock className="h-3.5 w-3.5 text-ink-400" />
                 Locked Preview
               </div>
-              <p className="mt-2 text-[13px] font-semibold text-slate-900">
+              <p className="mt-2 text-[13px] font-semibold text-ink-900">
                 {isGuest ? "Login to unlock the full job board." : "Purchase membership to unlock the full job board."}
               </p>
-              <p className="mt-1 text-[12.5px] text-slate-600 leading-relaxed">
+              <p className="mt-1 text-[12.5px] text-ink-600 leading-relaxed">
                 You can browse the first 5 jobs. The rest stay blurred until you sign in or upgrade your membership.
               </p>
             </div>
-            <a
-              href={access?.cta === "membership" ? membershipHref : loginHref}
-              className={`inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-transform hover:-translate-y-0.5 ${
-                access?.cta === "membership"
-                  ? "bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 hover:bg-amber-400"
-                  : "bg-slate-900 text-white shadow-lg shadow-slate-900/20 hover:bg-slate-800"
-              }`}
-            >
-              {access?.cta === "membership" ? "Buy Membership" : "Login"}
-              <ArrowRight className="h-4 w-4" />
-            </a>
+            <Button asChild variant="primary" size="sm">
+              <a href={access?.cta === "membership" ? membershipHref : loginHref}>
+                {access?.cta === "membership" ? "Buy Membership" : "Login"}
+                <ArrowRight className="h-4 w-4" />
+              </a>
+            </Button>
           </div>
         </div>
       )}
 
       {hasPremiumMembership && !hasUltraMembership && (
-        <div className="rounded-[14px] border border-amber-200 bg-amber-50 p-4 mb-5 text-left">
-          <p className="text-[13px] font-semibold text-amber-900 mb-1">Premium access</p>
-          <p className="text-[12.5px] text-amber-900/90 leading-relaxed">
+        <div className="rounded-(--jf-radius-frame) border border-sapphire-bright/20 bg-sapphire-50 p-4 mb-5 text-left">
+          <p className="text-[13px] font-semibold text-sapphire-brand mb-1">Premium access</p>
+          <p className="text-[12.5px] text-sapphire-brand/90 leading-relaxed">
             Premium members can browse job listings, but search is reserved for Ultra membership.
           </p>
         </div>
@@ -427,7 +322,7 @@ export default function JobBoard() {
             size={13}
             className="absolute left-[10px] top-1/2 -translate-y-1/2 pointer-events-none"
             style={{
-              color: searchFocused ? "var(--color-hub-accent-fg)" : "var(--color-hub-text-3)",
+              color: searchFocused ? "var(--color-sapphire-brand)" : "var(--color-ink-500)",
               transition: "color 150ms",
             }}
           />
@@ -444,15 +339,15 @@ export default function JobBoard() {
             }
             disabled={!canSearch}
             className={
-              "w-full h-[35px] pl-[30px] pr-3 rounded-[10px] border border-hub-border-strong bg-hub-surface text-[13px] text-hub-text-1 placeholder:text-hub-text-3 outline-none " +
-              (!canSearch ? "cursor-not-allowed opacity-70 bg-hub-bg-subtle" : "")
+              "w-full h-[35px] pl-[30px] pr-3 rounded-(--jf-radius-tile) border border-border-frame bg-page text-[13px] text-ink-900 placeholder:text-ink-500 outline-none " +
+              (!canSearch ? "cursor-not-allowed opacity-70 bg-surface-alt" : "")
             }
             style={{ transition: "border-color 150ms, box-shadow 150ms" }}
             onFocus={(e) => {
               if (!canSearch) return;
               setSearchFocused(true);
-              e.currentTarget.style.borderColor = "var(--color-hub-accent)";
-              e.currentTarget.style.boxShadow = "0 0 0 3px oklch(0.52 0.22 278 / 0.12)";
+              e.currentTarget.style.borderColor = "var(--color-sapphire-bright)";
+              e.currentTarget.style.boxShadow = "0 0 0 3px rgba(47, 123, 224, 0.12)";
             }}
             onBlur={(e) => {
               if (!canSearch) return;
@@ -467,22 +362,9 @@ export default function JobBoard() {
           onClick={fetchJobs}
           disabled={loading}
           aria-label="Refresh jobs"
-          whileTap={reduced ? undefined : { scale: 0.93, transition: { duration: 0.08 } }}
-          className="h-[35px] w-[35px] flex items-center justify-center rounded-[10px] border border-hub-border
-                     bg-hub-surface text-hub-text-3 disabled:opacity-40 flex-shrink-0"
+          className="h-[35px] w-[35px] flex items-center justify-center rounded-(--jf-radius-tile) border border-border-soft
+                     bg-page text-ink-500 hover:border-border-frame hover:text-ink-600 disabled:opacity-40 flex-shrink-0"
           style={{ transition: "border-color 150ms, color 150ms" }}
-          onMouseEnter={(e) => {
-            if (!canHover.current) return;
-            const el = e.currentTarget as HTMLButtonElement;
-            el.style.borderColor = "var(--color-hub-border-strong)";
-            el.style.color = "var(--color-hub-text-2)";
-          }}
-          onMouseLeave={(e) => {
-            if (!canHover.current) return;
-            const el = e.currentTarget as HTMLButtonElement;
-            el.style.borderColor = "";
-            el.style.color = "";
-          }}
         >
           <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
         </motion.button>
@@ -498,40 +380,20 @@ export default function JobBoard() {
               key={c.value === "" ? "__all__" : c.value}
               type="button"
               disabled={buttonDisabled}
-              onClick={(e) => {
+              onClick={() => {
                 if (buttonDisabled) return;
                 setCategory(c.value);
                 setPage(1);
-                const el = e.currentTarget as HTMLButtonElement;
-                el.style.backgroundColor = "";
-                el.style.borderColor = "";
-                el.style.color = "";
               }}
-              whileTap={reduced ? undefined : { scale: 0.96, transition: { duration: 0.08 } }}
               className={[
-                "px-[11px] py-1 rounded-full text-[12px] font-medium border",
+                "px-[11px] py-1 rounded-(--jf-radius-pill) text-[12px] font-medium border transition-colors duration-150",
                 isActive
-                  ? "bg-hub-accent border-hub-accent text-white"
-                  : "bg-transparent border-transparent text-hub-text-3",
+                  ? "bg-sapphire-bright border-sapphire-bright text-white"
+                  : "bg-transparent border-transparent text-ink-500 hover:bg-sapphire-50 hover:border-sapphire-brand/40 hover:text-sapphire-brand",
                 buttonDisabled ? "opacity-50 cursor-not-allowed" : "",
               ].join(" ")}
               style={{
-                transition: "border-color 130ms, background-color 130ms, color 130ms, box-shadow 130ms",
-                boxShadow: isActive ? "0 1px 4px oklch(0.52 0.22 278 / 0.3)" : undefined,
-              }}
-              onMouseEnter={(e) => {
-                if (isActive || buttonDisabled || !canHover.current) return;
-                const el = e.currentTarget as HTMLButtonElement;
-                el.style.backgroundColor = "var(--color-hub-accent-soft)";
-                el.style.borderColor = "oklch(0.52 0.22 278 / 0.4)";
-                el.style.color = "var(--color-hub-accent-fg)";
-              }}
-              onMouseLeave={(e) => {
-                if (!canHover.current) return;
-                const el = e.currentTarget as HTMLButtonElement;
-                el.style.backgroundColor = "";
-                el.style.borderColor = "";
-                el.style.color = "";
+                boxShadow: isActive ? "0 1px 4px rgba(47, 123, 224, 0.3)" : undefined,
               }}
             >
               {c.label}
@@ -542,10 +404,7 @@ export default function JobBoard() {
 
       {/* Results count */}
       {!loading && total > 0 && (
-        <p className="text-[11.5px] text-hub-text-3 mb-4">
-          <span className="font-medium text-hub-text-2">{total.toLocaleString()}</span>{" "}
-          {filterLabel} jobs
-        </p>
+        <Stat size="sm" value={total.toLocaleString()} label={`${filterLabel} jobs`} className="mb-4" />
       )}
 
       {/* Job list */}
@@ -569,10 +428,10 @@ export default function JobBoard() {
             initial={reduced ? { opacity: 0 } : "hidden"}
             animate={reduced ? { opacity: 1 } : "show"}
             exit={{ opacity: 0, transition: { duration: 0.1 } }}
-            className="flex flex-col gap-[3px]"
+            className="flex flex-col gap-2.5"
           >
             {jobs.map((job) => (
-              <JobCard key={job.id} job={job} reduced={reduced} canHoverRef={canHover} />
+              <JobCard key={job.id} job={job} reduced={reduced} />
             ))}
           </motion.div>
         ) : (
@@ -581,33 +440,20 @@ export default function JobBoard() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.1 } }}
-            className="py-14 text-center border border-dashed border-hub-border rounded-[10px]"
+            className="py-14 text-center border border-dashed border-border-soft rounded-(--jf-radius-row)"
           >
-            <SearchX size={26} strokeWidth={1.5} className="mx-auto mb-4 text-hub-text-3" />
-            <p className="text-[14px] font-semibold text-hub-text-1 mb-1.5">
+            <SearchX size={26} strokeWidth={1.5} className="mx-auto mb-4 text-ink-500" />
+            <p className="text-[14px] font-semibold text-ink-900 mb-1.5">
               {emptyTitle(searchQuery, category)}
             </p>
-            <p className="text-[12.5px] text-hub-text-3 max-w-[270px] mx-auto mb-5 leading-relaxed">
+            <p className="text-[12.5px] text-ink-500 max-w-[270px] mx-auto mb-5 leading-relaxed">
               {emptyHint(searchQuery, category)}
             </p>
             <motion.button
               onClick={clearFilters}
-              whileTap={reduced ? undefined : { scale: 0.96, transition: { duration: 0.08 } }}
-              className="text-[12px] font-medium text-hub-accent-fg bg-hub-accent-soft border border-hub-accent/20
-                         px-4 py-1.5 rounded-full"
-              style={{ transition: "background-color 130ms, border-color 130ms" }}
-              onMouseEnter={(e) => {
-                if (!canHover.current) return;
-                const el = e.currentTarget as HTMLButtonElement;
-                el.style.backgroundColor = "oklch(0.95 0.04 278)";
-                el.style.borderColor = "oklch(0.52 0.22 278 / 0.3)";
-              }}
-              onMouseLeave={(e) => {
-                if (!canHover.current) return;
-                const el = e.currentTarget as HTMLButtonElement;
-                el.style.backgroundColor = "";
-                el.style.borderColor = "";
-              }}
+              className="text-[12px] font-medium text-sapphire-brand bg-sapphire-50 border border-sapphire-brand/20
+                         hover:bg-sapphire-100 hover:border-sapphire-brand/30 transition-colors duration-150
+                         px-4 py-1.5 rounded-(--jf-radius-pill)"
             >
               Clear filters
             </motion.button>
@@ -622,37 +468,28 @@ export default function JobBoard() {
           transition={{ duration: 0.35 }}
           className="mt-6"
         >
-          <div className="relative overflow-hidden rounded-[24px] border border-slate-200 bg-white p-4 md:p-5 shadow-sm">
-            <div className="absolute inset-0 bg-gradient-to-b from-white/0 via-white/20 to-white/90 pointer-events-none" />
-            <div className="relative grid gap-4 md:grid-cols-[1.1fr_0.9fr] md:items-center">
-              <div className="space-y-3">
-                <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                  <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                  More jobs hidden
-                </div>
-                <p className="text-[14px] font-semibold text-slate-900">
-                  {access?.cta === "membership"
-                    ? "Upgrade your membership to reveal the rest of the board."
-                    : "Login to continue reading the job board."}
-                </p>
-                <p className="text-[12.5px] leading-relaxed text-slate-600">
-                  The preview stops here, with a soft blur just like Medium. Unlocking gives you the remaining jobs, search, and full filters.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3 pt-1">
-                  <a
-                    href={access?.cta === "membership" ? membershipHref : loginHref}
-                    className={`inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-transform hover:-translate-y-0.5 ${
-                      access?.cta === "membership"
-                        ? "bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 hover:bg-amber-400"
-                        : "bg-slate-900 text-white shadow-lg shadow-slate-900/20 hover:bg-slate-800"
-                    }`}
-                  >
+          <div className="rounded-(--jf-radius-panel) border border-border-soft bg-page p-4 md:p-5 shadow-sm">
+            <div className="space-y-3">
+              <div className="inline-flex items-center gap-2 rounded-(--jf-radius-pill) border border-border-soft bg-surface-alt px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-ink-500">
+                <Sparkles className="h-3.5 w-3.5 text-ink-500" />
+                More jobs hidden
+              </div>
+              <p className="text-[14px] font-semibold text-ink-900">
+                {access?.cta === "membership"
+                  ? "Upgrade your membership to reveal the rest of the board."
+                  : "Login to continue reading the job board."}
+              </p>
+              <p className="text-[12.5px] leading-relaxed text-ink-600">
+                The preview stops here, with a soft blur just like Medium. Unlocking gives you the remaining jobs, search, and full filters.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 pt-1">
+                <Button asChild variant="primary" size="sm">
+                  <a href={access?.cta === "membership" ? membershipHref : loginHref}>
                     {access?.cta === "membership" ? "Purchase Membership" : "Login"}
                     <ArrowRight className="h-4 w-4" />
                   </a>
-                </div>
+                </Button>
               </div>
-              <PreviewGhostStack />
             </div>
           </div>
         </motion.div>
@@ -660,54 +497,26 @@ export default function JobBoard() {
 
       {/* Pagination */}
       {!isPreviewLocked && totalPages > 1 && (
-        <div className="flex items-center justify-between mt-6 pt-5 border-t border-hub-border">
+        <div className="flex items-center justify-between mt-6 pt-5 border-t border-border-soft">
           <motion.button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            whileTap={reduced ? undefined : PRESS}
-            className="flex items-center gap-1.5 h-[32px] px-3 rounded-[8px] border border-hub-border
-                       bg-hub-surface text-[12px] font-medium text-hub-text-2
-                       disabled:opacity-30"
-            style={{ transition: "border-color 150ms, color 150ms" }}
-            onMouseEnter={(e) => {
-              if (!canHover.current) return;
-              const el = e.currentTarget as HTMLButtonElement;
-              el.style.borderColor = "var(--color-hub-border-strong)";
-              el.style.color = "var(--color-hub-text-1)";
-            }}
-            onMouseLeave={(e) => {
-              if (!canHover.current) return;
-              const el = e.currentTarget as HTMLButtonElement;
-              el.style.borderColor = "";
-              el.style.color = "";
-            }}
+            className="flex items-center gap-1.5 h-[32px] px-3 rounded-(--jf-radius-pill) border border-border-soft
+                       bg-page text-[12px] font-medium text-ink-700 hover:bg-surface-alt
+                       transition-colors duration-150 disabled:opacity-30"
           >
             <ChevronLeft size={13} />
             Prev
           </motion.button>
-          <span className="text-[12px] text-hub-text-3">
+          <span className="text-[12px] text-ink-500">
             Page {page} of {totalPages}
           </span>
           <motion.button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
-            whileTap={reduced ? undefined : PRESS}
-            className="flex items-center gap-1.5 h-[32px] px-3 rounded-[8px] border border-hub-border
-                       bg-hub-surface text-[12px] font-medium text-hub-text-2
-                       disabled:opacity-30"
-            style={{ transition: "border-color 150ms, color 150ms" }}
-            onMouseEnter={(e) => {
-              if (!canHover.current) return;
-              const el = e.currentTarget as HTMLButtonElement;
-              el.style.borderColor = "var(--color-hub-border-strong)";
-              el.style.color = "var(--color-hub-text-1)";
-            }}
-            onMouseLeave={(e) => {
-              if (!canHover.current) return;
-              const el = e.currentTarget as HTMLButtonElement;
-              el.style.borderColor = "";
-              el.style.color = "";
-            }}
+            className="flex items-center gap-1.5 h-[32px] px-3 rounded-(--jf-radius-pill) border border-border-soft
+                       bg-page text-[12px] font-medium text-ink-700 hover:bg-surface-alt
+                       transition-colors duration-150 disabled:opacity-30"
           >
             Next
             <ChevronRight size={13} />
