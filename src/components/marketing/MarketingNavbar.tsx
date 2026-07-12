@@ -23,12 +23,13 @@ function NavDropdown({
     <div className="group relative">
       <button
         onClick={onToggle}
+        aria-expanded={open}
         className="flex items-center gap-1 text-sm text-ink-600 transition-colors duration-200 hover:text-ink-900"
       >
         {label}
         <ChevronDown size={13} className="opacity-70 transition-transform duration-200 group-hover:rotate-180" />
       </button>
-      <div className="invisible absolute top-full left-1/2 z-50 w-[480px] -translate-x-1/2 translate-y-1 pt-3 opacity-0 transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
+      <div className={cn("invisible absolute top-full left-1/2 z-50 w-[480px] -translate-x-1/2 translate-y-1 pt-3 opacity-0 transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100", open && "visible opacity-100 translate-y-0")}>
         <div className="grid grid-cols-2 gap-1 rounded-[var(--jf-radius-panel)] border border-border-soft bg-page p-3 shadow-[var(--jf-shadow-frame)]">
           {links.map((link) => {
             const Icon = link.icon;
