@@ -44,12 +44,28 @@ export function HeroCardCluster() {
   const [mentorship, latestJobs, courses] = HERO_CLUSTER_CARDS;
 
   return (
-    <div className="relative h-[640px]">
-      {/* Connector strokes — reinforce "one illustration," not Clay's icon set */}
-      <svg viewBox="0 0 540 640" className="pointer-events-none absolute inset-0 h-full w-full" fill="none" aria-hidden>
-        <path d="M 216 140 C 228 108, 244 88, 268 74" stroke="var(--color-ink-400)" strokeWidth="1.4" />
-        <path d="M 500 260 C 516 284, 514 298, 500 310" stroke="var(--color-ink-400)" strokeWidth="1.4" />
-        <path d="M 150 610 C 168 582, 190 560, 216 544" stroke="var(--color-ink-400)" strokeWidth="1.4" />
+    <div className="relative h-[684px]">
+      {/*
+       * Connector stroke — reinforces "one illustration," not Clay's icon
+       * set. viewBox is set to the container's actual measured pixel
+       * dimensions (622 x 684 at the 1440px desktop target), not an
+       * arbitrary scale, so this coordinate maps 1:1 to the cards' real
+       * on-screen positions instead of being stretched/distorted.
+       * Only 1 arrow (Mentorship #1 → Latest Jobs #2): a second arrow was
+       * tried for Latest Jobs #2 → Courses #3, but that pair's only gap
+       * sits inside the small rectangle where the two cards already
+       * physically overlap — anything drawn there renders underneath the
+       * (z-index-higher) Courses card and is invisible. The physical
+       * card overlap itself already reads as "connected" there; forcing
+       * a hidden arrow added a maintenance trap for no visible benefit.
+       */}
+      <svg viewBox="0 0 622 684" className="pointer-events-none absolute inset-0 h-full w-full" fill="none" aria-hidden>
+        <defs>
+          <marker id="cluster-arrow" markerWidth="8" markerHeight="8" refX="5.5" refY="4" orient="auto">
+            <path d="M0,0 L7,4 L0,8" stroke="var(--color-ink-400)" strokeWidth="1.3" fill="none" />
+          </marker>
+        </defs>
+        <path d="M 235 150 C 270 190, 315 250, 350 316" stroke="var(--color-ink-400)" strokeWidth="1.4" markerEnd="url(#cluster-arrow)" />
       </svg>
 
       <ClusterCard card={latestJobs} position={CARD_POSITION[1]} />
