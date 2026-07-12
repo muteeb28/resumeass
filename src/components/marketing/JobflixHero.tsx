@@ -9,6 +9,7 @@
  */
 import { ArrowRight } from "lucide-react";
 import { Container, MonoLabel, Button, LogoStrip } from "./primitives";
+import { HeroCardCluster } from "./hero/HeroCardCluster";
 
 const hiredAt = ["Google", "Stripe", "Airbnb", "Figma", "Notion", "Spotify"];
 
@@ -32,8 +33,8 @@ export function JobflixHero() {
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Button href="/create" size="lg">
-                Create Resume
+              <Button href="/find-jobs" size="lg">
+                Apply to Jobs
                 <ArrowRight size={18} />
               </Button>
               <Button href="/optimize" variant="ghost" size="lg" className="text-ink-700 hover:bg-surface-alt">
@@ -42,16 +43,11 @@ export function JobflixHero() {
             </div>
 
             <p className="mt-6 font-mono-data text-[13.5px] text-ink-500">
-              Free to start · No credit card required
+              Helping candidates land interviews faster
             </p>
           </div>
 
-          {/* Right — TEMPORARY placeholder. Milestone 3 replaces this div
-              with <HeroCardCluster />. Deliberately obvious/dashed so it
-              reads as unfinished, not as a design decision. */}
-          <div className="flex h-[560px] items-center justify-center rounded-[var(--jf-radius-frame)] border border-dashed border-border-frame text-sm text-ink-400">
-            HeroCardCluster — Milestone 3
-          </div>
+          <HeroCardCluster />
         </div>
 
         <div className="mt-[var(--jf-space-section-tight)] border-t border-border-soft pt-8">
