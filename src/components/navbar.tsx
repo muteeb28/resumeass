@@ -1,29 +1,14 @@
 "use client";
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ChevronDown, Briefcase, ClipboardList, Mail, Building2, Globe, Plane, BookOpen, GraduationCap } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Button } from "./button";
 import AuthModal from "./auth-modal";
 import { useUserStore } from "../stores/useUserStore";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-
-const JOB_LINKS = [
-  { name: "Find Jobs", href: "/find-jobs", description: "Browse fresh job openings.", icon: Briefcase },
-  { name: "Job Tracker", href: "/job-tracker", description: "Track your applications.", icon: ClipboardList },
-  { name: "HR Emails", href: "/hr-emails", description: "Find verified HR contacts.", icon: Mail },
-  { name: "Dubai HR", href: "/dubai-hr", description: "UAE hiring contacts.", icon: Building2 },
-  { name: "Gulf Jobs", href: "/gulf-jobs", description: "Gulf region opportunities.", icon: Globe },
-  { name: "AU & NZ", href: "/au-nz", description: "Australia and New Zealand roles.", icon: Plane },
-];
-
-const LEARN_LINKS = [
-  { name: "Courses", href: "https://jobflix.in/courses", description: "Video courses and learning paths.", icon: GraduationCap, external: true },
-  { name: "Opportunities", href: "http://localhost:3000/opportunities", description: "Explore job and career opportunities.", icon: Briefcase, external: true },
-  { name: "Prepare", href: "http://localhost:3000/prepare", description: "Practice problems and interview prep.", icon: ClipboardList, external: true },
-  { name: "Interview Questions", href: "/interview-questions", description: "Practice company-wise interview questions.", icon: BookOpen, external: false },
-];
+import { JOB_LINKS, LEARN_LINKS } from "./marketing/nav-links";
 
 export const Navbar = ({
   className,
