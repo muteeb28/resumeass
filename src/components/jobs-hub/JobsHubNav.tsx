@@ -13,8 +13,7 @@ export function JobsHubNav() {
   return (
     <nav
       aria-label="Jobs Hub sections"
-      className="sticky top-16 z-[100] bg-hub-surface border-b border-hub-border"
-      style={{ fontFamily: 'var(--font-hub)' }}
+      className="sticky top-16 z-[100] bg-page border-b border-border-soft"
     >
       <div className="max-w-[940px] mx-auto px-5">
         <div className="flex items-end overflow-x-auto scrollbar-hide">
@@ -30,10 +29,10 @@ export function JobsHubNav() {
                 className={[
                   'relative flex items-center gap-[5px] px-[15px] py-[11px] shrink-0',
                   'text-[13px] transition-colors duration-[130ms] outline-none select-none',
-                  'focus-visible:ring-2 focus-visible:ring-hub-accent/30 focus-visible:rounded-t-[4px]',
+                  'focus-visible:ring-2 focus-visible:ring-sapphire-bright/30 focus-visible:rounded-t-[4px]',
                   isActive
-                    ? 'text-hub-text-1 font-semibold'
-                    : 'text-hub-text-3 font-medium hover:text-hub-text-2',
+                    ? 'text-ink-900 font-semibold'
+                    : 'text-ink-500 font-medium hover:text-ink-700',
                 ].join(' ')}
               >
                 <span>{tab.label}</span>
@@ -42,7 +41,7 @@ export function JobsHubNav() {
                   {isActive && (
                     <motion.span
                       key="dot"
-                      className="w-[5px] h-[5px] rounded-full bg-hub-accent flex-shrink-0"
+                      className="w-[5px] h-[5px] rounded-full bg-sapphire-bright flex-shrink-0"
                       initial={reduced ? { opacity: 0 } : TAB_DOT.initial}
                       animate={reduced ? { opacity: 1 } : TAB_DOT.animate}
                       exit={reduced ? { opacity: 0 } : { scale: 0.3, opacity: 0 }}
@@ -52,7 +51,7 @@ export function JobsHubNav() {
                 </AnimatePresence>
 
                 {tab.dataStatus === 'empty' && (
-                  <span className="text-[9px] font-semibold text-hub-text-3 bg-hub-bg-subtle border border-hub-border px-[5px] py-px rounded-[3px] leading-none">
+                  <span className="text-[9px] font-semibold text-ink-500 bg-surface-alt border border-border-soft px-[5px] py-px rounded-[3px] leading-none">
                     soon
                   </span>
                 )}
@@ -60,7 +59,7 @@ export function JobsHubNav() {
                 {isActive && (
                   <motion.div
                     layoutId="tab-indicator"
-                    className="absolute inset-x-0 bottom-0 h-[2px] rounded-t-[2px] bg-hub-accent"
+                    className="absolute inset-x-0 bottom-0 h-[2px] rounded-t-[2px] bg-sapphire-bright"
                     transition={reduced ? { duration: 0 } : TAB_INDICATOR}
                   />
                 )}
