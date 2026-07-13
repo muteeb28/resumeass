@@ -9,22 +9,44 @@ html {
 }
 
 :root {
-  --font-display: "Space Grotesk", "Segoe UI", sans-serif;
-  --font-body: "Manrope", "Segoe UI", sans-serif;
-  /* shadcn/ui semantic tokens (light) */
+  /* App-wide default is Onest (Design System typography table: "One
+     family for everything: Onest," weights 300–600). Root-level fix —
+     replaces the prior Manrope/Space Grotesk split so every route,
+     including the navbar, inherits Onest without a wrapper. */
+  --font-display: 'Onest', 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'Onest', 'Segoe UI', system-ui, sans-serif;
+  /* shadcn/ui semantic tokens (light) — repointed to JobFlix Design System
+     values (Sprint 2). Sourced: sapphire-bright #2F7BE0, ink-900 #0B2A3C,
+     ink-500 #647B8E, surface-alt #F5F8F7, border-soft #EEF2F1, semantic
+     Error #D6455B — all from JobFlix Design System.html's documented scale.
+     --secondary/--destructive/--accent/--ring/--input were previously
+     undefined here (no --color-* mapping existed for them at all), so
+     several ui/button.tsx variants silently generated no CSS. */
   --background: #ffffff;
-  --foreground: #09090b;
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --border: #e4e4e7;
-  --primary: #18181b;
-  --primary-foreground: #fafafa;
+  --foreground: #0B2A3C;
+  --muted: #F5F8F7;
+  --muted-foreground: #647B8E;
+  --border: #EEF2F1;
+  --primary: #2F7BE0;
+  --primary-foreground: #ffffff;
+  --secondary: #EAF0EF;
+  --secondary-foreground: #0B2A3C;
+  --destructive: #D6455B;
+  --destructive-foreground: #ffffff;
+  --accent: #F5F8F7;
+  --accent-foreground: #0B2A3C;
+  --ring: #2F7BE0;
+  --input: #EEF2F1;
   --card: #ffffff;
-  --card-foreground: #09090b;
+  --card-foreground: #0B2A3C;
   --font-sans: var(--font-body);
-  --app-bg: #fbfbf8;
+  /* Repointed to the Design System's page/ink-900 values (same pattern as
+     the font-family root fix) — html/body still reference --app-bg/
+     --app-ink below, but those now resolve to the JobFlix scale instead
+     of the pre-rebrand warm-off-white/near-black pair. */
+  --app-bg: var(--color-page);
   --app-surface: #ffffff;
-  --app-ink: #0b0b0b;
+  --app-ink: var(--color-ink-900);
   --app-muted: #5f6368;
   --app-border: #e6e6e3;
   --app-accent: #111111;
@@ -77,6 +99,14 @@ html {
   --color-border: var(--border);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-jobs-teal: #0D9488;
@@ -137,6 +167,145 @@ html {
   /* status */
   --color-hub-warn:           oklch(0.570 0.150  55);
   --color-hub-warn-bg:        oklch(0.950 0.050  55);
+}
+
+/* ──────────────────────────────────────────────────────────────
+   JobFlix Design System (v1.0) — brand tokens
+   Migration note: this block replaces the prior "Ledger" azure
+   system in place. Existing `--color-brand-*` / `--shadow-brand-*`
+   names are KEPT (still consumed by src/components/marketing/*
+   pending the Sprint 1 hero rebuild) but their VALUES are now the
+   locked JobFlix Sapphire palette. New canonical tokens (ink scale,
+   navy-900, surfaces/borders, semantic colors) are added alongside
+   for direct use by future migrated surfaces. Font vars are left
+   untouched — global font migration is a separate, later sprint.
+   ────────────────────────────────────────────────────────────── */
+@theme {
+  --font-hanken: 'Onest', 'Segoe UI', system-ui, sans-serif;
+  --font-mono-data: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+  /* Legacy brand-* names — repointed to JobFlix values, kept for existing consumers */
+  --color-brand-canvas: #FFFFFF;
+  --color-brand-surface: #FFFFFF;
+  --color-brand-sunken: #F5F8F7;
+  --color-brand-row: #EAF0EF;
+  --color-brand-border: #EEF2F1;
+  --color-brand-border-strong: #E4EBEF;
+  --color-brand-ink: #0B2A3C;
+  --color-brand-ink-dark: #071E2B;
+  --color-brand-ink-70: #24455B;
+  --color-brand-ink-40: #93A5B2;
+  --color-brand-mono: #647B8E;
+
+  --color-brand-accent: #2F7BE0;
+  --color-brand-accent-hover: #1D5FD8;
+  --color-brand-accent-soft: #CFE0FB;
+  --color-brand-accent-ink: #163F8C;
+
+  --shadow-brand-sm: 0 1px 2px rgba(7, 30, 43, 0.06);
+  --shadow-brand-md: 0 4px 14px rgba(7, 30, 43, 0.10);
+  --shadow-brand-lg: 0 24px 60px -12px rgba(7, 30, 43, 0.30);
+
+  /* Canonical JobFlix Sapphire scale */
+  --color-sapphire-brand: #1D5FD8;
+  --color-sapphire-bright: #2F7BE0;
+  --color-sapphire-mid: #2FA1DC;
+  --color-sapphire-sky: #4FB6E8;
+  --color-sapphire-700: #163F8C;
+  /* Sourced from the reference's own embedded palette object (Sapphire.b800) — confirmed by computed-style match on the AI-feedback body text. */
+  --color-sapphire-800: #12326E;
+  --color-sapphire-100: #CFE0FB;
+  --color-sapphire-50: #EAF1FD;
+
+  /* Canonical ink scale — text on light surfaces */
+  --color-ink-900: #0B2A3C;
+  --color-ink-700: #24455B;
+  --color-ink-600: #3E556B;
+  --color-ink-500: #647B8E;
+  --color-ink-400: #93A5B2;
+
+  /* Text on dark (navy) surfaces */
+  --color-dark-body: #C0CFDA;
+  --color-dark-nav: #C6D3DC;
+  --color-dark-link: #B7C6D1;
+  --color-dark-muted: #7E96A6;
+  --color-dark-faint: #5E7688;
+
+  /* Surfaces, borders, dark theater */
+  --color-page: #FFFFFF;
+  --color-surface-alt: #F5F8F7;
+  --color-track: #EAF0EF;
+  --color-border-soft: #EEF2F1;
+  --color-border-frame: #E4EBEF;
+  --color-navy-900: #071E2B;
+
+  /* Semantic (intentional additions, harmonized with ink/brand hues) */
+  --color-success: #0FA573;
+  --color-warning: #C77414;
+  --color-error: #D6455B;
+  --color-info: #2FA1DC;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   JobFlix Design System (v1.0) — structural tokens
+   Containers, vertical rhythm, component spacing, radii, shadows
+   and signature gradients from the locked Design System. Consumed
+   via Tailwind arbitrary values, e.g. max-w-(--jf-container-wide),
+   rounded-(--jf-radius-panel), shadow-(--jf-shadow-theatrical).
+   ────────────────────────────────────────────────────────────── */
+:root {
+  /* Three containers */
+  --jf-container-wide: 1240px;
+  --jf-container-content: 1180px;
+  --jf-container-prose: 1000px;
+
+  /* Vertical rhythm */
+  --jf-space-page-padding: 40px;
+  --jf-space-section: 96px;
+  --jf-space-section-tight: 80px;
+  --jf-space-section-loose: 112px;
+  --jf-space-nav-height: 74px;
+  --jf-space-hero-pad-top: 104px;
+  --jf-space-hero-pad-bottom: 64px;
+  --jf-gap-hero: 56px;
+  --jf-gap-feature: 64px;
+  --jf-gap-stats: 40px;
+  --jf-gap-footer: 32px;
+  --jf-gap-nav: 28px;
+  --jf-gap-cta-pair: 12px;
+
+  /* Component spacing */
+  --jf-space-frame-pad: 20px;
+  --jf-space-panel-pad: 22px;
+  --jf-space-row-chip-x: 13px;
+  --jf-space-row-chip-y: 11px;
+  --jf-space-btn-lg-x: 28px;
+  --jf-space-btn-lg-y: 15px;
+  --jf-space-btn-sm-x: 18px;
+  --jf-space-btn-sm-y: 9px;
+
+  /* Radii */
+  --jf-radius-pill: 9999px;
+  --jf-radius-panel: 20px;
+  --jf-radius-frame: 14px;
+  --jf-radius-row: 12px;
+  --jf-radius-tile: 9px;
+  --jf-radius-mini: 6px;
+
+  /* Elevation — navy-tinted, long-throw, soft */
+  /* Verified against JobFlix Homepage.html's own embedded source (the
+     `frame()` helper) — exact two-layer shadow for flat feature-row cards. */
+  --jf-shadow-frame: 0 8px 16px -8px rgba(11, 42, 60, 0.14), 0 13px 27px -12px rgba(11, 42, 60, 0.12);
+  --jf-shadow-panel: 0 4px 14px rgba(7, 30, 43, 0.10);
+  /* Both verified via computed-style match against the hero's dominant
+     panel and "This week" mini-card on JobFlix Homepage.html. */
+  --jf-shadow-theatrical: 0 44px 70px -42px rgba(7, 20, 32, 0.65), 0 60px 130px -20px rgba(7, 20, 32, 0.5);
+  --jf-shadow-theatrical-sm: 0 30px 50px -32px rgba(7, 20, 32, 0.5), 0 40px 90px -36px rgba(7, 20, 32, 0.35);
+
+  /* Signature gradients */
+  --jf-grad: linear-gradient(118deg, #2F7BE0 0%, #2FA1DC 55%, #0FA573 100%);
+  --jf-grad-dark: linear-gradient(150deg, #071E2B 0%, #0B2A3C 55%, #163F8C 100%);
+  --jf-grad-bar: linear-gradient(90deg, #1D5FD8 0%, #2FA1DC 100%);
 }
 
 @layer base {

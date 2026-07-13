@@ -1,12 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { cn } from "../../lib/utils";
 import { Container, Button } from "./primitives";
 import { JOB_LINKS, LEARN_LINKS } from "./nav-links";
-import { useUserStore } from "../../stores/useUserStore";
 
 function NavDropdown({
   label,
@@ -24,7 +23,7 @@ function NavDropdown({
       <button
         onClick={onToggle}
         aria-expanded={open}
-        className="flex items-center gap-1 text-sm text-ink-600 transition-colors duration-200 hover:text-ink-900"
+        className="flex items-center gap-1 text-sm font-medium text-ink-600 transition-colors duration-200 hover:text-ink-900"
       >
         {label}
         <ChevronDown size={13} className="opacity-70 transition-transform duration-200 group-hover:rotate-180" />
@@ -58,12 +57,20 @@ function NavDropdown({
 }
 
 export function MarketingNavbar() {
-  const { user, logout } = useUserStore();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [jobsOpen, setJobsOpen] = useState(false);
   const [learnOpen, setLearnOpen] = useState(false);
   const [mobileJobsOpen, setMobileJobsOpen] = useState(false);
   const [mobileLearnOpen, setMobileLearnOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 0);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const loginHref =
     typeof window !== "undefined"
@@ -71,51 +78,44 @@ export function MarketingNavbar() {
       : "#";
 
   return (
-    <nav className="relative z-50 bg-page">
+    <nav className={cn(
+      "sticky top-0 z-50 bg-page transition-shadow duration-200",
+      scrolled && "shadow-[var(--jf-shadow-frame)] border-b border-border-soft"
+    )}>
       <Container width="wide">
         <div className="flex h-16 items-center justify-between">
+          {/* Zone 1: Logo */}
           <Link href="/" className="flex items-center">
             <img src="/logo.png" alt="ResumeAssist AI" className="h-9 w-auto object-contain" />
           </Link>
 
+          {/* Zone 2: Navigation Links */}
           <div className="hidden items-center gap-9 md:flex">
-            <Link href="/referrals" className="text-sm text-ink-600 transition-colors duration-200 hover:text-ink-900">
+            <Link href="/referrals" className="text-sm font-medium text-ink-600 transition-colors duration-200 hover:text-ink-900">
               Job Referrals
             </Link>
             <NavDropdown label="Jobs" links={JOB_LINKS} open={jobsOpen} onToggle={() => setJobsOpen((v) => !v)} />
             <NavDropdown label="Learn" links={LEARN_LINKS} open={learnOpen} onToggle={() => setLearnOpen((v) => !v)} />
-            <Link href="/pricing" className="text-sm text-ink-600 transition-colors duration-200 hover:text-ink-900">
+            <Link href="/pricing" className="text-sm font-medium text-ink-600 transition-colors duration-200 hover:text-ink-900">
               Pricing
             </Link>
-            <Link href="/blog" className="text-sm text-ink-600 transition-colors duration-200 hover:text-ink-900">
+            <Link href="/blog" className="text-sm font-medium text-ink-600 transition-colors duration-200 hover:text-ink-900">
               Blog
             </Link>
-            <Link href="/contact-us" className="text-sm text-ink-600 transition-colors duration-200 hover:text-ink-900">
+            <Link href="/contact-us" className="text-sm font-medium text-ink-600 transition-colors duration-200 hover:text-ink-900">
               Contact Us
             </Link>
           </div>
 
+          {/* Zone 3: Actions */}
           <div className="hidden items-center gap-5 md:flex">
-            {user ? (
-              <div className="group relative">
-                <button className="flex h-9 w-9 items-center justify-center rounded-full bg-ink-900 text-sm font-medium text-white">
-                  {user.email ? user.email.split("@")[0].slice(0, 2).toUpperCase() : "?"}
-                </button>
-                <div className="invisible absolute right-0 z-50 mt-2 w-40 translate-y-1 rounded-md border border-border-soft bg-page opacity-0 shadow-[var(--jf-shadow-frame)] transition-all duration-150 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
-                  <a href={`${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/my-account/dashboard/me`} className="block px-4 py-2 text-sm text-ink-700 hover:bg-surface-alt">Profile</a>
-                  <a href={`${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/my-account/membership`} className="block px-4 py-2 text-sm text-ink-700 hover:bg-surface-alt">Memberships</a>
-                  <Link href="/resume" className="block px-4 py-2 text-sm text-ink-700 hover:bg-surface-alt">My resume</Link>
-                  <button onClick={async () => { await logout(); window.location.href = "/"; }} className="w-full px-4 py-2 text-left text-sm text-ink-700 hover:bg-surface-alt">Logout</button>
-                </div>
-              </div>
-            ) : (
-              <Button href={loginHref} variant="ghost" className="text-ink-700 hover:bg-surface-alt">
-                Log in
-              </Button>
-            )}
+            <Link href={loginHref} className="text-sm font-medium text-ink-600 hover:text-ink-900 transition-colors duration-200">
+              Log in
+            </Link>
             <Button href="/create">Sign up ↗</Button>
           </div>
 
+          {/* Mobile hamburger */}
           <button className="p-2 text-ink-700 md:hidden" onClick={() => setMobileOpen((v) => !v)} aria-label="Toggle menu">
             <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {mobileOpen ? (
@@ -136,7 +136,7 @@ export function MarketingNavbar() {
               transition={{ duration: 0.2, ease: "easeInOut" }}
               className="overflow-hidden md:hidden"
             >
-              <div className="space-y-1 rounded-lg border border-border-soft bg-page px-2 pt-2 pb-3">
+              <div className="space-y-1 rounded-lg border border-border-soft bg-page px-2 pt-2 pb-3 mb-3">
                 <Link href="/referrals" className="block rounded-md px-3 py-2 text-sm font-medium text-ink-700 hover:bg-surface-alt" onClick={() => setMobileOpen(false)}>Job Referrals</Link>
 
                 <div>
@@ -178,11 +178,9 @@ export function MarketingNavbar() {
                 <Link href="/contact-us" className="block rounded-md px-3 py-2 text-sm font-medium text-ink-700 hover:bg-surface-alt" onClick={() => setMobileOpen(false)}>Contact Us</Link>
 
                 <div className="mt-2 space-y-2 border-t border-border-soft px-3 pt-3">
-                  {!user && (
-                    <Button href={loginHref} variant="ghost" className="w-full justify-center text-ink-700">
-                      Log in
-                    </Button>
-                  )}
+                  <Button href={loginHref} variant="ghost" className="w-full justify-center text-ink-700">
+                    Log in
+                  </Button>
                   <Button href="/create" className="w-full justify-center">
                     Sign up ↗
                   </Button>

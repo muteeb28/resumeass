@@ -1,6 +1,7 @@
 "use client";
 
 import { MarketingNavbar } from "./marketing/MarketingNavbar";
+import { BlogTicker } from "./marketing/BlogTicker";
 import { BackgroundRippleLayout } from "./background-ripple-layout";
 import { JobflixHero } from "./marketing/JobflixHero";
 import { Container, SectionHeader, Stat, Button } from "./marketing/primitives";
@@ -21,8 +22,9 @@ const stats = [
 
 export function AnimatedPinDemo() {
   return (
-    <BackgroundRippleLayout tone="dark">
+    <BackgroundRippleLayout tone="light">
       <MarketingNavbar />
+      <BlogTicker />
 
       {/* Onest applies to the whole migrated marketing body (not Navbar,
           which stays out of font-migration scope until its own sprint). */}
