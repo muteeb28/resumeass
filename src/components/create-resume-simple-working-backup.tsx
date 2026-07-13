@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "./ui/button";
-import { Navbar } from "./navbar";
 
 export const CreateResumeSimpleWorking = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
@@ -29,7 +28,6 @@ export const CreateResumeSimpleWorking = () => {
 
   return (
     <div className="min-h-screen bg-black">
-      <Navbar />
       <div className="pt-24 pb-20 px-4 relative z-10">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">

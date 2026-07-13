@@ -7,7 +7,6 @@ import { JobflixHero } from "./marketing/JobflixHero";
 import { Container, SectionHeader, Stat, Button } from "./marketing/primitives";
 import { FeatureRow } from "./marketing/FeatureRow";
 import { TestimonialQuote } from "./marketing/TestimonialQuote";
-import { Footer } from "./marketing/Footer";
 import { ResumeATSPanel } from "./marketing/panels/ResumeATSPanel";
 import { JobsReferralsPanel } from "./marketing/panels/JobsReferralsPanel";
 import { InterviewPrepPanel } from "./marketing/panels/InterviewPrepPanel";
@@ -142,8 +141,6 @@ export function AnimatedPinDemo() {
           </div>
         </Container>
       </section>
-
-      <Footer />
       </div>
     </BackgroundRippleLayout>
   );

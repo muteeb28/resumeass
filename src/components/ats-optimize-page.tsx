@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { BackgroundRippleLayout } from "@/components/background-ripple-layout";
-import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { buildApiUrl } from "@/services/resumeOptimizerApi";
@@ -180,8 +179,6 @@ export default function ATSOptimizePage() {
 
   return (
     <BackgroundRippleLayout tone="light" contentClassName="ats-optimizer pt-16">
-      <Navbar tone="light" />
-
       {/* Progress Bar */}
       <div className="bg-page/90 backdrop-blur-md border-b border-border-soft sticky top-16 z-40">
         <div className="container mx-auto px-6 py-4">

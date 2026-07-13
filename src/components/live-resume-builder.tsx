@@ -1,7 +1,6 @@
 "use client";
 import { useState, useRef, useCallback } from "react";
 import { Button } from "./ui/button";
-import { Navbar } from "./navbar";
 import { OptimizedResumeTemplate } from "./optimized-resume-template";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -256,7 +255,6 @@ export const LiveResumeBuilder = () => {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navbar />
       <div className="pt-20 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-2">

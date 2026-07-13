@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "./ui/button";
-import { Navbar } from "./navbar";
 import { ResumeGeneratorService, type ResumeData } from "../services/resumeGenerator";
 
 type CreateStep = 'templates' | 'job-description' | 'generating' | 'preview' | 'payment';
@@ -744,7 +743,6 @@ export const CreateResumePage = () => {
 
   return (
     <div className="min-h-screen bg-black">
-      <Navbar />
       <div className="pt-24 pb-20 px-4">
         <div className="max-w-7xl mx-auto">
           <AnimatePresence mode="wait">

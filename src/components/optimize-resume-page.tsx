@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { BackgroundRippleLayout } from "@/components/background-ripple-layout";
-import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import TemplatePreview from "@/components/resume-optimizer/TemplatePreview";
 import FinalResumePreview from "@/components/resume-optimizer/FinalResumePreview";
@@ -213,7 +212,6 @@ export default function OptimizeResumePage() {
 
   return (
     <BackgroundRippleLayout tone="dark" contentClassName="resume-optimizer pt-16">
-      <Navbar />
 
       <div className="bg-black/40 backdrop-blur-md border-b border-white/10 sticky top-16 z-40">
         <div className="container mx-auto px-6 py-4">

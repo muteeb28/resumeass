@@ -1,5 +1,4 @@
 import { useRouter } from 'next/navigation';
-import { Navbar } from './navbar';
 
 export const CreateResumeSimpleWorking = () => {
   const router = useRouter();
@@ -17,8 +16,7 @@ export const CreateResumeSimpleWorking = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-black">
-      <Navbar />
+    <div className="min-h-screen bg-black">      
       <div className="pt-24 pb-20 px-4 relative z-10">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">

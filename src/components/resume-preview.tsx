@@ -1,7 +1,6 @@
 "use client";
 import { type ResumeData } from "../services/resumeGenerator";
 import { Button } from "./ui/button";
-import { Navbar } from "./navbar";
 import { DeedyResume } from "./deedy-resume";
 
 interface ResumePreviewProps {
@@ -849,8 +848,7 @@ export const ResumePreview = ({ resumeData, templateId, templateName }: ResumePr
   };
 
   return (
-    <div className="min-h-screen bg-black">
-      <Navbar />
+    <div className="min-h-screen bg-black">      
       <div className="pt-24 pb-20 px-4">
         <div className="max-w-6xl mx-auto">
           {/* Header */}

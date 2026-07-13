@@ -6,6 +6,8 @@ import AuthProvider from './AuthProvider'
 import Providers from './Providers'
 import { Toaster } from "@/components/ui/sonner";
 import MembershipSync from '@/components/MembershipSync';
+import { Navbar } from '@/components/navbar'
+import { Footer } from '@/components/marketing/Footer'
 
 export const metadata: Metadata = {
   title: 'ResumeAssist AI - AI-Powered Resume Builder',
@@ -42,7 +44,9 @@ export default function RootLayout({
         <Providers>
           <AuthProvider>
             <MembershipSync />
+            <Navbar tone="light" />
             {children}
+            <Footer />
           </AuthProvider>
         </Providers>
         <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />

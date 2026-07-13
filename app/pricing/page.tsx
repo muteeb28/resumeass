@@ -9,7 +9,6 @@ import axiosInstance from "@/lib/axios";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { H1_CTA_BAND, SECTION_TITLE, INTRO_TEXT } from "@/lib/typography";
-import { Navbar } from "@/components/navbar";
 import { BackgroundRippleLayout } from "@/components/background-ripple-layout";
 
 const TIER_WEIGHTS: Record<string, number> = {
@@ -275,7 +274,6 @@ export default function MembershipPage() {
       contentClassName="pt-[74px]"
       showRipple={false}
     >
-      <Navbar tone="light" />
 
       {/* ─── SECTION 1: HERO HEADER ─── */}
       <header className="relative py-20 px-4 text-center overflow-hidden border-b border-border-soft">

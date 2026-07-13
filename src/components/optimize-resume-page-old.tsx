@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "./ui/button";
-import { Navbar } from "./navbar";
 import { DeepSeekOptimizationService } from "../services/deepseekOptimization";
 
 type OptimizeStep = 'upload' | 'target-role' | 'job-description' | 'optimizing' | 'template-selection' | 'payment';
@@ -675,7 +674,6 @@ CERTIFICATIONS
 
   return (
     <div className="min-h-screen bg-black">
-      <Navbar />
       <div className="pt-24 pb-20 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">

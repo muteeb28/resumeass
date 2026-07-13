@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Button } from "./ui/button";
-import { Navbar } from "./navbar";
 import { type ResumeData, ResumeGeneratorService } from "../services/resumeGenerator";
 import { ResumePreview } from "./resume-preview";
 
@@ -179,7 +178,6 @@ export const ResumeBuilder = ({ selectedTemplate }: ResumeBuilderProps) => {
 
   return (
     <div className="min-h-screen bg-black">
-      <Navbar />
       <div className="pt-24 pb-20 px-4">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
