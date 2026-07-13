@@ -1,5 +1,5 @@
 "use client";
-import { Button } from "./button";
+import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { motion } from "motion/react";
 

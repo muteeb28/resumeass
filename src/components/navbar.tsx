@@ -3,7 +3,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "../lib/utils";
-import { Button } from "./button";
+import { Button } from "./ui/button";
 import AuthModal from "./auth-modal";
 import { useUserStore } from "../stores/useUserStore";
 import { useRouter } from "next/navigation";
@@ -29,19 +29,19 @@ export const Navbar = ({
 
   const linkCls = cn(
     "transition-colors duration-200 relative group text-sm font-medium",
-    isLight ? "text-slate-600 hover:text-slate-900" : "text-slate-300 hover:text-white"
+    isLight ? "text-ink-600 hover:text-ink-900" : "text-dark-nav hover:text-white"
   );
 
   const underline = cn(
-    "absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r transition-all duration-300 group-hover:w-full",
-    isLight ? "from-teal-500 to-emerald-500" : "from-neutral-400 to-neutral-200"
+    "absolute -bottom-1 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full",
+    isLight ? "bg-sapphire-bright" : "bg-sapphire-sky"
   );
 
   const mobileLinkCls = cn(
     "block px-3 py-2 rounded-md transition-all duration-200 text-sm font-medium",
     isLight
-      ? "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
-      : "text-slate-300 hover:text-white hover:bg-slate-800/50"
+      ? "text-ink-700 hover:text-ink-900 hover:bg-surface-alt"
+      : "text-dark-nav hover:text-white hover:bg-white/10"
   );
 
   return (
@@ -51,12 +51,12 @@ export const Navbar = ({
       transition={{ duration: 0.6, ease: "easeOut" }}
       className={cn(
         "fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b",
-        isLight ? "bg-white/85 border-slate-200" : "bg-black/80 border-slate-800",
+        isLight ? "bg-page/85 border-border-soft" : "bg-navy-900/90 border-white/10",
         className
       )}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-[74px]">
           {/* Logo */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -97,7 +97,7 @@ export const Navbar = ({
               <button
                 className={cn(
                   "flex items-center gap-1 transition-colors duration-200 text-sm font-medium",
-                  isLight ? "text-slate-600 hover:text-slate-900" : "text-slate-300 hover:text-white"
+                  isLight ? "text-ink-600 hover:text-ink-900" : "text-dark-nav hover:text-white"
                 )}
               >
                 Jobs
@@ -109,10 +109,10 @@ export const Navbar = ({
               <div className="absolute top-full left-0 w-[480px] pt-3 opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200 z-50">
                 <div
                   className={cn(
-                    "rounded-xl border p-3 grid grid-cols-2 gap-1",
+                    "rounded-[var(--jf-radius-panel)] border p-3 grid grid-cols-2 gap-1",
                     isLight
-                      ? "bg-white border-slate-200 shadow-xl shadow-slate-200/60"
-                      : "bg-slate-900 border-slate-700/80 shadow-xl shadow-black/30"
+                      ? "bg-page border-border-soft shadow-[var(--jf-shadow-frame)]"
+                      : "bg-navy-900 border-white/10 shadow-xl shadow-black/30"
                   )}
                 >
                   {JOB_LINKS.map((link) => {
@@ -123,13 +123,13 @@ export const Navbar = ({
                         href={link.href}
                         className={cn(
                           "flex items-start gap-3 px-3 py-3 rounded-lg transition-colors duration-150",
-                          isLight ? "hover:bg-slate-50" : "hover:bg-slate-800/60"
+                          isLight ? "hover:bg-surface-alt" : "hover:bg-white/10"
                         )}
                       >
                         <div
                           className={cn(
                             "flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center mt-0.5",
-                            isLight ? "bg-neutral-100 text-neutral-600" : "bg-neutral-500/10 text-neutral-400"
+                            isLight ? "bg-surface-alt text-ink-600" : "bg-white/10 text-dark-muted"
                           )}
                         >
                           <Icon size={15} />
@@ -138,7 +138,7 @@ export const Navbar = ({
                           <div
                             className={cn(
                               "text-sm font-semibold leading-tight",
-                              isLight ? "text-neutral-900" : "text-neutral-100"
+                              isLight ? "text-ink-900" : "text-white"
                             )}
                           >
                             {link.name}
@@ -146,7 +146,7 @@ export const Navbar = ({
                           <div
                             className={cn(
                               "text-xs mt-0.5 leading-snug",
-                              isLight ? "text-slate-500" : "text-slate-400"
+                              isLight ? "text-ink-500" : "text-dark-muted"
                             )}
                           >
                             {link.description}
@@ -169,7 +169,7 @@ export const Navbar = ({
               <button
                 className={cn(
                   "flex items-center gap-1 transition-colors duration-200 text-sm font-medium",
-                  isLight ? "text-slate-600 hover:text-slate-900" : "text-slate-300 hover:text-white"
+                  isLight ? "text-ink-600 hover:text-ink-900" : "text-dark-nav hover:text-white"
                 )}
               >
                 Learn
@@ -181,10 +181,10 @@ export const Navbar = ({
               <div className="absolute top-full left-0 w-[480px] pt-3 opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200 z-50">
                 <div
                   className={cn(
-                    "rounded-xl border p-3 grid grid-cols-2 gap-1",
+                    "rounded-[var(--jf-radius-panel)] border p-3 grid grid-cols-2 gap-1",
                     isLight
-                      ? "bg-white border-slate-200 shadow-xl shadow-slate-200/60"
-                      : "bg-slate-900 border-slate-700/80 shadow-xl shadow-black/30"
+                      ? "bg-page border-border-soft shadow-[var(--jf-shadow-frame)]"
+                      : "bg-navy-900 border-white/10 shadow-xl shadow-black/30"
                   )}
                 >
                   {LEARN_LINKS.map((link) => {
@@ -194,7 +194,7 @@ export const Navbar = ({
                         <div
                           className={cn(
                             "flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center mt-0.5",
-                            isLight ? "bg-neutral-100 text-neutral-600" : "bg-neutral-500/10 text-neutral-400"
+                            isLight ? "bg-surface-alt text-ink-600" : "bg-white/10 text-dark-muted"
                           )}
                         >
                           <Icon size={15} />
@@ -203,7 +203,7 @@ export const Navbar = ({
                           <div
                             className={cn(
                               "text-sm font-semibold leading-tight",
-                              isLight ? "text-neutral-900" : "text-neutral-100"
+                              isLight ? "text-ink-900" : "text-white"
                             )}
                           >
                             {link.name}
@@ -211,7 +211,7 @@ export const Navbar = ({
                           <div
                             className={cn(
                               "text-xs mt-0.5 leading-snug",
-                              isLight ? "text-slate-500" : "text-slate-400"
+                              isLight ? "text-ink-500" : "text-dark-muted"
                             )}
                           >
                             {link.description}
@@ -221,7 +221,7 @@ export const Navbar = ({
                     );
                     const itemCls = cn(
                       "flex items-start gap-3 px-3 py-3 rounded-lg transition-colors duration-150",
-                      isLight ? "hover:bg-slate-50" : "hover:bg-slate-800/60"
+                      isLight ? "hover:bg-surface-alt" : "hover:bg-white/10"
                     );
                     return link.external ? (
                       <a
@@ -282,7 +282,7 @@ export const Navbar = ({
               size="sm"
               onClick={() => router.push("/contact-us")}
               className={cn(
-                isLight ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100" : ""
+                isLight ? "text-ink-600 hover:text-ink-900 hover:bg-surface-alt" : "text-white hover:bg-white/10"
               )}
             >
               Contact Us
@@ -292,7 +292,7 @@ export const Navbar = ({
                 <button
                   className={cn(
                     "flex items-center justify-center w-9 h-9 rounded-full text-white text-sm font-medium",
-                    isLight ? "bg-slate-900" : "bg-neutral-700"
+                    isLight ? "bg-ink-900" : "bg-white/15"
                   )}
                   aria-haspopup="true"
                   aria-expanded={false}
@@ -303,30 +303,30 @@ export const Navbar = ({
                 <div
                   className={cn(
                     "absolute right-0 mt-2 w-40 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transform translate-y-1 group-hover:translate-y-0 transition-all duration-150 z-50 border",
-                    isLight ? "bg-white border-neutral-200" : "bg-slate-800 border-slate-700"
+                    isLight ? "bg-page border-border-soft" : "bg-navy-900 border-white/10"
                   )}
                 >
                   <a
                     href={`${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/my-account/dashboard/me`}
-                    className={cn("block px-4 py-2 text-sm", isLight ? "text-neutral-700 hover:bg-neutral-100" : "text-slate-200 hover:bg-slate-700")}
+                    className={cn("block px-4 py-2 text-sm", isLight ? "text-ink-700 hover:bg-surface-alt" : "text-dark-nav hover:bg-white/10")}
                   >
                     Profile
                   </a>
                   <a
                     href={`${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/my-account/membership`}
-                    className={cn("block px-4 py-2 text-sm", isLight ? "text-neutral-700 hover:bg-neutral-100" : "text-slate-200 hover:bg-slate-700")}
+                    className={cn("block px-4 py-2 text-sm", isLight ? "text-ink-700 hover:bg-surface-alt" : "text-dark-nav hover:bg-white/10")}
                   >
                     Memberships
                   </a>
                   <Link
                     href="/resume"
-                    className={cn("block px-4 py-2 text-sm", isLight ? "text-neutral-700 hover:bg-neutral-100" : "text-slate-200 hover:bg-slate-700")}
+                    className={cn("block px-4 py-2 text-sm", isLight ? "text-ink-700 hover:bg-surface-alt" : "text-dark-nav hover:bg-white/10")}
                   >
                     My resume
                   </Link>
                   <button
                     onClick={async () => { await logout(); router.replace("/"); }}
-                    className={cn("w-full text-left px-4 py-2 text-sm", isLight ? "text-neutral-700 hover:bg-neutral-100" : "text-slate-200 hover:bg-slate-700")}
+                    className={cn("w-full text-left px-4 py-2 text-sm", isLight ? "text-ink-700 hover:bg-surface-alt" : "text-dark-nav hover:bg-white/10")}
                   >
                     Logout
                   </button>
@@ -340,7 +340,7 @@ export const Navbar = ({
                   window.location.href = `${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/login?next=${encodeURIComponent(window.location.origin)}`
                 }
                 className={cn(
-                  isLight ? "text-slate-700 hover:text-slate-900 hover:bg-slate-100" : ""
+                  isLight ? "text-ink-700 hover:text-ink-900 hover:bg-surface-alt" : "text-white hover:bg-white/10"
                 )}
               >
                 Login
@@ -354,7 +354,7 @@ export const Navbar = ({
               onClick={() => setIsOpen(!isOpen)}
               className={cn(
                 "transition-colors duration-200 p-2",
-                isLight ? "text-slate-700 hover:text-slate-900" : "text-slate-300 hover:text-white"
+                isLight ? "text-ink-700 hover:text-ink-900" : "text-dark-nav hover:text-white"
               )}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -371,7 +371,7 @@ export const Navbar = ({
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                   className={cn(
                     "flex items-center justify-center w-9 h-9 rounded-full text-white text-sm font-medium transition-transform active:scale-95",
-                    isLight ? "bg-slate-900" : "bg-neutral-700"
+                    isLight ? "bg-ink-900" : "bg-white/15"
                   )}
                   aria-haspopup="true"
                   aria-expanded={isMenuOpen}
@@ -382,20 +382,20 @@ export const Navbar = ({
                 <div
                   className={cn(
                     "absolute right-0 mt-2 w-40 rounded-md shadow-lg transform transition-all duration-150 z-50 border",
-                    isLight ? "bg-white border-neutral-200" : "bg-slate-800 border-slate-700",
+                    isLight ? "bg-page border-border-soft" : "bg-navy-900 border-white/10",
                     isMenuOpen ? "opacity-100 visible translate-y-0" : "opacity-0 invisible translate-y-1"
                   )}
                 >
                   <a
                     href={`${process.env.NEXT_PUBLIC_AUTH_CLIENT_URL}/my-account/dashboard/me`}
-                    className={cn("block px-4 py-2 text-sm", isLight ? "text-neutral-700 hover:bg-neutral-100" : "text-slate-200 hover:bg-slate-700")}
+                    className={cn("block px-4 py-2 text-sm", isLight ? "text-ink-700 hover:bg-surface-alt" : "text-dark-nav hover:bg-white/10")}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Profile
                   </a>
                   <a
                     href={`${process.env.NEXT_PUBLIC_AUTH_CLIENT_URL}/my-account/dashboard/me`}
-                    className={cn("block px-4 py-2 text-sm", isLight ? "text-neutral-700 hover:bg-neutral-100" : "text-slate-200 hover:bg-slate-700")}
+                    className={cn("block px-4 py-2 text-sm", isLight ? "text-ink-700 hover:bg-surface-alt" : "text-dark-nav hover:bg-white/10")}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Orders
@@ -406,7 +406,7 @@ export const Navbar = ({
                       await logout();
                       router.replace("/");
                     }}
-                    className={cn("w-full text-left px-4 py-2 text-sm", isLight ? "text-neutral-700 hover:bg-neutral-100" : "text-slate-200 hover:bg-slate-700")}
+                    className={cn("w-full text-left px-4 py-2 text-sm", isLight ? "text-ink-700 hover:bg-surface-alt" : "text-dark-nav hover:bg-white/10")}
                   >
                     Logout
                   </button>
@@ -433,7 +433,7 @@ export const Navbar = ({
               <div
                 className={cn(
                   "px-2 pt-2 pb-3 space-y-1 rounded-lg mt-2 border",
-                  isLight ? "bg-white/95 border-slate-200" : "bg-slate-900/50 border-slate-800"
+                  isLight ? "bg-page/95 border-border-soft" : "bg-navy-900/80 border-white/10"
                 )}
               >
                 {/* Job Referrals */}
@@ -448,8 +448,8 @@ export const Navbar = ({
                     className={cn(
                       "w-full flex items-center justify-between px-3 py-2 rounded-md transition-all duration-200 text-sm font-medium",
                       isLight
-                        ? "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
-                        : "text-slate-300 hover:text-white hover:bg-slate-800/50"
+                        ? "text-ink-700 hover:text-ink-900 hover:bg-surface-alt"
+                        : "text-dark-nav hover:text-white hover:bg-white/10"
                     )}
                   >
                     <span>Jobs</span>
@@ -467,13 +467,13 @@ export const Navbar = ({
                           className={cn(
                             "block px-3 py-2 rounded-md transition-all duration-200 text-sm font-medium",
                             isLight
-                              ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                              : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                              ? "text-ink-600 hover:text-ink-900 hover:bg-surface-alt"
+                              : "text-dark-muted hover:text-white hover:bg-white/10"
                           )}
                           onClick={() => { setIsOpen(false); setJobsOpen(false); }}
                         >
                           <span className="block">{link.name}</span>
-                          <span className={cn("block text-xs font-normal mt-0.5", isLight ? "text-slate-400" : "text-slate-500")}>
+                          <span className={cn("block text-xs font-normal mt-0.5", isLight ? "text-ink-400" : "text-dark-faint")}>
                             {link.description}
                           </span>
                         </a>
@@ -489,8 +489,8 @@ export const Navbar = ({
                     className={cn(
                       "w-full flex items-center justify-between px-3 py-2 rounded-md transition-all duration-200 text-sm font-medium",
                       isLight
-                        ? "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
-                        : "text-slate-300 hover:text-white hover:bg-slate-800/50"
+                        ? "text-ink-700 hover:text-ink-900 hover:bg-surface-alt"
+                        : "text-dark-nav hover:text-white hover:bg-white/10"
                     )}
                   >
                     <span>Learn</span>
@@ -511,13 +511,13 @@ export const Navbar = ({
                             className={cn(
                               "block px-3 py-2 rounded-md transition-all duration-200 text-sm font-medium",
                               isLight
-                                ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                                : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                                ? "text-ink-600 hover:text-ink-900 hover:bg-surface-alt"
+                                : "text-dark-muted hover:text-white hover:bg-white/10"
                             )}
                             onClick={() => { setIsOpen(false); setLearnOpen(false); }}
                           >
                             <span className="block">{link.name}</span>
-                            <span className={cn("block text-xs font-normal mt-0.5", isLight ? "text-slate-400" : "text-slate-500")}>
+                            <span className={cn("block text-xs font-normal mt-0.5", isLight ? "text-ink-400" : "text-dark-faint")}>
                               {link.description}
                             </span>
                           </a>
@@ -528,13 +528,13 @@ export const Navbar = ({
                             className={cn(
                               "block px-3 py-2 rounded-md transition-all duration-200 text-sm font-medium",
                               isLight
-                                ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                                : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                                ? "text-ink-600 hover:text-ink-900 hover:bg-surface-alt"
+                                : "text-dark-muted hover:text-white hover:bg-white/10"
                             )}
                             onClick={() => { setIsOpen(false); setLearnOpen(false); }}
                           >
                             <span className="block">{link.name}</span>
-                            <span className={cn("block text-xs font-normal mt-0.5", isLight ? "text-slate-400" : "text-slate-500")}>
+                            <span className={cn("block text-xs font-normal mt-0.5", isLight ? "text-ink-400" : "text-dark-faint")}>
                               {link.description}
                             </span>
                           </Link>
@@ -554,7 +554,7 @@ export const Navbar = ({
                   Blog
                 </a>
 
-                <div className={cn("border-t pt-3 mt-3 space-y-2", isLight ? "border-slate-200" : "border-slate-700")}>
+                <div className={cn("border-t pt-3 mt-3 space-y-2", isLight ? "border-border-soft" : "border-white/10")}>
                   <a href="contact-us" className={mobileLinkCls} onClick={() => setIsOpen(false)}>
                     Contact Us
                   </a>
@@ -562,7 +562,7 @@ export const Navbar = ({
                     {!user && (
                       <Button
                         size="sm"
-                        className="w-full rounded-lg bg-amber-500 text-slate-950 hover:bg-amber-400"
+                        className="w-full"
                         onClick={() =>
                           window.location.href = `${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/login?next=${encodeURIComponent(window.location.origin)}`
                         }
