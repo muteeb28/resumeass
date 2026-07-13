@@ -1,241 +1,248 @@
 // src/components/marketing/hero/HeroCardCluster.tsx
-import Link from "next/link";
-import { ChevronDown, Video, FileText, Users, Code, Server, Laptop, BookOpen, GraduationCap, Compass, Circle } from "lucide-react";
+"use client";
+
+import { motion } from "framer-motion";
+import { 
+  Briefcase, Compass, GraduationCap, Calendar, Zap, 
+  Send, ShoppingBag, Layers, Flame, ArrowUpRight
+} from "lucide-react";
+
+const floatAnimation = (delay: number, duration: number = 5) => ({
+  y: [0, -10, 0],
+  transition: {
+    duration: duration,
+    repeat: Infinity,
+    repeatType: "reverse",
+    ease: "easeInOut",
+    delay: delay,
+  }
+} as any);
 
 export function HeroCardCluster() {
   return (
-    <div className="relative mx-auto h-[460px] w-[470px] select-none scale-[0.75] origin-center sm:scale-[0.9] md:scale-100 sm:origin-top-right lg:ml-auto">
-      {/* SVG Connectors - Precise edge-to-edge curved lines */}
-      <svg
-        viewBox="0 0 470 450"
-        className="pointer-events-none absolute inset-0 z-0 h-full w-full opacity-70"
-        fill="none"
-        aria-hidden="true"
+    <div className="relative h-[600px] w-full max-w-[640px] select-none scale-[0.72] sm:scale-[0.85] md:scale-100 origin-center lg:origin-right flex items-center justify-center">
+      
+      {/* BACKGROUND GRAPHIC INTERACTION GLOW */}
+      <div className="absolute inset-0 bg-radial-gradient from-indigo-500/5 via-transparent to-transparent pointer-events-none blur-3xl" />
+
+      {/* CARD 1: DYNAMIC JOB MATCH PIPELINE (Find Jobs) - Moved Up and Left */}
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, delay: 0.1, type: "spring" }}
+        style={{ x: -160, y: -160 }}
+        className="absolute z-20 w-[220px] rounded-2xl border border-slate-200/80 bg-white/95 p-3.5 shadow-[0_20px_40px_rgba(99,102,241,0.05)] backdrop-blur-md"
       >
-        <defs>
-          <marker
-            id="card-arrowhead"
-            markerWidth="8"
-            markerHeight="8"
-            refX="6"
-            refY="4"
-            orient="auto"
-          >
-            <path
-              d="M 1 1 L 6 4 L 1 7"
-              stroke="var(--color-ink-400)"
-              strokeWidth="1.3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="none"
-            />
-          </marker>
-        </defs>
-
-        {/* Arrow 1: Card 1 (Grow) Right Edge -> Card 2 (Apply) Bottom Edge */}
-        <path
-          d="M 210 180 C 245 180, 245 200, 285 200"
-          stroke="var(--color-ink-400)"
-          strokeWidth="1.3"
-          markerEnd="url(#card-arrowhead)"
-        />
-
-        {/* Arrow 2: Card 2 (Apply) Bottom Edge -> Card 3 (Learn) Top Edge */}
-        <path
-          d="M 430 200 C 430 215, 450 205, 450 215"
-          stroke="var(--color-ink-400)"
-          strokeWidth="1.3"
-          markerEnd="url(#card-arrowhead)"
-        />
-
-        {/* Arrow 3: Card 3 (Learn) Bottom-Left Edge -> Card 1 (Grow) Right Edge */}
-        <path
-          d="M 200 435 C 160 435, 160 330, 210 330"
-          stroke="var(--color-ink-400)"
-          strokeWidth="1.3"
-          markerEnd="url(#card-arrowhead)"
-        />
-      </svg>
-
-      {/* CARD 2: Latest Jobs (Top Right, Smallest, z-10) */}
-      <div className="absolute top-0 left-[270px] z-10 w-[190px] h-[200px]">
-        <div className="flex flex-col h-full rounded-[14px] border border-border-frame bg-page p-3 shadow-[var(--jf-shadow-frame)] transition-shadow duration-200 hover:shadow-[var(--jf-shadow-panel)]">
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-border-soft pb-2">
+        <motion.div animate={floatAnimation(0, 4.5)}>
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
             <div className="flex items-center gap-1.5">
-              <span className="rounded-[4px] bg-emerald-50 px-1.5 py-0.5 text-[9px] font-bold text-emerald-600 uppercase tracking-wide">
-                2. Apply
+              <span className="flex h-5 w-5 items-center justify-center rounded-md bg-indigo-50 text-indigo-600 shadow-sm">
+                <Briefcase size={11} />
               </span>
-              <h3 className="text-[11px] font-bold text-ink-900 tracking-tight">Latest Jobs</h3>
+              <h3 className="text-xs font-bold text-slate-900 tracking-tight">AI Matches</h3>
             </div>
-            <BriefcaseIcon />
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[8.5px] font-bold text-emerald-600">
+              <Zap size={8} className="fill-current" /> Live
+            </span>
           </div>
 
-          {/* Job Rows */}
-          <div className="mt-2 flex-1 space-y-1.5">
+          <div className="mt-2.5 space-y-1.5">
             {[
-              { role: "Frontend Engineer", company: "Stripe", score: "95%", logo: "S", bg: "bg-indigo-50 text-indigo-600" },
-              { role: "AI Engineer", company: "Google", score: "92%", logo: "G", bg: "bg-red-50 text-red-600" },
-              { role: "Software Engineer", company: "Notion", score: "88%", logo: "N", bg: "bg-gray-150 text-gray-900" },
+              { role: "Staff Engineer", company: "Stripe", match: "98%", color: "bg-emerald-50 text-emerald-600" },
+              { role: "AI Architect", company: "Google", match: "94%", color: "bg-indigo-50 text-indigo-600" },
             ].map((job, idx) => (
-              <div
-                key={idx}
-                className="flex items-center justify-between rounded-[8px] border border-border-soft/60 bg-surface-alt p-1.5"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-md font-mono text-[9px] font-bold ${job.bg}`}>
-                    {job.logo}
-                  </div>
-                  <div className="min-w-0 leading-none">
-                    <div className="truncate text-[9.5px] font-semibold text-ink-900">{job.role}</div>
-                    <div className="text-[8px] text-ink-500 mt-0.5">{job.company}</div>
-                  </div>
+              <div key={idx} className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/60 p-2">
+                <div className="min-w-0 leading-none">
+                  <div className="truncate text-[10px] font-bold text-slate-800">{job.role}</div>
+                  <div className="text-[8.5px] text-slate-400 mt-0.5 font-medium">{job.company}</div>
                 </div>
-                <span className="rounded bg-emerald-50 px-1 py-0.5 text-[8px] font-bold text-emerald-600 leading-none">
-                  {job.score}
+                <span className={`rounded-lg px-1.5 py-0.5 text-[8.5px] font-bold ${job.color}`}>
+                  {job.match}
                 </span>
               </div>
             ))}
           </div>
+        </motion.div>
+      </motion.div>
 
-          {/* Footer */}
-          <div className="mt-2 flex items-center justify-between border-t border-border-soft pt-1.5 text-[8.5px] font-medium text-ink-500 font-mono">
-            <span>150+ new roles</span>
-            <span className="text-emerald-500 font-semibold">Live Match →</span>
-          </div>
-        </div>
-      </div>
-
-      {/* CARD 1: Mentorship & Referrals (Center Left, Mid-size, z-30) */}
-      <div className="absolute top-[120px] left-0 z-30 w-[210px] h-[250px]">
-        <div className="flex flex-col h-full rounded-[14px] border border-border-frame bg-page p-3.5 shadow-[var(--jf-shadow-frame)] transition-shadow duration-200 hover:shadow-[var(--jf-shadow-panel)]">
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-border-soft pb-2.5">
+      {/* CARD 2: REAL-TIME REFERRAL BUS (Referrals) - Moved Up and Right */}
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, delay: 0.2, type: "spring" }}
+        style={{ x: 160, y: -140 }}
+        className="absolute z-10 w-[230px] rounded-2xl border border-purple-100 bg-white/95 p-3.5 shadow-[0_15px_35px_rgba(147,51,234,0.04)] backdrop-blur-md"
+      >
+        <motion.div animate={floatAnimation(0.5, 5)}>
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
             <div className="flex items-center gap-1.5">
-              <span className="rounded-[4px] bg-sapphire-50 px-1.5 py-0.5 text-[9px] font-bold text-sapphire-brand uppercase tracking-wide">
-                1. Grow
+              <span className="flex h-5 w-5 items-center justify-center rounded-md bg-purple-50 text-purple-600 shadow-sm">
+                <Compass size={11} />
               </span>
-              <h3 className="text-[11.5px] font-bold text-ink-900 tracking-tight">Mentorship</h3>
+              <h3 className="text-xs font-bold text-slate-900 tracking-tight">Referrals</h3>
             </div>
-            <Compass size={12} className="text-sapphire-brand" />
+            <span className="text-[8.5px] font-bold font-mono text-purple-500">ROUTING</span>
           </div>
 
-          {/* Content Dropdown Box */}
-          <div className="mt-2.5">
-            <div className="flex items-center justify-between rounded-[8px] border border-border-soft bg-surface-alt px-2.5 py-1.5 text-[9.5px] font-medium text-ink-600">
-              <span className="truncate">Select career service...</span>
-              <ChevronDown size={11} className="text-ink-400" />
+          <div className="mt-2.5 space-y-2">
+            <div className="rounded-xl bg-slate-950 p-2 text-white">
+              <div className="flex items-center justify-between text-[8px] font-semibold opacity-80">
+                <span>Stripe Infra Node</span>
+                <span className="text-emerald-400">Vouched</span>
+              </div>
+              <p className="text-[9.5px] text-slate-300 mt-0.5 font-medium leading-tight">
+                Connected with Lead Systems Engineer.
+              </p>
             </div>
+            <button className="w-full flex items-center gap-1 rounded-xl border border-dashed border-purple-200 bg-purple-50/30 p-1.5 text-[9px] text-purple-600 font-bold justify-center">
+              <Send size={9} /> Request Figma Drop
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+
+      {/* CARD 3: THE RE-DESIGNED WEB TEMPLATE SHOP (Center-Stage Feature Anchor) */}
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.7, delay: 0.25, type: "spring" }}
+        style={{ x: 0, y: -10 }} // Root center positions the shop cleanly between layers
+        className="absolute z-50 w-[270px] rounded-2xl border-2 border-indigo-600 bg-white p-4 shadow-[0_30px_60px_rgba(99,102,241,0.18)]"
+      >
+        <motion.div animate={floatAnimation(1, 4.2)}>
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+            <div className="flex items-center gap-2">
+              <span className="flex h-5 w-5 items-center justify-center rounded-md bg-indigo-600 text-white shadow-sm">
+                <ShoppingBag size={11} />
+              </span>
+              <h3 className="text-xs font-black text-slate-900 tracking-tight">Premium Site Shop</h3>
+            </div>
+            <span className="inline-flex items-center gap-0.5 text-[8.5px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-200">
+              <Flame size={10} className="fill-current" /> Live Marketplace
+            </span>
           </div>
 
-          {/* List of Services */}
-          <div className="mt-3 flex-1 space-y-1.5">
+          {/* New Clean UI Grid Style instead of cluttered visual screen */}
+          <div className="mt-3 space-y-2">
             {[
-              { name: "Resume Review", desc: "Expert feedback", icon: FileText },
-              { name: "1:1 Mentorship", desc: "Book practice rounds", icon: Video },
-              { name: "Referrals Finder", desc: "Stripe, Google, Notion", icon: Users },
-            ].map((service, idx) => {
-              const Icon = service.icon;
-              return (
-                <div
-                  key={idx}
-                  className="flex items-center gap-2 rounded-[8px] border border-border-soft/60 bg-surface-alt px-2.5 py-2"
-                >
-                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-sapphire-50 text-sapphire-brand">
-                    <Icon size={11} />
+              { name: "SaaS Matrix Kit", tag: "Startup Production", price: "$49", activeColors: ["bg-indigo-500", "bg-purple-500"] },
+              { name: "Minimal Portfolio Pro", tag: "Personal / Creator", price: "$39", activeColors: ["bg-emerald-500", "bg-teal-500"] },
+            ].map((item, i) => (
+              <div 
+                key={i} 
+                className="group relative flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/50 p-2.5 hover:bg-white hover:border-indigo-200 hover:shadow-xs transition-all duration-300 cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  {/* Abstract clean presentation dots mimicking code packages */}
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white border border-slate-200 group-hover:border-indigo-200 shadow-2xs">
+                    <Layers size={12} className="text-slate-400 group-hover:text-indigo-600 transition-colors" />
                   </div>
-                  <div className="leading-none min-w-0">
-                    <div className="truncate text-[10px] font-semibold text-ink-900">{service.name}</div>
-                    <div className="text-[8px] text-ink-500 mt-0.5">{service.desc}</div>
+                  <div className="min-w-0 leading-none">
+                    <div className="text-[11px] font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">{item.name}</div>
+                    <div className="text-[8.5px] text-slate-400 font-semibold mt-0.5">{item.tag}</div>
                   </div>
                 </div>
-              );
-            })}
-          </div>
 
-          {/* Footer */}
-          <div className="mt-2.5 flex items-center justify-between border-t border-border-soft pt-1.5 text-[8.5px] font-medium text-ink-500 font-mono">
-            <span>500+ mock rounds</span>
-            <span className="text-sapphire-brand font-semibold">Join Network →</span>
-          </div>
-        </div>
-      </div>
-
-      {/* CARD 3: Courses (Bottom Right, Largest, z-20 - overlaps behind Card 1) */}
-      <div className="absolute top-[215px] left-[185px] z-20 w-[275px] h-[220px]">
-        <div className="flex flex-col h-full rounded-[14px] border border-border-frame bg-page p-3.5 shadow-[var(--jf-shadow-frame)] transition-shadow duration-200 hover:shadow-[var(--jf-shadow-panel)]">
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-border-soft pb-2.5">
-            <div className="flex items-center gap-1.5">
-              <span className="rounded-[4px] bg-purple-50 px-1.5 py-0.5 text-[9px] font-bold text-purple-600 uppercase tracking-wide">
-                3. Learn
-              </span>
-              <h3 className="text-[11.5px] font-bold text-ink-900 tracking-tight">Courses</h3>
-            </div>
-            {/* Small Profile circle icon on right side of header */}
-            <div className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-purple-50 text-purple-600">
-              <GraduationCap size={11} />
-            </div>
-          </div>
-
-          {/* Courses Progress Rows */}
-          <div className="mt-3 flex-1 space-y-2.5">
-            {[
-              { name: "React Patterns & Ecosystem", desc: "10 modules", progress: 75 },
-              { name: "System Design Blueprint", desc: "12 modules", progress: 40 },
-              { name: "DSA Cracking Course", desc: "20 modules", progress: 90 },
-            ].map((course, idx) => (
-              <div key={idx} className="space-y-1">
-                <div className="flex items-center justify-between text-[10px]">
-                  <span className="font-semibold text-ink-900 truncate pr-2">{course.name}</span>
-                  <span className="font-mono text-[8px] text-ink-500 shrink-0">{course.desc}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-1.5 flex-1 rounded-full bg-track overflow-hidden">
-                    <div
-                      className="h-full rounded-full"
-                      style={{
-                        width: `${course.progress}%`,
-                        background: "var(--jf-grad-bar)",
-                      }}
-                    />
+                <div className="flex items-center gap-2 shrink-0">
+                  {/* Miniature Swatch Previews */}
+                  <div className="hidden sm:flex gap-0.5 opacity-60 group-hover:opacity-100 transition-opacity">
+                    {item.activeColors.map((color, cIdx) => (
+                      <span key={cIdx} className={`h-1.5 w-1.5 rounded-full ${color}`} />
+                    ))}
                   </div>
-                  <span className="min-w-[20px] text-right font-mono text-[8px] font-semibold text-ink-900 leading-none">
-                    {course.progress}%
-                  </span>
+                  <div className="text-right leading-none">
+                    <div className="text-[11px] font-bold text-slate-900 font-mono">{item.price}</div>
+                    <div className="text-[7.5px] font-bold text-indigo-600 group-hover:underline mt-0.5 flex items-center gap-0.5 justify-end">
+                      Get <ArrowUpRight size={8} />
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Footer */}
-          <div className="mt-2.5 flex items-center justify-between border-t border-border-soft pt-1.5 text-[8.5px] font-medium text-ink-500 font-mono">
-            <span>✓ 4k+ candidates active</span>
-            <span className="text-purple-500 font-semibold">Start Prep →</span>
+          {/* Quick Footer Call-out */}
+          <div className="mt-2.5 bg-indigo-50/50 rounded-lg p-1.5 border border-indigo-100/50 text-[9px] font-medium text-indigo-700 text-center">
+            Deploy portfolios & business systems in 1-click.
           </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+        </motion.div>
+      </motion.div>
 
-// Simple briefcase icon component
-function BriefcaseIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="var(--color-ink-400)"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="lucide lucide-briefcase"
-    >
-      <path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-      <rect width="20" height="14" x="2" y="6" rx="2" />
-    </svg>
+      {/* CARD 4: 1:1 STRATEGY SCHEDULER (Mentorship) - Moved Down and Left */}
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.7, delay: 0.35, type: "spring" }}
+        style={{ x: -150, y: 140 }}
+        className="absolute z-40 w-[210px] rounded-2xl border border-pink-100 bg-white/95 p-3.5 shadow-[0_25px_45_rgba(219,39,119,0.04)] backdrop-blur-md"
+      >
+        <motion.div animate={floatAnimation(1.2, 4.8)}>
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+            <div className="flex items-center gap-1.5">
+              <span className="flex h-5 w-5 items-center justify-center rounded-md bg-pink-50 text-pink-600 shadow-sm">
+                <Calendar size={11} />
+              </span>
+              <h3 className="text-xs font-bold text-slate-900 tracking-tight">Mock Rounds</h3>
+            </div>
+            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          </div>
+
+          <div className="mt-2 flex items-center gap-2 rounded-xl bg-slate-50 p-1.5">
+            <div className="h-6 w-6 shrink-0 rounded-full bg-gradient-to-tr from-pink-500 to-rose-500 flex items-center justify-center text-white font-black text-[9px]">
+              AM
+            </div>
+            <div className="min-w-0 leading-none">
+              <div className="text-[9.5px] font-bold text-slate-900 truncate">Aris Moore</div>
+              <div className="text-[8px] text-slate-400 mt-0.5 font-bold">Recruiter @ Figma</div>
+            </div>
+          </div>
+
+          <div className="mt-2 grid grid-cols-2 gap-1 text-center text-[8.5px] font-bold">
+            <div className="rounded-lg bg-pink-600 text-white py-1">Today 4PM</div>
+            <div className="rounded-lg border border-slate-200 bg-white py-1 text-slate-500">More</div>
+          </div>
+        </motion.div>
+      </motion.div>
+
+      {/* CARD 5: ADAPTIVE WORKSPACE STATUS (Tracker/Readiness) - Moved Down and Right */}
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.7, delay: 0.4, type: "spring" }}
+        style={{ x: 160, y: 120 }}
+        className="absolute z-10 w-[220px] rounded-2xl border border-amber-100 bg-white/95 p-3.5 shadow-[0_20px_40px_rgba(245,158,11,0.03)] backdrop-blur-md"
+      >
+        <motion.div animate={floatAnimation(0.8, 5.2)}>
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+            <div className="flex items-center gap-1.5">
+              <span className="flex h-5 w-5 items-center justify-center rounded-md bg-amber-50 text-amber-600 shadow-sm">
+                <GraduationCap size={11} />
+              </span>
+              <h3 className="text-xs font-bold text-slate-900 tracking-tight">Readiness</h3>
+            </div>
+            <span className="text-[8px] font-bold text-slate-400 font-mono">KPI</span>
+          </div>
+
+          <div className="mt-2.5 space-y-2">
+            {[
+              { label: "Systems Architecture", val: 80, grad: "from-amber-400 to-orange-500" },
+              { label: "Fullstack Execution", val: 95, grad: "from-emerald-400 to-teal-500" },
+            ].map((track, i) => (
+              <div key={i} className="space-y-0.5">
+                <div className="flex items-center justify-between text-[8.5px] font-bold text-slate-700">
+                  <span className="truncate">{track.label}</span>
+                  <span className="font-mono">{track.val}%</span>
+                </div>
+                <div className="h-1 w-full rounded-full bg-slate-100 overflow-hidden">
+                  <div className={`h-full rounded-full bg-gradient-to-r ${track.grad}`} style={{ width: `${track.val}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </motion.div>
+
+    </div>
   );
 }
