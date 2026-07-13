@@ -84,6 +84,13 @@ export interface ResumeVolunteer {
   highlights: string[];
 }
 
+export interface ResumeCertification {
+  id?: string;
+  name: string;
+  issuer?: string;
+  date?: string;
+}
+
 export type SectionType =
   | "basics"
   | "work"
@@ -91,7 +98,8 @@ export type SectionType =
   | "projects"
   | "education"
   | "awards"
-  | "volunteer";
+  | "volunteer"
+  | "certifications";
 
 export interface ResumeData {
   basics: ResumeBasics;
@@ -101,6 +109,7 @@ export interface ResumeData {
   education: ResumeEducation[];
   awards: ResumeAward[];
   volunteer: ResumeVolunteer[];
+  certifications?: ResumeCertification[];
   coursework?: string[];
   extraSections?: Array<{ title: string; items: string[] }>;
 }

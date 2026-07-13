@@ -2,8 +2,8 @@
  * Converter to transform parsed resume data into Portfolioly's strict schema
  */
 
-import type { ResumeJSON, ResumeJSONv2, TimelineItem, ProjectItem, EducationItem, ListItem } from "@/types/resume";
-import type { ResumeData, ResumeWork, ResumeEducation, ResumeSkill, ResumeProject, ResumeAward, ResumeVolunteer } from "@/types/portfolioly-resume";
+import type { ResumeJSON, ResumeJSONv2, TimelineItem, ProjectItem, EducationItem, ListItem, CertificationItem } from "@/types/resume";
+import type { ResumeData, ResumeWork, ResumeEducation, ResumeSkill, ResumeProject, ResumeAward, ResumeVolunteer, ResumeCertification } from "@/types/portfolioly-resume";
 import { generateId } from "./id";
 
 const normalizeUrl = (value: string): string => {
@@ -83,6 +83,7 @@ export function convertToPortfoliolyFormat(resume: ResumeJSON | ResumeJSONv2): R
   let awards: ResumeAward[] = [];
   let volunteer: ResumeVolunteer[] = [];
   let courseworkList: string[] = [];
+  let certifications: ResumeCertification[] = [];
   let extraSections: Array<{ title: string; items: string[] }> = [];
 
   if ('sections' in resume) {
@@ -199,19 +200,14 @@ export function convertToPortfoliolyFormat(resume: ResumeJSON | ResumeJSONv2): R
           .filter(Boolean);
 
       } else if (id === 'certifications') {
-        const certItems = items
-          .map((item: any) => {
-            if (item.type === 'certification') {
-              return [item.name, item.issuer && `Issued by ${item.issuer}`, item.date]
-                .filter(Boolean).join(" — ");
-            }
-            if (item.type === 'list') return item.value;
-            return '';
-          })
-          .filter(Boolean);
-        if (certItems.length > 0) {
-          extraSections.push({ title: "Certifications", items: certItems });
-        }
+        certifications = items
+          .filter((item): item is CertificationItem => item.type === 'certification')
+          .map(item => ({
+            id: generateId(),
+            name: item.name || "",
+            issuer: item.issuer,
+            date: item.date,
+          }));
 
       } else {
         // All other sections (languages, interests, publications, extra_*, etc.) → extraSections
@@ -325,20 +321,21 @@ export function convertToPortfoliolyFormat(resume: ResumeJSON | ResumeJSONv2): R
       .filter(Boolean);
 
     const rawCertifications = Array.isArray(dynamicResume.certifications) ? dynamicResume.certifications : [];
-    if (rawCertifications.length > 0) {
-      extraSections.push({
-        title: "Certifications",
-        items: rawCertifications
-          .map((c: any) => {
-            if (typeof c === "string") return c.trim();
-            const name = (c.name || "").trim();
-            const issuer = (c.issuer || "").trim();
-            const date = (c.date || "").trim();
-            return [name, issuer && `Issued by ${issuer}`, date].filter(Boolean).join(" — ");
-          })
-          .filter(Boolean),
-      });
-    }
+    certifications = rawCertifications
+      .map((c: any): ResumeCertification | null => {
+        if (typeof c === "string") {
+          const name = c.trim();
+          return name ? { id: generateId(), name } : null;
+        }
+        const name = (c.name || "").toString().trim();
+        return name ? {
+          id: generateId(),
+          name,
+          issuer: (c.issuer || "").toString() || undefined,
+          date: (c.date || "").toString() || undefined,
+        } : null;
+      })
+      .filter((c: ResumeCertification | null): c is ResumeCertification => c !== null);
 
     const rawExtraSections = Array.isArray(dynamicResume.extraSections) ? dynamicResume.extraSections : [];
     extraSections = [
@@ -358,6 +355,7 @@ export function convertToPortfoliolyFormat(resume: ResumeJSON | ResumeJSONv2): R
     awards,
     volunteer,
     coursework: courseworkList,
+    certifications: certifications.length > 0 ? certifications : undefined,
     extraSections: extraSections.length > 0 ? extraSections : undefined,
   };
 }

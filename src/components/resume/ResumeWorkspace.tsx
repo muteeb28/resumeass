@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Download, Eye, Pencil, ChevronDown, ChevronUp, ArrowLeft } from "lucide-react";
 import axiosInstance from "@/lib/axios";
-import { Button } from "@/components/button";
+import { Button } from "@/components/ui/button";
 import ResumeDataEditor from "@/components/edit/ResumeDataEditor";
 import JakeTemplate from "@/components/resume/JakeTemplate";
 import TemplateTwoColumn from "@/templates/TemplateTwoColumn";
@@ -188,10 +188,10 @@ function AtsScoreBadge({ score }: { score: number }) {
   if (!score || score <= 0) return null;
   const color =
     score >= 75
-      ? "bg-green-100 text-green-700 border-green-200"
+      ? "bg-success/10 text-success border-success/20"
       : score >= 50
-        ? "bg-yellow-100 text-yellow-700 border-yellow-200"
-        : "bg-red-100 text-red-700 border-red-200";
+        ? "bg-warning/10 text-warning border-warning/20"
+        : "bg-error/10 text-error border-error/20";
   return (
     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${color}`}>
       ATS {score}%
@@ -316,7 +316,7 @@ export default function ResumeWorkspace({
 
   if (errorMsg) {
     return (
-      <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      <div className="rounded-[var(--jf-radius-panel)] border border-error/20 bg-error/10 px-4 py-3 text-sm text-error">
         {errorMsg}
       </div>
     );
@@ -324,7 +324,7 @@ export default function ResumeWorkspace({
 
   if (!resumeJSON || !portfoliolyResume) {
     return (
-      <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-16 text-center text-sm text-neutral-500">
+      <div className="rounded-[var(--jf-radius-panel)] border border-border-soft bg-page px-4 py-16 text-center text-sm text-ink-500">
         Loading resume preview...
       </div>
     );
@@ -334,22 +334,22 @@ export default function ResumeWorkspace({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-4 shadow-sm">
+      <div className="rounded-[var(--jf-radius-panel)] border border-border-soft bg-page px-4 py-4 shadow-[var(--jf-shadow-frame)]">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-xl font-semibold text-neutral-900">{title}</h1>
+              <h1 className="text-xl font-semibold text-ink-900">{title}</h1>
               {atsScore > 0 && <AtsScoreBadge score={atsScore} />}
             </div>
-            {subtitle && <p className="text-sm text-neutral-600 max-w-3xl">{subtitle}</p>}
+            {subtitle && <p className="text-sm text-ink-600 max-w-3xl">{subtitle}</p>}
             {metadata.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-1">
                 {metadata.map((item) => (
                   <div
                     key={item.label}
-                    className="rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1 text-xs text-neutral-600"
+                    className="rounded-full border border-border-soft bg-surface-alt px-3 py-1 text-xs text-ink-600"
                   >
-                    <span className="font-medium text-neutral-900">{item.label}:</span> {item.value}
+                    <span className="font-medium text-ink-900">{item.label}:</span> {item.value}
                   </div>
                 ))}
               </div>
@@ -357,23 +357,20 @@ export default function ResumeWorkspace({
           </div>
 
           {onBack && (
-            <button
-              onClick={onBack}
-              className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
-            >
+            <Button variant="outline" onClick={onBack}>
               <ArrowLeft className="h-4 w-4" />
               {backLabel}
-            </button>
+            </Button>
           )}
         </div>
       </div>
 
-      <div className="rounded-t-2xl border border-neutral-200 bg-white px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div className="rounded-t-[var(--jf-radius-panel)] border border-border-soft bg-page px-4 py-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-1">
           <button
             onClick={() => setViewMode("edit")}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              viewMode === "edit" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-[var(--jf-radius-row)] text-sm font-medium transition-all ${
+              viewMode === "edit" ? "bg-ink-900 text-white" : "text-ink-600 hover:bg-surface-alt"
             }`}
           >
             <Pencil className="h-3.5 w-3.5" />
@@ -381,8 +378,8 @@ export default function ResumeWorkspace({
           </button>
           <button
             onClick={() => setViewMode("preview")}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              viewMode === "preview" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-[var(--jf-radius-row)] text-sm font-medium transition-all ${
+              viewMode === "preview" ? "bg-ink-900 text-white" : "text-ink-600 hover:bg-surface-alt"
             }`}
           >
             <Eye className="h-3.5 w-3.5" />
@@ -397,10 +394,10 @@ export default function ResumeWorkspace({
                 <button
                   key={template.id}
                   onClick={() => setSelectedTemplate(template.id)}
-                  className={`px-3 py-1.5 text-xs rounded-lg border transition-all ${
+                  className={`px-3 py-1.5 text-xs rounded-[var(--jf-radius-row)] border transition-all ${
                     selectedTemplate === template.id
-                      ? "bg-neutral-900 text-white border-neutral-900"
-                      : "bg-white text-neutral-500 border-neutral-200 hover:border-neutral-300"
+                      ? "bg-ink-900 text-white border-ink-900"
+                      : "bg-page text-ink-500 border-border-soft hover:border-border-frame"
                   }`}
                 >
                   {template.name}
@@ -409,20 +406,11 @@ export default function ResumeWorkspace({
             </div>
           )}
 
-          <Button
-            onClick={handleDownloadPdf}
-            disabled={pdfGenerating}
-            className="bg-neutral-900 text-white hover:bg-neutral-800 text-sm h-9"
-          >
+          <Button onClick={handleDownloadPdf} disabled={pdfGenerating} size="sm">
             <Download className="h-3.5 w-3.5 mr-1" />
             {pdfGenerating ? "PDF..." : "PDF"}
           </Button>
-          <Button
-            onClick={handleDownloadDocx}
-            disabled={docxGenerating}
-            variant="outline"
-            className="text-sm h-9 !border-neutral-200 !text-neutral-700 !bg-white hover:!bg-neutral-50"
-          >
+          <Button onClick={handleDownloadDocx} disabled={docxGenerating} variant="outline" size="sm">
             <Download className="h-3.5 w-3.5 mr-1" />
             {docxGenerating ? "DOCX..." : "DOCX"}
           </Button>
@@ -430,28 +418,28 @@ export default function ResumeWorkspace({
       </div>
 
       {changelog && (
-        <div className="border-x border-neutral-200 bg-neutral-50">
+        <div className="border-x border-border-soft bg-surface-alt">
           <button
             onClick={() => setChangelogOpen((value) => !value)}
-            className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-neutral-600 hover:bg-neutral-100 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-ink-600 hover:bg-track transition-colors"
           >
             <div className="flex items-center gap-3 flex-wrap">
-              <span className="font-medium text-neutral-800">Optimization summary</span>
+              <span className="font-medium text-ink-900">Optimization summary</span>
               {atsScore > 0 && <AtsScoreBadge score={atsScore} />}
-              <span className="text-xs text-neutral-400">
+              <span className="text-xs text-ink-400">
                 {changelog.keywords_added.length > 0 && (
-                  <span className="text-green-600 font-medium">+{changelog.keywords_added.length} keywords</span>
+                  <span className="text-success font-medium">+{changelog.keywords_added.length} keywords</span>
                 )}
                 {changelog.keywords_added.length > 0 && changelog.keywords_missing.length > 0 && (
-                  <span className="mx-1 text-neutral-300">·</span>
+                  <span className="mx-1 text-ink-400">·</span>
                 )}
                 {changelog.keywords_missing.length > 0 && (
-                  <span className="text-amber-600 font-medium">{changelog.keywords_missing.length} missing</span>
+                  <span className="text-warning font-medium">{changelog.keywords_missing.length} missing</span>
                 )}
                 {(changelog.bullet_changes?.length ?? 0) > 0 && (
                   <>
-                    <span className="mx-1 text-neutral-300">·</span>
-                    <span className="text-blue-600 font-medium">{changelog.bullet_changes!.length} bullets rewritten</span>
+                    <span className="mx-1 text-ink-400">·</span>
+                    <span className="text-info font-medium">{changelog.bullet_changes!.length} bullets rewritten</span>
                   </>
                 )}
               </span>
@@ -460,21 +448,21 @@ export default function ResumeWorkspace({
           </button>
 
           {changelogOpen && (
-            <div className="px-4 pb-5 space-y-5 border-t border-neutral-200">
+            <div className="px-4 pb-5 space-y-5 border-t border-border-soft">
               {(changelog.keywords_added.length > 0 || changelog.keywords_missing.length > 0) && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
                   {changelog.keywords_added.length > 0 && (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-green-100 text-green-700 text-[10px] font-bold">+</span>
-                        <p className="text-xs font-semibold text-neutral-700">
+                        <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-success/15 text-success text-[10px] font-bold">+</span>
+                        <p className="text-xs font-semibold text-ink-700">
                           Added to your resume
-                          <span className="ml-1.5 text-[11px] font-normal text-green-600">({changelog.keywords_added.length})</span>
+                          <span className="ml-1.5 text-[11px] font-normal text-success">({changelog.keywords_added.length})</span>
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-1.5">
                         {changelog.keywords_added.map((kw) => (
-                          <span key={kw} className="text-[11px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
+                          <span key={kw} className="text-[11px] px-2 py-0.5 rounded-full bg-success/10 text-success border border-success/20">
                             {kw}
                           </span>
                         ))}
@@ -484,15 +472,15 @@ export default function ResumeWorkspace({
                   {changelog.keywords_missing.length > 0 && (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold">!</span>
-                        <p className="text-xs font-semibold text-neutral-700">
+                        <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-warning/15 text-warning text-[10px] font-bold">!</span>
+                        <p className="text-xs font-semibold text-ink-700">
                           Still missing from resume
-                          <span className="ml-1.5 text-[11px] font-normal text-amber-600">({changelog.keywords_missing.length})</span>
+                          <span className="ml-1.5 text-[11px] font-normal text-warning">({changelog.keywords_missing.length})</span>
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-1.5">
                         {changelog.keywords_missing.map((kw) => (
-                          <span key={kw} className="text-[11px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                          <span key={kw} className="text-[11px] px-2 py-0.5 rounded-full bg-warning/10 text-warning border border-warning/20">
                             {kw}
                           </span>
                         ))}
@@ -506,7 +494,7 @@ export default function ResumeWorkspace({
         </div>
       )}
 
-      <div className="rounded-b-2xl border border-t-0 border-neutral-200 bg-white">
+      <div className="rounded-b-[var(--jf-radius-panel)] border border-t-0 border-border-soft bg-page">
         {viewMode === "edit" && (
           <div className="p-6">
             <ResumeDataEditor data={portfoliolyResume} onChange={setPortfoliolyResume} />

@@ -8,7 +8,7 @@ interface Props {
 }
 
 export default function TemplateDarkSidebar({ data }: Props) {
-  const { basics, work, skills, projects, education, awards, volunteer, coursework, extraSections } = data;
+  const { basics, work, skills, projects, education, awards, volunteer, coursework, certifications, extraSections } = data;
   const summary = basics.summary || "";
 
   return (
@@ -73,6 +73,20 @@ export default function TemplateDarkSidebar({ data }: Props) {
                 <div key={i} className="tds-sb-award">
                   <div className="tds-sb-award-name">{a.title}</div>
                   {a.awarder && <div className="tds-sb-award-org">{a.awarder}</div>}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Certifications in sidebar */}
+          {certifications && certifications.length > 0 && (
+            <div className="tds-sb-section">
+              <h3 className="tds-sb-title">Certifications</h3>
+              {certifications.map((c, i) => (
+                <div key={i} className="tds-sb-award">
+                  <div className="tds-sb-award-name">{c.name}</div>
+                  {c.issuer && <div className="tds-sb-award-org">{c.issuer}</div>}
+                  {c.date && <div className="tds-sb-award-org">{c.date}</div>}
                 </div>
               ))}
             </div>

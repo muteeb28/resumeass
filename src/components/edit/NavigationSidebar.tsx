@@ -11,6 +11,7 @@ import {
   FolderKanban,
   GraduationCap,
   Award,
+  BadgeCheck,
 } from "lucide-react";
 
 export interface SectionNavItem {
@@ -27,7 +28,8 @@ export const navItems: SectionNavItem[] = [
   { id: "skills", label: "Skills", icon: Wrench },
   { id: "projects", label: "Projects", icon: FolderKanban },
   { id: "education", label: "Education", icon: GraduationCap },
-  { id: "awards", label: "Awards", icon: Award },
+  { id: "certifications", label: "Certifications", icon: BadgeCheck },
+  { id: "awards", label: "Awards & Achievements", icon: Award },
 ];
 
 function hasData(data: ResumeData, sectionId: string): boolean {
@@ -46,6 +48,8 @@ function hasData(data: ResumeData, sectionId: string): boolean {
       return (data.projects?.length ?? 0) > 0;
     case "education":
       return (data.education?.length ?? 0) > 0;
+    case "certifications":
+      return (data.certifications?.length ?? 0) > 0;
     case "awards":
       return (data.awards?.length ?? 0) > 0;
     default:

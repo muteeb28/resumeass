@@ -155,6 +155,17 @@ describe('parserToV2', () => {
     expect(v2.sections).toHaveProperty('certifications');
   });
 
+  it('certifications section uses certification-layout items and preserves issuer/date (not the generic list heuristic)', () => {
+    const certSection = v2.sections['certifications'];
+    expect(certSection.layout).toBe('certifications');
+    expect(certSection.items).toHaveLength(1);
+    const [cert] = certSection.items as any[];
+    expect(cert.type).toBe('certification');
+    expect(cert.name).toBe('SAP Certified Associate');
+    expect(cert.issuer).toBe('SAP');
+    expect(cert.date).toBe('2022');
+  });
+
   it('captures volunteer section', () => {
     expect(v2.sections).toHaveProperty('volunteer');
   });
@@ -244,10 +255,16 @@ describe('parserToV2 → convertToPortfoliolyFormat (full pipeline)', () => {
     expect(portfolio.coursework).toContain('Business Analytics');
   });
 
-  it('certifications appear in extraSections', () => {
+  it('certifications are captured as structured data, not flattened into extraSections', () => {
+    expect(portfolio.certifications).toHaveLength(1);
+    expect(portfolio.certifications![0]).toMatchObject({
+      name: 'SAP Certified Associate',
+      issuer: 'SAP',
+      date: '2022',
+    });
+    expect(typeof portfolio.certifications![0].id).toBe('string');
     const certSection = portfolio.extraSections?.find(s => s.title === 'Certifications');
-    expect(certSection).toBeDefined();
-    expect(certSection!.items.length).toBeGreaterThan(0);
+    expect(certSection).toBeUndefined();
   });
 
   it('assigns a unique id to every work, education, project, skill and award item', () => {

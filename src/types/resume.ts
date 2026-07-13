@@ -732,6 +732,16 @@ export const parserToV2 = (parsed: any): ResumeJSONv2 => {
           details: item.details || [],
           highlights: item.highlights || [],
         }));
+      } else if (key === 'certifications') {
+        // Known certifications key — always certification layout, regardless of
+        // generic list/timeline heuristics, so name/issuer/date survive intact.
+        layout = 'certifications';
+        items = val.map((item: any) => ({
+          type: 'certification',
+          name: item.name || item.title || '',
+          issuer: item.issuer || item.organization || item.awarder || '',
+          date: item.date || item.dates || item.year || '',
+        }));
       } else if (key === 'skills' || isList) {
         layout = 'list';
         // Flatten categories if needed, or map flat strings

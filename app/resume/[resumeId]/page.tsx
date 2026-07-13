@@ -7,6 +7,8 @@ import axiosInstance from "@/lib/axios";
 import { BackgroundRippleLayout } from "@/components/background-ripple-layout";
 import { Navbar } from "@/components/navbar";
 import ResumeWorkspace from "@/components/resume/ResumeWorkspace";
+import { Button } from "@/components/ui/button";
+import { StatusBadge, getStatusLabel } from "@/components/ui/status-badge";
 
 interface ResumeMetadataRow {
   filename?: string;
@@ -35,43 +37,6 @@ function getResumeRecord(payload: any) {
     payload?.item ??
     payload
   );
-}
-
-function getStatusStyle(raw?: string) {
-  const key = (raw || "pending").toLowerCase();
-
-  if (["done", "completed", "success", "ready"].includes(key)) {
-    return {
-      label: raw || "Completed",
-      className: "bg-green-100 text-green-700 border-green-200",
-    };
-  }
-
-  if (["processing", "optimizing", "in-progress", "in_progress", "generating"].includes(key)) {
-    return {
-      label: raw || "Processing",
-      className: "bg-blue-100 text-blue-700 border-blue-200",
-    };
-  }
-
-  if (["pending", "queued", "draft"].includes(key)) {
-    return {
-      label: raw || "Pending",
-      className: "bg-amber-100 text-amber-700 border-amber-200",
-    };
-  }
-
-  if (["failed", "error"].includes(key)) {
-    return {
-      label: raw || "Failed",
-      className: "bg-red-100 text-red-700 border-red-200",
-    };
-  }
-
-  return {
-    label: raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : "Pending",
-    className: "bg-neutral-100 text-neutral-700 border-neutral-200",
-  };
 }
 
 export default function ResumePage() {
@@ -117,84 +82,79 @@ export default function ResumePage() {
   }, [resumeId, reloadToken]);
 
   const metadata: ResumeMetadataRow = resumeRecord || {};
-  const status = getStatusStyle(metadata.status);
+  const statusLabel = getStatusLabel(metadata.status);
 
   const summaryItems = [
     { label: "Filename", value: metadata.filename || "Untitled resume" },
-    { label: "Status", value: status.label },
+    { label: "Status", value: statusLabel },
     { label: "Created", value: formatDateTime(metadata.createdAt) },
     { label: "Updated", value: formatDateTime(metadata.updatedAt) },
   ];
 
   return (
-    <BackgroundRippleLayout tone="light" className="bg-white" contentClassName="resume-detail pt-16">
+    <BackgroundRippleLayout tone="light" className="bg-page" contentClassName="resume-detail pt-[74px]" showRipple={false}>
       <Navbar tone="light" />
       <div className="px-4 pb-20 pt-24">
         <div className="mx-auto max-w-6xl space-y-6">
           <div className="flex items-center justify-between gap-3">
-            <button
-              onClick={() => router.push("/resume")}
-              className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
-            >
+            <Button variant="outline" onClick={() => router.push("/resume")}>
               <ArrowLeft className="h-4 w-4" />
               Back to resumes
-            </button>
+            </Button>
 
-            <button
-              onClick={() => setReloadToken((value) => value + 1)}
-              className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
-            >
+            <Button variant="outline" onClick={() => setReloadToken((value) => value + 1)}>
               <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
               Refresh
-            </button>
+            </Button>
           </div>
 
           {errorMsg && (
-            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="rounded-[var(--jf-radius-panel)] border border-error/20 bg-error/10 px-4 py-3 text-sm text-error">
               {errorMsg}
             </div>
           )}
 
           {loading ? (
-            <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-16 text-center text-sm text-neutral-500">
+            <div className="rounded-[var(--jf-radius-panel)] border border-border-soft bg-page px-4 py-16 text-center text-sm text-ink-500">
               Loading resume...
             </div>
           ) : resumeRecord ? (
             <>
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 {summaryItems.map((item) => (
-                  <div key={item.label} className="rounded-2xl border border-neutral-200 bg-white px-4 py-4 shadow-sm">
-                    <div className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{item.label}</div>
-                    <div className="mt-2 text-sm font-medium text-neutral-900">{item.value}</div>
+                  <div
+                    key={item.label}
+                    className="rounded-[var(--jf-radius-panel)] border border-border-soft bg-page px-4 py-4 shadow-[var(--jf-shadow-frame)]"
+                  >
+                    <div className="text-xs font-semibold uppercase tracking-[0.09em] text-ink-500">{item.label}</div>
+                    <div className="mt-2 text-sm font-medium text-ink-900">{item.value}</div>
                   </div>
                 ))}
               </div>
 
               <div className="grid gap-4 lg:grid-cols-[1.35fr_0.65fr]">
-                <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
-                  <div className="flex items-center gap-2 border-b border-neutral-200 pb-3">
-                    <FileText className="h-4 w-4 text-neutral-500" />
-                    <h2 className="text-sm font-semibold text-neutral-900">Job description</h2>
+                <div className="rounded-[var(--jf-radius-panel)] border border-border-soft bg-page p-4 shadow-[var(--jf-shadow-frame)]">
+                  <div className="flex items-center gap-2 border-b border-border-soft pb-3">
+                    <FileText className="h-4 w-4 text-ink-500" />
+                    <h2 className="text-sm font-semibold text-ink-900">Job description</h2>
                   </div>
-                  <p className="whitespace-pre-wrap pt-4 text-sm leading-7 text-neutral-600">
+                  <p className="whitespace-pre-wrap pt-4 text-sm leading-7 text-ink-600">
                     {metadata.jobDescription || "—"}
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
-                  <div className="flex items-center gap-2 border-b border-neutral-200 pb-3">
-                    <ShieldCheck className="h-4 w-4 text-neutral-500" />
-                    <h2 className="text-sm font-semibold text-neutral-900">Resume status</h2>
+                <div className="rounded-[var(--jf-radius-panel)] border border-border-soft bg-page p-4 shadow-[var(--jf-shadow-frame)]">
+                  <div className="flex items-center gap-2 border-b border-border-soft pb-3">
+                    <ShieldCheck className="h-4 w-4 text-ink-500" />
+                    <h2 className="text-sm font-semibold text-ink-900">Resume status</h2>
                   </div>
                   <div className="pt-4">
-                    <span className={`inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-semibold ${status.className}`}>
-                      {status.label}
-                    </span>
-                    <div className="mt-4 flex items-center gap-2 text-sm text-neutral-600">
+                    <StatusBadge status={metadata.status} className="px-3 py-1.5 text-xs" />
+                    <div className="mt-4 flex items-center gap-2 text-sm text-ink-600">
                       <CalendarDays className="h-4 w-4" />
                       Created {formatDateTime(metadata.createdAt)}
                     </div>
-                    <div className="mt-2 flex items-center gap-2 text-sm text-neutral-600">
+                    <div className="mt-2 flex items-center gap-2 text-sm text-ink-600">
                       <CalendarDays className="h-4 w-4" />
                       Updated {formatDateTime(metadata.updatedAt)}
                     </div>
@@ -207,14 +167,14 @@ export default function ResumePage() {
                 title={metadata.filename || "Resume preview"}
                 subtitle={metadata.jobDescription}
                 metadata={[
-                  { label: "Status", value: status.label },
+                  { label: "Status", value: statusLabel },
                   { label: "Created", value: formatDateTime(metadata.createdAt) },
                   { label: "Updated", value: formatDateTime(metadata.updatedAt) },
                 ]}
               />
             </>
           ) : (
-            <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-16 text-center text-sm text-neutral-500">
+            <div className="rounded-[var(--jf-radius-panel)] border border-border-soft bg-page px-4 py-16 text-center text-sm text-ink-500">
               No resume found.
             </div>
           )}

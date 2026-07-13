@@ -1,6 +1,6 @@
 "use client";
 import { type ResumeData } from "../services/resumeGenerator";
-import { Button } from "./button";
+import { Button } from "./ui/button";
 import { Navbar } from "./navbar";
 import { DeedyResume } from "./deedy-resume";
 

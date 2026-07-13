@@ -8,7 +8,7 @@ interface Props {
 }
 
 export default function TemplateSidebar({ data }: Props) {
-  const { basics, work, skills, projects, education, awards, volunteer, coursework, extraSections } = data;
+  const { basics, work, skills, projects, education, awards, volunteer, coursework, certifications, extraSections } = data;
   const summary = basics.summary || "";
 
   return (
@@ -96,6 +96,20 @@ export default function TemplateSidebar({ data }: Props) {
                 <div key={i} className="tsb-award-item">
                   <div className="tsb-award-title">{a.title}</div>
                   {a.awarder && <div className="tsb-award-detail">{a.awarder}</div>}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Certifications */}
+          {certifications && certifications.length > 0 && (
+            <div className="tsb-sidebar-section">
+              <h3 className="tsb-sidebar-title">Certifications</h3>
+              {certifications.map((c, i) => (
+                <div key={i} className="tsb-award-item">
+                  <div className="tsb-award-title">{c.name}</div>
+                  {c.issuer && <div className="tsb-award-detail">{c.issuer}</div>}
+                  {c.date && <div className="tsb-award-detail">{c.date}</div>}
                 </div>
               ))}
             </div>

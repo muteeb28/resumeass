@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { H1_CTA_BAND, INTRO_TEXT } from "@/lib/typography";
 import { useSearchParams } from "next/navigation";
 import { Navbar } from "./navbar";
 import { BackgroundRippleLayout } from "./background-ripple-layout";
-import { Button } from "./button";
+import { Button } from "./ui/button";
 import ResumeDataEditor from "./edit/ResumeDataEditor";
 import PortfolioPreview from "./portfolio-preview";
 import { extractPortfolioData, buildApiUrl } from "../services/resumeOptimizerApi";
@@ -150,10 +151,10 @@ export default function CreatePortfolioPage() {
 
   const renderUploadStep = () => (
     <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
-      <h1 className="text-4xl md:text-5xl font-bold text-neutral-900 tracking-tight">
+      <h1 className={H1_CTA_BAND}>
         Import Your Professional Data
       </h1>
-      <p className="mt-4 text-neutral-500 text-lg">
+      <p className={`mt-4 ${INTRO_TEXT}`}>
         Upload your resume to create a portfolio — quick and easy. You can edit anytime.
       </p>
 
@@ -161,18 +162,18 @@ export default function CreatePortfolioPage() {
       <div className="mt-10 w-full max-w-xl">
         <button
           onClick={() => setShowUploadZone(true)}
-          className={`group flex flex-col items-center gap-4 rounded-2xl border-2 bg-white p-8 transition-all hover:shadow-md w-full ${
+          className={`group flex flex-col items-center gap-4 rounded-[var(--jf-radius-panel)] border-2 bg-page p-8 transition-all hover:shadow-[var(--jf-shadow-frame)] w-full ${
             showUploadZone
-              ? "border-neutral-900 shadow-md"
-              : "border-neutral-200 hover:border-neutral-300"
+              ? "border-sapphire-brand shadow-[var(--jf-shadow-frame)]"
+              : "border-border-soft hover:border-border-frame"
           }`}
         >
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-600 group-hover:bg-neutral-200 transition-colors">
+          <div className="flex h-14 w-14 items-center justify-center rounded-[var(--jf-radius-panel)] bg-surface-alt text-ink-600 transition-colors group-hover:bg-track">
             <Upload className="h-7 w-7" />
           </div>
           <div>
-            <div className="text-lg font-semibold text-neutral-900">Upload Resume</div>
-            <p className="mt-1 text-sm text-neutral-500">
+            <div className="text-lg font-semibold text-ink-900">Upload Resume</div>
+            <p className="mt-1 text-sm text-ink-500">
               Extract your professional experience and projects
             </p>
           </div>
@@ -182,13 +183,13 @@ export default function CreatePortfolioPage() {
       {/* Expanded upload area */}
       {showUploadZone && (
         <div className="mt-8 w-full max-w-xl text-left">
-          <div className="rounded-2xl border border-neutral-200 bg-white p-6">
-            <label className="group relative flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-neutral-200 rounded-xl cursor-pointer bg-neutral-50 hover:bg-neutral-100 hover:border-neutral-300 transition-all">
-              <Upload className="h-8 w-8 text-neutral-400 mb-2" />
-              <div className="text-neutral-700 text-sm font-semibold">
+          <div className="rounded-[var(--jf-radius-panel)] border border-border-soft bg-page p-6">
+            <label className="group relative flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-border-soft rounded-[var(--jf-radius-frame)] cursor-pointer bg-surface-alt hover:bg-track hover:border-border-frame transition-all">
+              <Upload className="h-8 w-8 text-ink-400 mb-2" />
+              <div className="text-ink-700 text-sm font-semibold">
                 Drop your PDF resume here
               </div>
-              <p className="text-neutral-400 text-xs mt-1">PDF up to 10MB</p>
+              <p className="text-ink-400 text-xs mt-1">PDF up to 10MB</p>
               <input
                 type="file"
                 className="hidden"
@@ -199,21 +200,21 @@ export default function CreatePortfolioPage() {
             </label>
 
             {uploadedFileName && (
-              <div className="mt-3 flex items-center gap-2 text-sm text-neutral-600">
+              <div className="mt-3 flex items-center gap-2 text-sm text-ink-600">
                 <FileText className="h-4 w-4" />
                 {uploadedFileName}
               </div>
             )}
 
             {isExtracting && (
-              <div className="mt-3 flex items-center gap-2 text-sm text-neutral-500">
+              <div className="mt-3 flex items-center gap-2 text-sm text-ink-500">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Extracting resume content...
               </div>
             )}
 
             {uploadError && (
-              <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+              <div className="mt-4 rounded-[var(--jf-radius-frame)] border border-error/20 bg-error/10 p-3 text-sm text-error">
                 {uploadError}
               </div>
             )}
@@ -231,14 +232,14 @@ export default function CreatePortfolioPage() {
     return (
       <div className="space-y-0">
         {/* Top toolbar */}
-        <div className="rounded-t-2xl border border-neutral-200 bg-white px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="rounded-t-[var(--jf-radius-panel)] border border-border-soft bg-page px-4 py-3 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-1">
             <button
               onClick={() => setViewMode("edit")}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-[var(--jf-radius-row)] text-sm font-medium transition-all ${
                 viewMode === "edit"
-                  ? "bg-neutral-900 text-white"
-                  : "text-neutral-600 hover:bg-neutral-100"
+                  ? "bg-ink-900 text-white"
+                  : "text-ink-600 hover:bg-surface-alt"
               }`}
             >
               <Pencil className="h-3.5 w-3.5" />
@@ -246,10 +247,10 @@ export default function CreatePortfolioPage() {
             </button>
             <button
               onClick={() => setViewMode("preview")}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-[var(--jf-radius-row)] text-sm font-medium transition-all ${
                 viewMode === "preview"
-                  ? "bg-neutral-900 text-white"
-                  : "text-neutral-600 hover:bg-neutral-100"
+                  ? "bg-ink-900 text-white"
+                  : "text-ink-600 hover:bg-surface-alt"
               }`}
             >
               <Eye className="h-3.5 w-3.5" />
@@ -257,10 +258,10 @@ export default function CreatePortfolioPage() {
             </button>
             <button
               onClick={() => setViewMode("raw")}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-[var(--jf-radius-row)] text-sm font-medium transition-all ${
                 viewMode === "raw"
-                  ? "bg-neutral-900 text-white"
-                  : "text-neutral-600 hover:bg-neutral-100"
+                  ? "bg-ink-900 text-white"
+                  : "text-ink-600 hover:bg-surface-alt"
               }`}
             >
               <FileText className="h-3.5 w-3.5" />
@@ -269,11 +270,7 @@ export default function CreatePortfolioPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
-              onClick={handlePublish}
-              disabled={isPublishing || !resumeData}
-              className="bg-neutral-900 text-white hover:bg-neutral-800 text-sm h-9 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+            <Button onClick={handlePublish} disabled={isPublishing || !resumeData} size="sm">
               <Globe className="h-3.5 w-3.5 mr-1" />
               {isPublishing ? "Publishing..." : "Publish Portfolio"}
             </Button>
@@ -281,7 +278,7 @@ export default function CreatePortfolioPage() {
         </div>
 
         {/* Content area */}
-        <div className="rounded-b-2xl border border-t-0 border-neutral-200 bg-white">
+        <div className="rounded-b-[var(--jf-radius-panel)] border border-t-0 border-border-soft bg-page">
           {viewMode === "edit" && resumeData && (
             <div className="p-6">
               <ResumeDataEditor data={resumeData} onChange={setResumeData} />
@@ -299,7 +296,7 @@ export default function CreatePortfolioPage() {
               <textarea
                 readOnly
                 value={JSON.stringify(rawExtracted, null, 2)}
-                className="w-full h-[70vh] font-mono text-xs bg-neutral-50 border border-neutral-200 rounded-xl p-4 text-neutral-800 resize-none focus:outline-none"
+                className="w-full h-[70vh] font-mono text-xs bg-surface-alt border border-border-soft rounded-[var(--jf-radius-frame)] p-4 text-ink-800 resize-none focus:outline-none"
               />
             </div>
           )}
@@ -314,7 +311,7 @@ export default function CreatePortfolioPage() {
               setUploadedFileName(null);
               setShowUploadZone(false);
             }}
-            className="text-sm text-neutral-400 hover:text-neutral-600 transition-colors"
+            className="text-sm text-ink-400 hover:text-ink-600 transition-colors"
           >
             Start over
           </button>
@@ -327,28 +324,28 @@ export default function CreatePortfolioPage() {
 
   const renderPublishedStep = () => (
     <div className="flex flex-col items-center text-center max-w-lg mx-auto py-8">
-      <div className="rounded-2xl border border-neutral-200 bg-white p-8 w-full space-y-6">
+      <div className="rounded-[var(--jf-radius-panel)] border border-border-soft bg-page p-8 w-full space-y-6">
         <div className="flex justify-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
-            <Globe className="h-7 w-7 text-green-600" />
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-success/10">
+            <Globe className="h-7 w-7 text-success" />
           </div>
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-2xl font-bold text-neutral-900">Portfolio Published!</h2>
-          <p className="text-neutral-500 text-sm">
+          <h2 className="text-2xl font-medium text-ink-900">Portfolio Published!</h2>
+          <p className="text-ink-500 text-sm">
             Your portfolio is now live and ready to share
           </p>
         </div>
 
         {/* URL + Copy */}
         <div className="flex items-center gap-2">
-          <div className="flex-1 bg-neutral-50 border border-neutral-200 rounded-lg px-4 py-2.5 text-sm text-neutral-700 font-mono truncate text-left">
+          <div className="flex-1 bg-surface-alt border border-border-soft rounded-[var(--jf-radius-row)] px-4 py-2.5 text-sm text-ink-700 font-mono truncate text-left">
             {publishedUrl}
           </div>
           <button
             onClick={handleCopyLink}
-            className="shrink-0 text-neutral-600 hover:text-neutral-800 transition-colors"
+            className="shrink-0 text-ink-600 hover:text-ink-900 transition-colors"
             title="Copy link"
           >
             {copied ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
@@ -358,16 +355,14 @@ export default function CreatePortfolioPage() {
         {/* Actions */}
         <div className="flex flex-col gap-3">
           <div className="flex gap-3 justify-center">
-            <a
-              href={`/p/${publishedSlug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors text-sm font-medium"
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-              View Portfolio
-            </a>
-            <button
+            <Button asChild>
+              <a href={`/p/${publishedSlug}`} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-3.5 w-3.5" />
+                View Portfolio
+              </a>
+            </Button>
+            <Button
+              variant="outline"
               onClick={() => {
                 setStep("upload");
                 setResumeData(null);
@@ -376,17 +371,16 @@ export default function CreatePortfolioPage() {
                 setPublishedSlug(null);
                 setShowUploadZone(false);
               }}
-              className="px-5 py-2 border border-neutral-200 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors text-sm font-medium"
             >
               Create Another
-            </button>
+            </Button>
           </div>
 
           {/* One-click Vercel deploy */}
           {publishedSlug && (
-            <div className="pt-2 border-t border-neutral-100 space-y-4">
+            <div className="pt-2 border-t border-border-soft space-y-4">
               <div>
-                <p className="text-xs text-neutral-400 text-center mb-3">
+                <p className="text-xs text-ink-400 text-center mb-3">
                   Want your own domain? Deploy to Vercel in one click.
                 </p>
                 <div className="flex justify-center">
@@ -395,8 +389,8 @@ export default function CreatePortfolioPage() {
               </div>
 
               {/* Live URL section */}
-              <div className="pt-2 border-t border-neutral-100">
-                <p className="text-xs text-neutral-500 font-semibold mb-2 text-center">
+              <div className="pt-2 border-t border-border-soft">
+                <p className="text-xs text-ink-500 font-semibold mb-2 text-center">
                   After deploying, paste your live site URL here
                 </p>
                 <div className="flex items-center gap-2">
@@ -405,7 +399,7 @@ export default function CreatePortfolioPage() {
                     value={liveUrl}
                     onChange={(e) => setLiveUrl(e.target.value)}
                     placeholder="https://your-portfolio.vercel.app"
-                    className="flex-1 bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-400 font-mono"
+                    className="flex-1 bg-surface-alt border border-border-soft rounded-[var(--jf-radius-row)] px-3 py-2 text-sm text-ink-700 focus:outline-none focus:ring-2 focus:ring-sapphire-bright/20 font-mono"
                   />
                   <button
                     onClick={() => {
@@ -414,7 +408,7 @@ export default function CreatePortfolioPage() {
                       setTimeout(() => setLiveCopied(false), 2000);
                     }}
                     disabled={!liveUrl}
-                    className="shrink-0 text-neutral-500 hover:text-neutral-700 disabled:opacity-30 transition-colors"
+                    className="shrink-0 text-ink-500 hover:text-ink-700 disabled:opacity-30 transition-colors"
                     title="Copy live URL"
                   >
                     {liveCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
@@ -424,7 +418,7 @@ export default function CreatePortfolioPage() {
                       href={liveUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors text-xs font-medium"
+                      className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 bg-ink-900 text-white rounded-[var(--jf-radius-row)] hover:bg-ink-900/90 transition-colors text-xs font-medium"
                       title="Open live site"
                     >
                       <Globe className="h-3.5 w-3.5" />
@@ -445,8 +439,9 @@ export default function CreatePortfolioPage() {
   return (
     <BackgroundRippleLayout
       tone="light"
-      className="bg-white"
-      contentClassName="resume-optimizer pt-16"
+      className="bg-page"
+      contentClassName="resume-optimizer pt-[74px]"
+      showRipple={false}
     >
       <Navbar tone="light" />
       <div className="px-4 pb-20 pt-24">

@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ActionButton } from "./ActionButton";
 import { FormSection } from "./FormSection";
-import type { ResumeCertification } from "@/types/resume";
+import type { ResumeCertification } from "@/types/portfolioly-resume";
+import { generateId } from "@/utils/id";
 
 export interface CertificationsFormProps {
   value: ResumeCertification[];
@@ -18,7 +19,7 @@ export function CertificationsForm({
   onChange,
 }: CertificationsFormProps) {
   const items = value || [];
-  const add = () => onChange([...(items || []), { ...emptyCert }]);
+  const add = () => onChange([...(items || []), { ...emptyCert, id: generateId() }]);
   const remove = (idx: number) => onChange(items.filter((_, i) => i !== idx));
   const update = (idx: number, next: Partial<ResumeCertification>) =>
     onChange(items.map((it, i) => (i === idx ? { ...it, ...next } : it)));
@@ -37,7 +38,7 @@ export function CertificationsForm({
           </p>
         )}
         {items.map((c, idx) => (
-          <div key={idx} className="grid gap-4 p-4 rounded-md border">
+          <div key={c.id ?? idx} className="grid gap-4 p-4 rounded-md border">
             <div className="grid md:grid-cols-3 gap-4">
               <div className="grid gap-2">
                 <Label>Name</Label>

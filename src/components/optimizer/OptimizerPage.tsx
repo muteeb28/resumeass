@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
+import { H1_CTA_BAND, INTRO_TEXT } from "@/lib/typography";
 import type { ResumeJSON } from "@/types/resume";
 import { exportResumeDocx } from "@/services/docxExport";
 import { convertToPortfoliolyFormat } from "@/utils/resume-converter";
 import { BackgroundRippleLayout } from "@/components/background-ripple-layout";
 import { Navbar } from "@/components/navbar";
-import { Button } from "@/components/button";
+import { Button } from "@/components/ui/button";
 import ResumeDataEditor from "@/components/edit/ResumeDataEditor";
 import JakeTemplate from "@/components/resume/JakeTemplate";
 import TemplateTwoColumn from "@/templates/TemplateTwoColumn";
@@ -414,18 +415,18 @@ const handleDownloadPdf = useCallback(async () => {
 
   if (phase === "done" && optimizedResume && portfoliolyResume) {
     return (
-      <BackgroundRippleLayout tone="light" className="bg-white" contentClassName="resume-optimizer pt-16">
+      <BackgroundRippleLayout tone="light" className="bg-page" contentClassName="resume-optimizer pt-[74px]" showRipple={false}>
         <Navbar tone="light" />
         <div className="px-4 pb-20 pt-24">
           <div className="mx-auto max-w-6xl space-y-0">
 
             {/* Toolbar */}
-            <div className="rounded-t-2xl border border-neutral-200 bg-white px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="rounded-t-[var(--jf-radius-panel)] border border-border-soft bg-page px-4 py-3 flex flex-wrap items-center justify-between gap-3">
               {/* Edit / Preview tabs */}
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setViewMode("edit")}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === "edit" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-[var(--jf-radius-row)] text-sm font-medium transition-all ${viewMode === "edit" ? "bg-ink-900 text-white" : "text-ink-600 hover:bg-surface-alt"
                     }`}
                 >
                   <Pencil className="h-3.5 w-3.5" />
@@ -433,7 +434,7 @@ const handleDownloadPdf = useCallback(async () => {
                 </button>
                 <button
                   onClick={() => setViewMode("preview")}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === "preview" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-[var(--jf-radius-row)] text-sm font-medium transition-all ${viewMode === "preview" ? "bg-ink-900 text-white" : "text-ink-600 hover:bg-surface-alt"
                     }`}
                 >
                   <Eye className="h-3.5 w-3.5" />
@@ -449,9 +450,9 @@ const handleDownloadPdf = useCallback(async () => {
                       <button
                         key={t.id}
                         onClick={() => setSelectedTemplate(t.id)}
-                        className={`px-3 py-1.5 text-xs rounded-lg border transition-all ${selectedTemplate === t.id
-                            ? "bg-neutral-900 text-white border-neutral-900"
-                            : "bg-white text-neutral-500 border-neutral-200 hover:border-neutral-300"
+                        className={`px-3 py-1.5 text-xs rounded-[var(--jf-radius-row)] border transition-all ${selectedTemplate === t.id
+                            ? "bg-ink-900 text-white border-ink-900"
+                            : "bg-page text-ink-500 border-border-soft hover:border-border-frame"
                           }`}
                       >
                         {t.name}
@@ -460,20 +461,11 @@ const handleDownloadPdf = useCallback(async () => {
                   </div>
                 )}
 
-                <Button
-                  onClick={handleDownloadPdf}
-                  disabled={pdfGenerating}
-                  className="bg-neutral-900 text-white hover:bg-neutral-800 text-sm h-9"
-                >
+                <Button onClick={handleDownloadPdf} disabled={pdfGenerating} size="sm">
                   <Download className="h-3.5 w-3.5 mr-1" />
                   {pdfGenerating ? "PDF..." : "PDF"}
                 </Button>
-                <Button
-                  onClick={handleDownloadDocx}
-                  disabled={docxGenerating}
-                  variant="outline"
-                  className="text-sm h-9 !border-neutral-200 !text-neutral-700 !bg-white hover:!bg-neutral-50"
-                >
+                <Button onClick={handleDownloadDocx} disabled={docxGenerating} variant="outline" size="sm">
                   <Download className="h-3.5 w-3.5 mr-1" />
                   {docxGenerating ? "DOCX..." : "DOCX"}
                 </Button>
@@ -482,40 +474,40 @@ const handleDownloadPdf = useCallback(async () => {
 
             {/* Changelog summary bar */}
             {changelog && (
-              <div className="border-x border-neutral-200 bg-neutral-50">
+              <div className="border-x border-border-soft bg-surface-alt">
                 {/* Collapsed bar */}
                 <button
                   onClick={() => setChangelogOpen((v) => !v)}
-                  className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-neutral-600 hover:bg-neutral-100 transition-colors"
+                  className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-ink-600 hover:bg-track transition-colors"
                 >
                   <div className="flex items-center gap-3 flex-wrap">
-                    <span className="font-medium text-neutral-800">Optimization summary</span>
+                    <span className="font-medium text-ink-900">Optimization summary</span>
                     {atsBefore > 0 && atsAfter > 0 && (
                       <span className="flex items-center gap-1.5 text-xs">
                         <AtsScoreBadge score={atsBefore} />
-                        <span className="text-neutral-400">→</span>
+                        <span className="text-ink-400">→</span>
                         <AtsScoreBadge score={atsAfter} />
                         {delta !== 0 && (
-                          <span className={`font-semibold ${delta > 0 ? "text-green-700" : "text-red-600"}`}>
+                          <span className={`font-semibold ${delta > 0 ? "text-success" : "text-error"}`}>
                             {delta > 0 ? `+${delta}` : delta} pts
                           </span>
                         )}
                       </span>
                     )}
-                    <span className="text-xs text-neutral-400">
+                    <span className="text-xs text-ink-400">
                       {changelog.keywords_added.length > 0 && (
-                        <span className="text-green-600 font-medium">+{changelog.keywords_added.length} keywords</span>
+                        <span className="text-success font-medium">+{changelog.keywords_added.length} keywords</span>
                       )}
                       {changelog.keywords_added.length > 0 && changelog.keywords_missing.length > 0 && (
-                        <span className="mx-1 text-neutral-300">·</span>
+                        <span className="mx-1 text-ink-400">·</span>
                       )}
                       {changelog.keywords_missing.length > 0 && (
-                        <span className="text-amber-600 font-medium">{changelog.keywords_missing.length} missing</span>
+                        <span className="text-warning font-medium">{changelog.keywords_missing.length} missing</span>
                       )}
                       {(changelog.bullet_changes?.length ?? 0) > 0 && (
                         <>
-                          <span className="mx-1 text-neutral-300">·</span>
-                          <span className="text-blue-600 font-medium">{changelog.bullet_changes!.length} bullets rewritten</span>
+                          <span className="mx-1 text-ink-400">·</span>
+                          <span className="text-info font-medium">{changelog.bullet_changes!.length} bullets rewritten</span>
                         </>
                       )}
                     </span>
@@ -525,7 +517,7 @@ const handleDownloadPdf = useCallback(async () => {
 
                 {/* Expanded detail */}
                 {changelogOpen && (
-                  <div className="px-4 pb-5 space-y-5 border-t border-neutral-200">
+                  <div className="px-4 pb-5 space-y-5 border-t border-border-soft">
 
                     {/* Keywords: Added vs Missing side by side */}
                     {(changelog.keywords_added.length > 0 || changelog.keywords_missing.length > 0) && (
@@ -533,15 +525,15 @@ const handleDownloadPdf = useCallback(async () => {
                         {changelog.keywords_added.length > 0 && (
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
-                              <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-green-100 text-green-700 text-[10px] font-bold">+</span>
-                              <p className="text-xs font-semibold text-neutral-700">
+                              <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-success/15 text-success text-[10px] font-bold">+</span>
+                              <p className="text-xs font-semibold text-ink-700">
                                 Added to your resume
-                                <span className="ml-1.5 text-[11px] font-normal text-green-600">({changelog.keywords_added.length})</span>
+                                <span className="ml-1.5 text-[11px] font-normal text-success">({changelog.keywords_added.length})</span>
                               </p>
                             </div>
                             <div className="flex flex-wrap gap-1.5">
                               {changelog.keywords_added.map((kw) => (
-                                <span key={kw} className="text-[11px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
+                                <span key={kw} className="text-[11px] px-2 py-0.5 rounded-full bg-success/10 text-success border border-success/20">
                                   {kw}
                                 </span>
                               ))}
@@ -551,15 +543,15 @@ const handleDownloadPdf = useCallback(async () => {
                         {changelog.keywords_missing.length > 0 && (
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
-                              <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold">!</span>
-                              <p className="text-xs font-semibold text-neutral-700">
+                              <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-warning/15 text-warning text-[10px] font-bold">!</span>
+                              <p className="text-xs font-semibold text-ink-700">
                                 Still missing from resume
-                                <span className="ml-1.5 text-[11px] font-normal text-amber-600">({changelog.keywords_missing.length})</span>
+                                <span className="ml-1.5 text-[11px] font-normal text-warning">({changelog.keywords_missing.length})</span>
                               </p>
                             </div>
                             <div className="flex flex-wrap gap-1.5">
                               {changelog.keywords_missing.map((kw) => (
-                                <span key={kw} className="text-[11px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                                <span key={kw} className="text-[11px] px-2 py-0.5 rounded-full bg-warning/10 text-warning border border-warning/20">
                                   {kw}
                                 </span>
                               ))}
@@ -572,24 +564,24 @@ const handleDownloadPdf = useCallback(async () => {
                     {/* Bullet changes: before → after diff */}
                     {(changelog.bullet_changes?.length ?? 0) > 0 && (
                       <div className="space-y-2">
-                        <p className="text-xs font-semibold text-neutral-700">
+                        <p className="text-xs font-semibold text-ink-700">
                           Bullets rewritten
-                          <span className="ml-1.5 text-[11px] font-normal text-blue-600">({changelog.bullet_changes!.length})</span>
+                          <span className="ml-1.5 text-[11px] font-normal text-info">({changelog.bullet_changes!.length})</span>
                         </p>
                         <div className="space-y-2">
                           {changelog.bullet_changes!.map((bc, i) => (
-                            <div key={i} className="rounded-lg border border-neutral-200 bg-white overflow-hidden">
-                              <div className="px-3 py-1.5 bg-neutral-50 border-b border-neutral-200">
-                                <span className="text-[10px] font-medium text-neutral-500 uppercase tracking-wide">{bc.section}</span>
+                            <div key={i} className="rounded-[var(--jf-radius-row)] border border-border-soft bg-page overflow-hidden">
+                              <div className="px-3 py-1.5 bg-surface-alt border-b border-border-soft">
+                                <span className="text-[10px] font-medium text-ink-500 uppercase tracking-[0.09em]">{bc.section}</span>
                               </div>
-                              <div className="divide-y divide-neutral-100">
+                              <div className="divide-y divide-border-soft">
                                 <div className="flex gap-2 px-3 py-2">
-                                  <span className="shrink-0 text-[11px] font-bold text-red-400 w-4">−</span>
-                                  <p className="text-[11px] text-neutral-400 line-through leading-relaxed">{bc.original}</p>
+                                  <span className="shrink-0 text-[11px] font-bold text-error/70 w-4">−</span>
+                                  <p className="text-[11px] text-ink-400 line-through leading-relaxed">{bc.original}</p>
                                 </div>
-                                <div className="flex gap-2 px-3 py-2 bg-green-50/50">
-                                  <span className="shrink-0 text-[11px] font-bold text-green-600 w-4">+</span>
-                                  <p className="text-[11px] text-green-800 leading-relaxed">{bc.improved}</p>
+                                <div className="flex gap-2 px-3 py-2 bg-success/5">
+                                  <span className="shrink-0 text-[11px] font-bold text-success w-4">+</span>
+                                  <p className="text-[11px] text-ink-900 leading-relaxed">{bc.improved}</p>
                                 </div>
                               </div>
                             </div>
@@ -603,7 +595,7 @@ const handleDownloadPdf = useCallback(async () => {
             )}
 
             {/* Content */}
-            <div className="rounded-b-2xl border border-t-0 border-neutral-200 bg-white">
+            <div className="rounded-b-[var(--jf-radius-panel)] border border-t-0 border-border-soft bg-page">
               {viewMode === "edit" && (
                 <div className="p-6">
                   <ResumeDataEditor data={portfoliolyResume} onChange={setPortfoliolyResume} />
@@ -625,7 +617,7 @@ const handleDownloadPdf = useCallback(async () => {
             <div className="pt-4 text-center">
               <button
                 onClick={handleReset}
-                className="text-sm text-neutral-400 hover:text-neutral-600 transition-colors"
+                className="text-sm text-ink-400 hover:text-ink-600 transition-colors"
               >
                 Optimize another resume
               </button>
@@ -641,15 +633,15 @@ const handleDownloadPdf = useCallback(async () => {
   const canOptimize = phase === "ready" && !!selectedFile;
 
   return (
-    <BackgroundRippleLayout tone="light" className="bg-white" contentClassName="resume-optimizer pt-16">
+    <BackgroundRippleLayout tone="light" className="bg-page" contentClassName="resume-optimizer pt-[74px]" showRipple={false}>
       <Navbar tone="light" />
       <div className="px-4 pb-20 pt-24">
         <div className="mx-auto max-w-6xl">
           <div className="max-w-xl mx-auto">
             <div className="space-y-5">
               <div>
-                <h1 className="text-lg font-bold">Optimize your resume</h1>
-                <p className="text-muted-foreground text-xs mt-1">
+                <h1 className={H1_CTA_BAND}>Optimize your resume</h1>
+                <p className={`mt-2 ${INTRO_TEXT}`}>
                   Upload your resume and optionally paste a job description. We&apos;ll analyze your ATS score, then fully rewrite it.
                 </p>
               </div>
@@ -682,7 +674,7 @@ const handleDownloadPdf = useCallback(async () => {
                     </div>
                   ) : selectedFile ? (
                     <div className="flex flex-col items-center gap-1">
-                      <svg className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-5 w-5 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                       <p className="text-sm font-medium">{uploadedFilename}</p>
@@ -730,7 +722,7 @@ const handleDownloadPdf = useCallback(async () => {
                       <p className="text-[11px] font-medium text-muted-foreground">Current keywords</p>
                       <div className="flex flex-wrap gap-1.5">
                         {preAnalysis.current_keywords.map((kw) => (
-                          <span key={kw} className="text-[11px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
+                          <span key={kw} className="text-[11px] px-2 py-0.5 rounded-full bg-success/10 text-success border border-success/20">
                             {kw}
                           </span>
                         ))}
@@ -743,7 +735,7 @@ const handleDownloadPdf = useCallback(async () => {
                       <p className="text-[11px] font-medium text-muted-foreground">Weak sections</p>
                       <div className="flex flex-wrap gap-1.5">
                         {preAnalysis.weak_sections.map((sec) => (
-                          <span key={sec} className="text-[11px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 capitalize">
+                          <span key={sec} className="text-[11px] px-2 py-0.5 rounded-full bg-warning/10 text-warning border border-warning/20 capitalize">
                             {sec}
                           </span>
                         ))}
@@ -792,10 +784,10 @@ function AtsScoreBadge({ score }: { score: number }) {
   if (!score || score <= 0) return null;
   const color =
     score >= 75
-      ? "bg-green-100 text-green-700 border-green-200"
+      ? "bg-success/10 text-success border-success/20"
       : score >= 50
-        ? "bg-yellow-100 text-yellow-700 border-yellow-200"
-        : "bg-red-100 text-red-700 border-red-200";
+        ? "bg-warning/10 text-warning border-warning/20"
+        : "bg-error/10 text-error border-error/20";
   return (
     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${color}`}>
       ATS {score}%

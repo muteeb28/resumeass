@@ -609,6 +609,27 @@ function buildSkillsSection(data: ResumeData): React.ReactNode | null {
 }
 
 /**
+ * Build certifications section
+ */
+function buildCertificationsSection(data: ResumeData): React.ReactNode | null {
+  if (!data?.certifications || data.certifications.length === 0) return null;
+
+  return (
+    <Section key="certifications" title="Certifications">
+      <ul className="jake-entry-bullets">
+        {data.certifications.map((cert, i) => (
+          <li key={i}>
+            <strong>{cert.name}</strong>
+            {cert.issuer && <span> - {cert.issuer}</span>}
+            {cert.date && <span> ({cert.date})</span>}
+          </li>
+        ))}
+      </ul>
+    </Section>
+  );
+}
+
+/**
  * Build awards section
  */
 function buildAwardsSection(data: ResumeData): React.ReactNode | null {
@@ -699,7 +720,7 @@ function buildVolunteerSection(data: ResumeData): React.ReactNode | null {
  */
 function buildSections(
   data: ResumeData,
-  sectionOrder: SectionType[] = ["basics", "work", "skills", "projects", "education", "awards", "volunteer"]
+  sectionOrder: SectionType[] = ["basics", "work", "skills", "projects", "education", "certifications", "awards", "volunteer"]
 ): React.ReactNode[] {
   const sections: React.ReactNode[] = [];
 
@@ -723,6 +744,11 @@ function buildSections(
       case "education":
         const education = buildEducationSection(data);
         if (education) sections.push(education);
+        break;
+
+      case "certifications":
+        const certifications = buildCertificationsSection(data);
+        if (certifications) sections.push(certifications);
         break;
 
       case "work":
@@ -857,6 +883,7 @@ export function JakeTemplate({
     "skills",
     "projects",
     "education",
+    "certifications",
     "awards",
     "volunteer",
   ];

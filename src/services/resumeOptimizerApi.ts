@@ -157,7 +157,7 @@ export async function extractPortfolioData(
   const formData = new FormData();
   formData.append('resume', file);
 
-  const url = buildApiUrl('extract-portfolio');
+  const url = buildApiUrl('resumes/extract-portfolio');
 
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
@@ -207,7 +207,7 @@ export async function parseResumeText(text: string, pageCount?: number): Promise
     throw new Error('Resume text is required');
   }
 
-  const response = await fetch(buildApiUrl('parse-resume-text'), {
+  const response = await fetch(buildApiUrl('resumes/parse-resume-text'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -234,7 +234,7 @@ export async function polishResumeText(text: string): Promise<string> {
     throw new Error('Resume text is required');
   }
 
-  const response = await fetch(buildApiUrl('polish-resume-text'), {
+  const response = await fetch(buildApiUrl('resumes/polish-resume-text'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ text: trimmed })
@@ -274,7 +274,7 @@ export async function optimizeResumeWithProgress(
     formData.append('parsedData', JSON.stringify(parsedData));
   }
 
-  const response = await fetch(buildApiUrl('optimize-resume-stream'), {
+  const response = await fetch(buildApiUrl('resumes/optimize-resume-stream'), {
     method: 'POST',
     body: formData,
   });
@@ -337,7 +337,7 @@ export async function optimizeResume(file: File, targetRole: string, originalPag
     console.log(` Sending optimization request for role: ${targetRole}`);
     console.log(` File: ${file.name}, Size: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
 
-    const response = await fetch(buildApiUrl('optimize-resume'), {
+    const response = await fetch(buildApiUrl('resumes/optimize-resume'), {
       method: 'POST',
       body: formData,
     });
@@ -378,7 +378,7 @@ export async function optimizeResume(file: File, targetRole: string, originalPag
  */
 export async function getTargetRoles(): Promise<TargetRole[]> {
   try {
-    const response = await fetch(buildApiUrl('target-roles'));
+    const response = await fetch(buildApiUrl('resumes/target-roles'));
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useCallback } from "react";
-import { Button } from "./button";
+import { Button } from "./ui/button";
 import { Navbar } from "./navbar";
 import { OptimizedResumeTemplate } from "./optimized-resume-template";
 import html2canvas from "html2canvas";

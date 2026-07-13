@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "./button";
+import { Button } from "./ui/button";
 import { Navbar } from "./navbar";
 import { type ResumeData, ResumeGeneratorService } from "../services/resumeGenerator";
 import { ResumePreview } from "./resume-preview";

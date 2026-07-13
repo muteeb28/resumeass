@@ -43,6 +43,11 @@ export const sectionConfigs: SectionConfig[] = [
     applyChange: (d, v) => ({ ...d, education: v }),
   },
   {
+    id: "certifications",
+    getValue: (d) => d.certifications ?? [],
+    applyChange: (d, v) => ({ ...d, certifications: v }),
+  },
+  {
     id: "awards",
     getValue: (d) => d.awards ?? [],
     applyChange: (d, v) => ({ ...d, awards: v }),

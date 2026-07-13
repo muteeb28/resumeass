@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "./button";
+import { Button } from "./ui/button";
 import { Navbar } from "./navbar";
 
 export const CreateResumeSimpleWorking = () => {

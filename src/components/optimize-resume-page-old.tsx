@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Button } from "./button";
+import { Button } from "./ui/button";
 import { Navbar } from "./navbar";
 import { DeepSeekOptimizationService } from "../services/deepseekOptimization";
 

@@ -11,6 +11,7 @@ import { WorkExperienceForm } from "./WorkExperienceForm";
 import { SkillsForm } from "./SkillsForm";
 import { ProjectsForm } from "./ProjectsForm";
 import { EducationForm } from "./EducationForm";
+import { CertificationsForm } from "./CertificationsForm";
 import { AwardsForm } from "./AwardsForm";
 import { FormSection } from "./FormSection";
 
@@ -26,6 +27,7 @@ const formComponents: Record<string, React.ComponentType<{ value: any; onChange:
   skills: SkillsForm,
   projects: ProjectsForm,
   education: EducationForm,
+  certifications: CertificationsForm,
   awards: AwardsForm,
 };
 

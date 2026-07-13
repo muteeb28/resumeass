@@ -84,10 +84,10 @@ export default function ResumePanel({ resume, selectedTemplate, atsScore, onSetT
 function AtsScorePill({ score }: { score: number }) {
   const color =
     score >= 75
-      ? "bg-green-100 text-green-700 border-green-200"
+      ? "bg-success/10 text-success border-success/20"
       : score >= 50
-      ? "bg-yellow-100 text-yellow-700 border-yellow-200"
-      : "bg-red-100 text-red-700 border-red-200";
+      ? "bg-warning/10 text-warning border-warning/20"
+      : "bg-error/10 text-error border-error/20";
   return (
     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${color}`}>
       ATS {score}%

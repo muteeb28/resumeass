@@ -1,9 +1,10 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
+import { H1_CTA_BAND, INTRO_TEXT } from "@/lib/typography";
 import { Navbar } from "./navbar";
 import { BackgroundRippleLayout } from "./background-ripple-layout";
-import { Button } from "./button";
+import { Button } from "./ui/button";
 import { buildApiUrl, extractResumeData, extractPortfolioData } from "../services/resumeOptimizerApi";
 import { generateJobSpecificResume } from "../services/resumeGenerator";
 import JakeTemplate from "./resume/JakeTemplate";
@@ -19,7 +20,6 @@ import { convertToPortfoliolyFormat, normalizeProfileLinks } from "@/utils/resum
 import {
   FileText,
   Upload,
-  CheckCircle2,
   User,
   Briefcase,
   Sparkles,
@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import PortfolioPreview from "./portfolio-preview";
+import { StepIndicator } from "./StepIndicator";
 
 type TemplateId = "jake" | "two-column" | "sidebar" | "dark-sidebar";
 
@@ -740,55 +741,54 @@ export const CreateResumeSimple = () => {
   // ─── Upload / Source Step ───────────────────────────────────────────
   const renderUploadStep = () => (
     <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
-      <h1 className="text-4xl md:text-5xl font-bold text-neutral-900 tracking-tight">
+      <h1 className={H1_CTA_BAND}>
         Build Your AI Resume
       </h1>
-      <p className="mt-4 text-neutral-500 text-lg">
+      <p className={`mt-4 ${INTRO_TEXT}`}>
         Upload your PDF resume — AI extracts your experience and builds polished templates in seconds.
       </p>
 
       {/* Upload card */}
-      <div className="mt-10 w-full max-w-sm mx-auto">
-        <label
-          className={`group flex flex-col items-center gap-4 rounded-2xl border-2 bg-white p-8 transition-all hover:shadow-md cursor-pointer ${inputMode === "upload"
-              ? "border-neutral-900 shadow-md"
-              : "border-neutral-200 hover:border-neutral-300"
-            }`}
-        >
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-600 group-hover:bg-neutral-200 transition-colors">
-            <Upload className="h-7 w-7" />
-          </div>
-          <div>
-            <div className="text-lg font-semibold text-neutral-900">Upload Resume</div>
-            <p className="mt-1 text-sm text-neutral-500">
-              Extract your professional experience and projects
-            </p>
-          </div>
-          <input
-            type="file"
-            className="hidden"
-            accept=".pdf"
-            onChange={(e) => {
-              setInputMode("upload");
-              handleFileUpload(e);
-            }}
-            disabled={isExtracting}
-          />
-        </label>
-      </div>
+      {!inputMode && (
+        <div className="mt-10 w-full max-w-sm mx-auto">
+          <label
+            className="group flex flex-col items-center gap-4 rounded-[var(--jf-radius-panel)] border-2 bg-page p-8 transition-all hover:shadow-[var(--jf-shadow-frame)] cursor-pointer border-border-soft hover:border-border-frame"
+          >
+            <div className="flex h-14 w-14 items-center justify-center rounded-[var(--jf-radius-panel)] bg-surface-alt text-ink-600 transition-colors group-hover:bg-track">
+              <Upload className="h-7 w-7" />
+            </div>
+            <div>
+              <div className="text-lg font-semibold text-ink-900">Upload Resume</div>
+              <p className="mt-1 text-sm text-ink-500">
+                Extract your professional experience and projects
+              </p>
+            </div>
+            <input
+              type="file"
+              className="hidden"
+              accept=".pdf"
+              onChange={(e) => {
+                setInputMode("upload");
+                handleFileUpload(e);
+              }}
+              disabled={isExtracting}
+            />
+          </label>
+        </div>
+      )}
 
       {/* Expanded input area */}
       {inputMode && (
         <div className="mt-8 w-full max-w-sm mx-auto text-left">
-          <div className="rounded-2xl border border-neutral-200 bg-white p-6">
+          <div className="rounded-[var(--jf-radius-panel)] border border-border-soft bg-page p-6">
             {inputMode === "upload" && (
               <>
-                <label className="group relative flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-neutral-200 rounded-xl cursor-pointer bg-neutral-50 hover:bg-neutral-100 hover:border-neutral-300 transition-all">
-                  <Upload className="h-8 w-8 text-neutral-400 mb-2" />
-                  <div className="text-neutral-700 text-sm font-semibold">
+                <label className="group relative flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-border-soft rounded-[var(--jf-radius-frame)] cursor-pointer bg-surface-alt hover:bg-track hover:border-border-frame transition-all">
+                  <Upload className="h-8 w-8 text-ink-400 mb-2" />
+                  <div className="text-ink-700 text-sm font-semibold">
                     Drop your PDF resume here
                   </div>
-                  <p className="text-neutral-400 text-xs mt-1">PDF up to 10MB</p>
+                  <p className="text-ink-400 text-xs mt-1">PDF up to 10MB</p>
                   <input
                     type="file"
                     className="hidden"
@@ -798,7 +798,7 @@ export const CreateResumeSimple = () => {
                   />
                 </label>
                 {uploadedFileName && (
-                  <div className="mt-3 flex items-center gap-2 text-sm text-neutral-600">
+                  <div className="mt-3 flex items-center gap-2 text-sm text-ink-600">
                     <FileText className="h-4 w-4" />
                     {uploadedFileName}
                   </div>
@@ -809,7 +809,7 @@ export const CreateResumeSimple = () => {
             {/* Show extracted text (or paste area if extraction failed) */}
             {inputMode === "upload" && (resumeText || resumeError) && (
               <div className="mt-4">
-                <label className="text-xs font-medium text-neutral-500 uppercase tracking-wide">
+                <label className="text-xs font-medium text-ink-500 uppercase tracking-[0.09em]">
                   {resumeText ? "Extracted Text (editable)" : "Paste Your Resume Text"}
                 </label>
                 <textarea
@@ -824,31 +824,33 @@ export const CreateResumeSimple = () => {
                     }
                   }}
                   placeholder="Paste your resume text here..."
-                  className="mt-2 h-40 w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10 resize-none"
+                  className="mt-2 h-40 w-full rounded-[var(--jf-radius-frame)] border border-border-soft bg-surface-alt px-4 py-3 text-sm text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-sapphire-bright/20 resize-none"
                 />
               </div>
             )}
 
             {isExtracting && (
-              <div className="mt-3 flex items-center gap-2 text-sm text-neutral-500">
+              <div className="mt-3 flex items-center gap-2 text-sm text-ink-500">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Extracting resume content...
               </div>
             )}
 
             {resumeError && (
-              <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+              <div className="mt-4 rounded-[var(--jf-radius-frame)] border border-error/20 bg-error/10 p-3 text-sm text-error">
                 {resumeError}
               </div>
             )}
 
+            {generationError && (
+              <div className="mt-4 rounded-[var(--jf-radius-frame)] border border-error/20 bg-error/10 p-3 text-sm text-error">
+                {generationError}
+              </div>
+            )}
+
             <div className="mt-6 flex justify-end">
-              <Button
-                onClick={handleContinue}
-                disabled={isExtracting || isGenerating}
-                className="bg-neutral-900 text-white hover:bg-neutral-800 px-8"
-              >
-                Get started
+              <Button onClick={handleContinue} disabled={isExtracting || isGenerating} className="px-8">
+                {isGenerating ? "Generating..." : "Get started"}
               </Button>
             </div>
           </div>
@@ -860,58 +862,24 @@ export const CreateResumeSimple = () => {
   // ─── Generating / Processing Step ──────────────────────────────────
   const renderGenerateStep = () => (
     <div className="flex flex-col items-center text-center max-w-lg mx-auto py-16">
-      <h1 className="text-4xl md:text-5xl font-bold text-neutral-900 tracking-tight">
+      <h1 className={H1_CTA_BAND}>
         Import Your Professional Data
       </h1>
-      <p className="mt-4 text-neutral-500 text-lg">
+      <p className="mt-4 text-lg text-ink-500">
         Choose a source to get started — quick and easy. You can edit anytime.
       </p>
 
       <div className="mt-12 w-full text-left">
         <div className="flex items-center gap-2 mb-6">
-          <Loader2 className="h-5 w-5 animate-spin text-neutral-600" />
-          <span className="text-sm font-semibold uppercase tracking-wider text-neutral-600">
+          <Loader2 className="h-5 w-5 animate-spin text-ink-600" />
+          <span className="text-xs font-semibold uppercase tracking-[0.09em] text-ink-600">
             AI Processing
           </span>
         </div>
 
-        <div className="space-y-5">
-          {processingSteps.map((ps, idx) => {
-            const Icon = ps.icon;
-            const isDone = idx < activeProcessingStep;
-            const isActive = idx === activeProcessingStep;
+        <StepIndicator steps={processingSteps} activeIndex={activeProcessingStep} />
 
-
-            return (
-              <div key={ps.id} className="flex items-center gap-3">
-                <div className={`flex h-9 w-9 items-center justify-center rounded-full shrink-0 ${isDone
-                    ? "bg-neutral-900 text-white"
-                    : isActive
-                      ? "bg-neutral-100 text-neutral-700"
-                      : "bg-neutral-50 text-neutral-300"
-                  }`}>
-                  {isDone ? (
-                    <CheckCircle2 className="h-5 w-5" />
-                  ) : isActive ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <Icon className="h-5 w-5" />
-                  )}
-                </div>
-                <span className={`text-base ${isDone
-                    ? "text-neutral-500 line-through"
-                    : isActive
-                      ? "text-neutral-900 font-medium"
-                      : "text-neutral-400"
-                  }`}>
-                  {ps.label}{isActive ? " ..." : ""}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-
-        <p className="mt-8 text-sm text-neutral-400">
+        <p className="mt-8 text-sm text-ink-400">
           Usually takes 30-60 seconds
         </p>
       </div>
@@ -930,13 +898,13 @@ export const CreateResumeSimple = () => {
     return (
       <div className="space-y-0">
         {/* Top toolbar - like Portfolioly's Edit/Preview/Fullscreen/Deploy/Publish/Save */}
-        <div className="rounded-t-2xl border border-neutral-200 bg-white px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="rounded-t-[var(--jf-radius-panel)] border border-border-soft bg-page px-4 py-3 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-1">
             <button
               onClick={() => setViewMode("edit")}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === "edit"
-                  ? "bg-neutral-900 text-white"
-                  : "text-neutral-600 hover:bg-neutral-100"
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-[var(--jf-radius-row)] text-sm font-medium transition-all ${viewMode === "edit"
+                  ? "bg-ink-900 text-white"
+                  : "text-ink-600 hover:bg-surface-alt"
                 }`}
             >
               <Pencil className="h-3.5 w-3.5" />
@@ -944,9 +912,9 @@ export const CreateResumeSimple = () => {
             </button>
             <button
               onClick={() => setViewMode("preview")}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === "preview"
-                  ? "bg-neutral-900 text-white"
-                  : "text-neutral-600 hover:bg-neutral-100"
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-[var(--jf-radius-row)] text-sm font-medium transition-all ${viewMode === "preview"
+                  ? "bg-ink-900 text-white"
+                  : "text-ink-600 hover:bg-surface-alt"
                 }`}
             >
               <Eye className="h-3.5 w-3.5" />
@@ -961,9 +929,9 @@ export const CreateResumeSimple = () => {
                   <button
                     key={t.id}
                     onClick={() => setSelectedTemplate(t.id)}
-                    className={`px-3 py-1.5 text-xs rounded-lg border transition-all ${selectedTemplate === t.id
-                        ? "bg-neutral-900 text-white border-neutral-900"
-                        : "bg-white text-neutral-500 border-neutral-200 hover:border-neutral-300"
+                    className={`px-3 py-1.5 text-xs rounded-[var(--jf-radius-row)] border transition-all ${selectedTemplate === t.id
+                        ? "bg-ink-900 text-white border-ink-900"
+                        : "bg-page text-ink-500 border-border-soft hover:border-border-frame"
                       }`}
                     title={t.description}
                   >
@@ -973,20 +941,11 @@ export const CreateResumeSimple = () => {
               </div>
             )}
 
-            <Button
-              onClick={handleDownloadPdf}
-              disabled={pdfGenerating}
-              className="bg-neutral-900 text-white hover:bg-neutral-800 text-sm h-9"
-            >
+            <Button onClick={handleDownloadPdf} disabled={pdfGenerating} size="sm">
               <Download className="h-3.5 w-3.5 mr-1" />
               {pdfGenerating ? "PDF..." : "PDF"}
             </Button>
-            <Button
-              onClick={handleDownloadDocx}
-              disabled={docxGenerating}
-              variant="outline"
-              className="text-sm h-9 !border-neutral-200 !text-neutral-700 !bg-white hover:!bg-neutral-50"
-            >
+            <Button onClick={handleDownloadDocx} disabled={docxGenerating} variant="outline" size="sm">
               <Download className="h-3.5 w-3.5 mr-1" />
               {docxGenerating ? "DOCX..." : "DOCX"}
             </Button>
@@ -994,11 +953,11 @@ export const CreateResumeSimple = () => {
 
           {/* Published link banner */}
           {publishedUrl && (
-            <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-1.5 text-sm">
-              <span className="text-green-700 truncate max-w-[200px] sm:max-w-xs">{publishedUrl}</span>
+            <div className="flex items-center gap-2 bg-success/10 border border-success/20 rounded-[var(--jf-radius-row)] px-3 py-1.5 text-sm">
+              <span className="text-success truncate max-w-[200px] sm:max-w-xs">{publishedUrl}</span>
               <button
                 onClick={handleCopyLink}
-                className="text-green-600 hover:text-green-800 transition-colors flex-shrink-0"
+                className="text-success hover:opacity-80 transition-opacity flex-shrink-0"
                 title="Copy link"
               >
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
@@ -1009,14 +968,14 @@ export const CreateResumeSimple = () => {
 
         {/* Warnings */}
         {(generationWarning || generationError) && (
-          <div className="border-x border-neutral-200 bg-white px-4 py-2 space-y-2">
+          <div className="border-x border-border-soft bg-page px-4 py-2 space-y-2">
             {generationWarning && (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-sm text-amber-700">
+              <div className="rounded-[var(--jf-radius-row)] border border-warning/20 bg-warning/10 p-2.5 text-sm text-warning">
                 {generationWarning}
               </div>
             )}
             {generationError && (
-              <div className="rounded-lg border border-red-200 bg-red-50 p-2.5 text-sm text-red-600">
+              <div className="rounded-[var(--jf-radius-row)] border border-error/20 bg-error/10 p-2.5 text-sm text-error">
                 {generationError}
               </div>
             )}
@@ -1024,7 +983,7 @@ export const CreateResumeSimple = () => {
         )}
 
         {/* Content area */}
-        <div className="rounded-b-2xl border border-t-0 border-neutral-200 bg-white">
+        <div className="rounded-b-[var(--jf-radius-panel)] border border-t-0 border-border-soft bg-page">
           {viewMode === "edit" && (
             <div className="p-6">
               <ResumeDataEditor data={portfoliolyResume} onChange={handleResumeChange} />
@@ -1047,7 +1006,7 @@ export const CreateResumeSimple = () => {
         <div className="pt-4 text-center">
           <button
             onClick={() => setStep("resume")}
-            className="text-sm text-neutral-400 hover:text-neutral-600 transition-colors"
+            className="text-sm text-ink-400 hover:text-ink-600 transition-colors"
           >
             Start another resume
           </button>
@@ -1063,14 +1022,14 @@ export const CreateResumeSimple = () => {
     return (
       <div className="space-y-0">
         {/* Top toolbar — same style as resume results */}
-        <div className="rounded-t-2xl border border-neutral-200 bg-white px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="rounded-t-[var(--jf-radius-panel)] border border-border-soft bg-page px-4 py-3 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-1">
             <button
               onClick={() => setPortfolioViewMode("edit")}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-[var(--jf-radius-row)] text-sm font-medium transition-all ${
                 portfolioViewMode === "edit"
-                  ? "bg-neutral-900 text-white"
-                  : "text-neutral-600 hover:bg-neutral-100"
+                  ? "bg-ink-900 text-white"
+                  : "text-ink-600 hover:bg-surface-alt"
               }`}
             >
               <Pencil className="h-3.5 w-3.5" />
@@ -1078,10 +1037,10 @@ export const CreateResumeSimple = () => {
             </button>
             <button
               onClick={() => setPortfolioViewMode("preview")}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-[var(--jf-radius-row)] text-sm font-medium transition-all ${
                 portfolioViewMode === "preview"
-                  ? "bg-neutral-900 text-white"
-                  : "text-neutral-600 hover:bg-neutral-100"
+                  ? "bg-ink-900 text-white"
+                  : "text-ink-600 hover:bg-surface-alt"
               }`}
             >
               <Eye className="h-3.5 w-3.5" />
@@ -1090,11 +1049,7 @@ export const CreateResumeSimple = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
-              onClick={handlePortfolioPublish}
-              disabled={isPortfolioPublishing}
-              className="bg-neutral-900 text-white hover:bg-neutral-800 text-sm h-9"
-            >
+            <Button onClick={handlePortfolioPublish} disabled={isPortfolioPublishing} size="sm">
               <Globe className="h-3.5 w-3.5 mr-1" />
               {isPortfolioPublishing ? "Publishing..." : "Publish Portfolio"}
             </Button>
@@ -1102,7 +1057,7 @@ export const CreateResumeSimple = () => {
         </div>
 
         {/* Content area */}
-        <div className="rounded-b-2xl border border-t-0 border-neutral-200 bg-white">
+        <div className="rounded-b-[var(--jf-radius-panel)] border border-t-0 border-border-soft bg-page">
           {portfolioViewMode === "edit" && (
             <div className="p-6">
               <ResumeDataEditor data={portfolioData} onChange={setPortfolioData} />
@@ -1126,7 +1081,7 @@ export const CreateResumeSimple = () => {
               setPortfolioData(null);
               setPortfolioFileName(null);
             }}
-            className="text-sm text-neutral-400 hover:text-neutral-600 transition-colors"
+            className="text-sm text-ink-400 hover:text-ink-600 transition-colors"
           >
             Start over
           </button>
@@ -1138,28 +1093,28 @@ export const CreateResumeSimple = () => {
   // ─── Portfolio Published Step ──────────────────────────────────────
   const renderPortfolioPublishedStep = () => (
     <div className="flex flex-col items-center text-center max-w-lg mx-auto py-8">
-      <div className="rounded-2xl border border-neutral-200 bg-white p-8 w-full space-y-6">
+      <div className="rounded-[var(--jf-radius-panel)] border border-border-soft bg-page p-8 w-full space-y-6">
         <div className="flex justify-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
-            <Globe className="h-7 w-7 text-green-600" />
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-success/10">
+            <Globe className="h-7 w-7 text-success" />
           </div>
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-2xl font-bold text-neutral-900">Portfolio Published!</h2>
-          <p className="text-neutral-500 text-sm">
+          <h2 className="text-2xl font-medium text-ink-900">Portfolio Published!</h2>
+          <p className="text-ink-500 text-sm">
             Your portfolio is now live and ready to share
           </p>
         </div>
 
         {/* URL + Copy */}
         <div className="flex items-center gap-2">
-          <div className="flex-1 bg-neutral-50 border border-neutral-200 rounded-lg px-4 py-2.5 text-sm text-neutral-700 font-mono truncate text-left">
+          <div className="flex-1 bg-surface-alt border border-border-soft rounded-[var(--jf-radius-row)] px-4 py-2.5 text-sm text-ink-700 font-mono truncate text-left">
             {portfolioUrl}
           </div>
           <button
             onClick={handlePortfolioCopyLink}
-            className="shrink-0 text-neutral-600 hover:text-neutral-800 transition-colors"
+            className="shrink-0 text-ink-600 hover:text-ink-900 transition-colors"
             title="Copy link"
           >
             {portfolioCopied ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
@@ -1168,16 +1123,14 @@ export const CreateResumeSimple = () => {
 
         {/* Actions */}
         <div className="flex gap-3 justify-center">
-          <a
-            href={`/p/${portfolioSlug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-5 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors text-sm font-medium"
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-            View Portfolio
-          </a>
-          <button
+          <Button asChild size="default">
+            <a href={`/p/${portfolioSlug}`} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="h-3.5 w-3.5" />
+              View Portfolio
+            </a>
+          </Button>
+          <Button
+            variant="outline"
             onClick={() => {
               setStep("resume");
               setInputMode(null);
@@ -1186,10 +1139,9 @@ export const CreateResumeSimple = () => {
               setPortfolioUrl(null);
               setPortfolioSlug(null);
             }}
-            className="px-5 py-2 border border-neutral-200 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors text-sm font-medium"
           >
             Create Another
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -1198,8 +1150,9 @@ export const CreateResumeSimple = () => {
   return (
     <BackgroundRippleLayout
       tone="light"
-      className="bg-white"
-      contentClassName="resume-optimizer pt-16"
+      className="bg-page"
+      contentClassName="resume-optimizer pt-[74px]"
+      showRipple={false}
     >
       <Navbar tone="light" />
       <div className="px-4 pb-20 pt-24">

@@ -8,7 +8,7 @@ interface Props {
 }
 
 export default function TemplateTwoColumn({ data }: Props) {
-  const { basics, work, skills, projects, education, awards, volunteer, coursework, extraSections } = data;
+  const { basics, work, skills, projects, education, awards, volunteer, coursework, certifications, extraSections } = data;
   const summary = basics.summary || "";
 
   return (
@@ -203,6 +203,19 @@ export default function TemplateTwoColumn({ data }: Props) {
                   <strong className="ttc-entry-title">{a.title}</strong>
                   {a.awarder && <div className="ttc-edu-degree">{a.awarder}</div>}
                   {a.summary && <div className="ttc-edu-score">{a.summary}</div>}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {certifications && certifications.length > 0 && (
+            <div className="ttc-section">
+              <h2 className="ttc-section-title ttc-accent-border">Certifications</h2>
+              {certifications.map((c, i) => (
+                <div key={i} className="ttc-entry">
+                  <strong className="ttc-entry-title">{c.name}</strong>
+                  {c.issuer && <div className="ttc-edu-degree">{c.issuer}</div>}
+                  {c.date && <div className="ttc-edu-score">{c.date}</div>}
                 </div>
               ))}
             </div>

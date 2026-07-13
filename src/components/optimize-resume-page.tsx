@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { BackgroundRippleLayout } from "@/components/background-ripple-layout";
 import { Navbar } from "@/components/navbar";
-import { Button } from "@/components/button";
+import { Button } from "@/components/ui/button";
 import TemplatePreview from "@/components/resume-optimizer/TemplatePreview";
 import FinalResumePreview from "@/components/resume-optimizer/FinalResumePreview";
 import { getPageCountHint } from "@/components/resume-optimizer/resumeUtils";
