@@ -5,7 +5,26 @@ import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, X } from "lucide-react";
+import { 
+  CalendarIcon, 
+  X, 
+  Plus, 
+  Save, 
+  Trash2, 
+  Edit3, 
+  Building2, 
+  Briefcase, 
+  MapPin, 
+  DollarSign, 
+  ExternalLink, 
+  User, 
+  ChevronDown, 
+  Check, 
+  Sparkles,
+  Link2,
+  FileText,
+  UserCheck
+} from "lucide-react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,12 +39,18 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { motion } from "motion/react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { motion, AnimatePresence } from "framer-motion";
 import { useUserStore } from "@/stores/useUserStore";
 import axiosInstance from "@/lib/axios";
 
 /**
- * TYPES
+ * TYPES & VISUAL CONSTANTS
  */
 type ApplicationStatus = "Offer" | "Rejected" | "Interview" | "Applied";
 
@@ -52,25 +77,17 @@ type JobApplicationRow = {
   isSaving?: boolean;
 };
 
-// Stagger animation container config for form rows
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.04,
-      delayChildren: 0.1,
-    },
-  },
+const STATUS_THEMES: Record<ApplicationStatus, { label: string; bg: string; dot: string; text: string; hover: string }> = {
+  Applied: { label: "Applied", bg: "bg-blue-50/70 border-blue-100", dot: "bg-blue-500", text: "text-blue-700", hover: "hover:bg-blue-100/50" },
+  Interview: { label: "Interview", bg: "bg-amber-50/70 border-amber-100", dot: "bg-amber-500", text: "text-amber-700", hover: "hover:bg-amber-100/50" },
+  Offer: { label: "Offer", bg: "bg-emerald-50/70 border-emerald-100", dot: "bg-emerald-500", text: "text-emerald-700", hover: "hover:bg-emerald-100/50" },
+  Rejected: { label: "Archived", bg: "bg-rose-50/70 border-rose-100", dot: "bg-rose-500", text: "text-rose-600", hover: "hover:bg-rose-100/50" },
 };
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 15 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { type: "spring", stiffness: 300, damping: 24 }
-  },
+const PRIORITY_THEMES: Record<string, string> = {
+  High: "bg-rose-50 text-rose-700 border-rose-100",
+  Medium: "bg-indigo-50 text-indigo-700 border-indigo-100",
+  Low: "bg-slate-50 text-slate-600 border-slate-200",
 };
 
 /**
@@ -126,7 +143,7 @@ const DEMO_APPLICATIONS: JobApplicationRow[] = [
     salary: "$120k - $150k",
     location: "Remote",
     priority: "High",
-    referral: "referral",
+    referral: "secured",
     notes: "Preview row for locked viewers.",
     isDraft: false,
   },
@@ -160,41 +177,7 @@ const DEMO_APPLICATIONS: JobApplicationRow[] = [
     salary: "$70k - $85k",
     location: "Mumbai",
     priority: "High",
-    referral: "employee",
-    notes: "Preview row for locked viewers.",
-    isDraft: false,
-  },
-  {
-    tempId: "demo-4",
-    _id: "demo-4",
-    company: "Pulse Commerce",
-    title: "Backend Engineer",
-    status: "Rejected",
-    link: "#",
-    contact: "careers@pulsecommerce.com",
-    date: new Date().toISOString(),
-    stage: "Screening Complete",
-    salary: "$130k - $160k",
-    location: "Hyderabad",
-    priority: "Low",
-    referral: "none",
-    notes: "Preview row for locked viewers.",
-    isDraft: false,
-  },
-  {
-    tempId: "demo-5",
-    _id: "demo-5",
-    company: "Vertex AI",
-    title: "Growth Manager",
-    status: "Offer",
-    link: "#",
-    contact: "people@vertexai.com",
-    date: new Date().toISOString(),
-    stage: "Offer Discussion",
-    salary: "$140k - $175k",
-    location: "Delhi",
-    priority: "High",
-    referral: "referral",
+    referral: "requested",
     notes: "Preview row for locked viewers.",
     isDraft: false,
   },
@@ -254,7 +237,6 @@ export default function SidebarDemo() {
       }
     } finally {
       if (!hasActiveMembership) {
-        // Keep the demo rows in place for locked viewers.
         setRows(DEMO_APPLICATIONS);
       }
     }
@@ -303,6 +285,7 @@ const Dashboard = ({
   const membershipHref = jobflixViewBase
     ? `${jobflixViewBase}/my-account/membership`
     : "/my-account/membership";
+
   const addRow = () => {
     if (!hasAccess) {
       toast.error('You need to have an active premium or ultra membership to add a row');
@@ -332,10 +315,7 @@ const Dashboard = ({
   };
 
   const saveDraftRows = async () => {
-    if (!hasAccess) {
-      toast.error('You need to have an active premium or ultra membership to add a row');
-      return;
-    }
+    if (!hasAccess) return;
     const draftRows = rows.filter((row) => row.isDraft);
     if (draftRows.length === 0) return;
 
@@ -347,11 +327,9 @@ const Dashboard = ({
 
     try {
       setSaveLoader(true);
-      const response = await axiosInstance.post("/job/applications",
-        {
-          applications: draftRows.map(cleanApplicationPayload),
-        },
-      );
+      await axiosInstance.post("/job/applications", {
+        applications: draftRows.map(cleanApplicationPayload),
+      });
       await reloadRows();
       toast.success(`${draftRows.length} application(s) saved.`);
     } catch (error) {
@@ -362,11 +340,7 @@ const Dashboard = ({
   };
 
   const saveSingleDraft = async (row: JobApplicationRow) => {
-    if (!hasAccess) {
-      toast.error('You need to have an active premium or ultra membership to add a row');
-      return;
-    }
-    if (!row.isDraft || !row.title.trim()) return;
+    if (!hasAccess || !row.isDraft || !row.title.trim()) return;
 
     const rowKey = getRowKey(row);
     setRows((prev) =>
@@ -374,12 +348,9 @@ const Dashboard = ({
     );
 
     try {
-      const response = await axiosInstance.post("/job/applications",
-        {
-          application: cleanApplicationPayload(row),
-        },
-      );
-
+      await axiosInstance.post("/job/applications", {
+        application: cleanApplicationPayload(row),
+      });
       await reloadRows();
       toast.success("Application saved.");
     } catch (error) {
@@ -392,20 +363,13 @@ const Dashboard = ({
   };
 
   const deleteRow = async (row: JobApplicationRow) => {
-    if (!hasAccess) {
-      toast.error('You need to have an active premium or ultra membership to add a row');
-      return;
-    }
+    if (!hasAccess) return;
     if (row.isDraft) {
       setRows((prev) => prev.filter((entry) => getRowKey(entry) !== getRowKey(row)));
       return;
     }
     try {
-      await axiosInstance.post("/job/application/delete",
-        {
-          id: row._id,
-        },
-      );
+      await axiosInstance.post("/job/application/delete", { id: row._id });
       setRows((prev) => prev.filter((entry) => entry._id !== row._id));
       toast.success("Deleted.");
     } catch (error) {
@@ -414,10 +378,7 @@ const Dashboard = ({
   };
 
   const updateRowStatus = async (row: JobApplicationRow, status: ApplicationStatus) => {
-    if (!hasAccess) {
-      toast.error('You need to have an active premium or ultra membership to add a row');
-      return;
-    }
+    if (!hasAccess) return;
     if (row.isDraft) {
       setRows((prev) =>
         prev.map((entry) => (getRowKey(entry) === getRowKey(row) ? { ...entry, status } : entry))
@@ -425,12 +386,9 @@ const Dashboard = ({
       return;
     }
     try {
-      await axiosInstance.put(`/job/application/status/update/${row._id}`,
-        {
-          status,
-        },
-      );
+      await axiosInstance.put(`/job/application/status/update/${row._id}`, { status });
       setRows((prev) => prev.map((entry) => (entry._id === row._id ? { ...entry, status } : entry)));
+      toast.success(`Status updated to ${status}`);
     } catch (error) {
       toast.error("Status update failed.");
     }
@@ -450,15 +408,8 @@ const Dashboard = ({
     if (editForm) setEditForm({ ...editForm, [field]: value });
   };
 
-  /**
-   * PARTIAL UPDATE LOGIC
-   */
   const saveEditedRow = async () => {
-    if (!hasAccess) {
-      toast.error('You need to have an active premium or ultra membership to add a row');
-      return;
-    }
-    if (!editForm || !editForm.title.trim() || !editingRow) return;
+    if (!hasAccess || !editForm || !editForm.title.trim() || !editingRow) return;
 
     if (editForm.isDraft) {
       const rowKey = getRowKey(editForm);
@@ -467,7 +418,6 @@ const Dashboard = ({
       return;
     }
 
-    // Identify only changed fields
     const changedFields: Partial<JobApplicationRow> = {};
     (Object.keys(editForm) as Array<keyof JobApplicationRow>).forEach((key) => {
       if (editForm[key] !== editingRow[key]) {
@@ -482,11 +432,9 @@ const Dashboard = ({
 
     try {
       setSaveEditLoader(true);
-      const response = await axiosInstance.put(`/job/applications/${editForm._id}`,
-        {
-          application: changedFields,
-        },
-      );
+      await axiosInstance.put(`/job/applications/${editForm._id}`, {
+        application: changedFields,
+      });
       setRows((prev) => prev.map((row) => (row._id === editForm._id ? { ...editForm } : row)));
       closeEditModal();
       toast.success("Updated successfully.");
@@ -500,349 +448,409 @@ const Dashboard = ({
   const hasChanges = JSON.stringify(editForm) !== JSON.stringify(editingRow);
 
   return (
-    <div className="flex flex-1">
-      <div className="flex h-full w-full flex-1 flex-col gap-6 bg-neutral-50">
-        <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+    <div className="flex flex-1 min-h-screen bg-slate-50/50 p-4 lg:p-8 font-sans antialiased text-slate-950">
+      <div className="flex h-full w-full flex-1 flex-col gap-6 max-w-7xl mx-auto">
+        
+        {/* PREVIEW LOCK MODE BANNER */}
+        <AnimatePresence>
           {isLockedPreview && (
-            <div className="mb-5 rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 md:p-5 shadow-sm">
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="relative overflow-hidden rounded-2xl border border-blue-100 bg-white p-5 shadow-[0_10px_25px_-5px_rgba(59,130,246,0.05)]"
+            >
+              <div className="absolute top-0 left-0 h-full w-[4px] bg-gradient-to-b from-blue-500 to-indigo-600" />
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="max-w-2xl">
-                  <p className="text-[10px] uppercase tracking-[0.28em] text-slate-400 font-bold">
-                    Preview Mode
-                  </p>
-                  <p className="mt-2 text-sm font-semibold text-slate-900">
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700">
+                    <Sparkles size={11} className="animate-pulse" /> Preview Mode
+                  </div>
+                  <h2 className="mt-2 text-sm font-bold text-slate-900 tracking-tight">
                     {isLoggedIn ? "Purchase membership to unlock your full job tracker." : "Login to unlock your full job tracker."}
-                  </p>
-                  <p className="mt-1 text-xs leading-relaxed text-slate-600">
-                    You’re seeing 5 demo jobs already added so you can preview the tracker. Unlocking lets you create, edit, and save the real tracker.
+                  </h2>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-500 font-medium">
+                    You’re seeing active demo applications in sandboxed view. Unlocking transfers active schemas into live persistent storage tables.
                   </p>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div>
                   <a
                     href={isLoggedIn ? membershipHref : loginHref}
-                    className={`inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-transform hover:-translate-y-0.5 ${
-                      isLoggedIn
-                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90"
-                        : "bg-neutral-900 text-white shadow-lg shadow-neutral-900/20 hover:bg-neutral-800"
-                    }`}
+                    className={cn(
+                      "inline-flex h-9 items-center justify-center rounded-xl px-5 text-xs font-bold transition-all shadow-sm hover:translate-y-[-1px]",
+                      isLoggedIn 
+                        ? "bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/10" 
+                        : "bg-slate-900 text-white hover:bg-slate-800"
+                    )}
                   >
-                    {isLoggedIn ? "Purchase Membership" : "Login"}
+                    {isLoggedIn ? "Purchase Membership" : "Login Portal"}
                   </a>
                 </div>
               </div>
-            </div>
+            </motion.div>
           )}
-          <>
-              <div className="mt-6 max-w-7xl flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-neutral-900">Active Applications</p>
-                  <p className="text-xs text-neutral-500">
-                    {isLockedPreview ? "Showing 5 demo jobs in preview mode." : `Managing ${rows.length} total applications.`}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={saveDraftRows}
-                    disabled={saveLoader || draftCount === 0 || !hasAccess}
-                    className="text-[11px] h-8 border-blue-200 text-blue-700 bg-blue-50/50 hover:bg-blue-50"
-                  >
-                    {saveLoader ? "Saving..." : hasAccess ? `Save Drafts (${draftCount})` : "Unlock to save"}
-                  </Button>
-                  {hasAccess && (
-                    <Button size="sm" onClick={addRow} className="text-[11px] h-8 bg-neutral-900 text-white">
-                      Add Row
-                    </Button>
-                  )}
-                </div>
-              </div>
+        </AnimatePresence>
 
-              <div className="mt-4 overflow-x-auto rounded-lg border border-neutral-200 shadow-sm">
-                <table className="w-full min-w-[1000px] text-left text-xs">
-                  <thead className="bg-neutral-50 border-b border-neutral-200 text-neutral-500">
-                    <tr>
-                      <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Company</th>
-                      <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Title</th>
-                      <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Status</th>
-                      <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Priority</th>
-                      <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Location</th>
-                      <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Applied Date</th>
-                      <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Stage</th>
-                      <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-neutral-100">
-                    {rows.length === 0 ? (
-                      <tr>
-                        <td className="px-4 py-10 text-center text-neutral-400" colSpan={8}>
-                          No applications found. Click "Add Row" to start.
+        {/* CONTAINER SHELL AREA */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs space-y-6">
+          
+          {/* CONTROL BAR DASHBOARD HEADER */}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-5">
+            <div>
+              <h1 className="text-base font-bold tracking-tight text-slate-900">Application Workspace</h1>
+              <p className="text-xs font-medium text-slate-400 mt-0.5">
+                {isLockedPreview ? "Showing 3 demo jobs in sandboxed workspace view." : `Syncing ${rows.length} production nodes securely.`}
+              </p>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={saveDraftRows}
+                disabled={saveLoader || draftCount === 0 || !hasAccess}
+                className="text-xs font-semibold h-9 border-indigo-200 text-indigo-700 bg-indigo-50/40 hover:bg-indigo-50/80 rounded-xl px-4 transition-all"
+              >
+                <Save size={13} className="mr-1.5 stroke-[2.5]" />
+                {saveLoader ? "Saving Changes..." : hasAccess ? `Save Drafts (${draftCount})` : "Locked Workspace"}
+              </Button>
+              {hasAccess && (
+                <Button size="sm" onClick={addRow} className="text-xs font-semibold h-9 bg-slate-900 hover:bg-slate-800 text-white rounded-xl px-4 shadow-sm transition-all">
+                  <Plus size={14} className="mr-1.5 stroke-[2.5]" /> Add Entry
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* DYNAMIC PIPELINE OVERVIEW PIP BLOCK */}
+          <div className="overflow-x-auto rounded-xl border border-slate-200/70 shadow-3xs overflow-hidden">
+            <table className="w-full min-w-[1000px] text-left text-xs border-collapse">
+              <thead className="bg-slate-50/70 border-b border-slate-200/80">
+                <tr>
+                  {["Company Name", "Position Title", "Current Status", "Priority Node", "Location", "Applied Date", "Interview Stage", "Controls"].map((header) => (
+                    <th key={header} className="px-5 py-3.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">{header}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100/80 bg-white font-medium text-slate-600">
+                {rows.length === 0 ? (
+                  <tr>
+                    <td className="px-5 py-12 text-center text-slate-400 font-medium" colSpan={8}>
+                      No tracking schemas mapped. Click "Add Entry" to initialize layout rows.
+                    </td>
+                  </tr>
+                ) : (
+                  rows.map((row) => {
+                    const theme = STATUS_THEMES[row.status] || STATUS_THEMES.Applied;
+                    return (
+                      <tr key={getRowKey(row)} className={cn("hover:bg-slate-50/40 transition-colors group", row.isDraft && "bg-amber-50/20")}>
+                        
+                        {/* Company Identity */}
+                        <td className="px-5 py-4 font-bold text-slate-900 tracking-tight">
+                          <div className="flex items-center gap-2.5">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50 text-slate-400 border border-slate-200/60 shadow-3xs">
+                              <Building2 size={13} />
+                            </div>
+                            {row.company || "—"}
+                          </div>
+                        </td>
+
+                        {/* Title Role Entry */}
+                        <td className="px-5 py-4 font-semibold text-slate-800">
+                          <div className="flex items-center gap-2">
+                            {row.title || "—"}
+                            {row.isDraft && <span className="rounded-md bg-amber-50 border border-amber-200 px-2 py-0.5 text-[9px] text-amber-700 font-bold uppercase tracking-wide">Draft</span>}
+                          </div>
+                        </td>
+
+                        {/* Status Radix Menu Control Component */}
+                        <td className="px-5 py-4">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger disabled={!hasAccess} className={cn(
+                              "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold shadow-3xs transition-all outline-none",
+                              theme.bg, theme.text, theme.hover
+                            )}>
+                              <span className={cn("h-1.5 w-1.5 rounded-full", theme.dot)} />
+                              {theme.label}
+                              <ChevronDown size={11} className="opacity-60 ml-0.5" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="rounded-xl border border-slate-200 bg-white p-1 shadow-md text-xs font-semibold text-slate-700 min-w-[120px]">
+                              {(Object.keys(STATUS_THEMES) as ApplicationStatus[]).map((st) => (
+                                <DropdownMenuItem key={st} onClick={() => updateRowStatus(row, st)} className="flex items-center gap-2 rounded-lg px-2 py-1.5 cursor-pointer hover:bg-slate-50">
+                                  <span className={cn("h-1.5 w-1.5 rounded-full", STATUS_THEMES[st].dot)} />
+                                  {STATUS_THEMES[st].label}
+                                  {row.status === st && <Check size={12} className="ml-auto text-slate-900" />}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
+
+                        {/* Priority Badge */}
+                        <td className="px-5 py-4">
+                          <span className={cn("px-2.5 py-0.5 rounded-md text-[10px] font-bold border shadow-3xs", PRIORITY_THEMES[row.priority] || PRIORITY_THEMES.Medium)}>
+                            {row.priority}
+                          </span>
+                        </td>
+
+                        {/* Location Element Block */}
+                        <td className="px-5 py-4 text-slate-500 font-medium">
+                          <div className="flex items-center gap-1.5">
+                            <MapPin size={12} className="text-slate-400" />
+                            {row.location || "—"}
+                          </div>
+                        </td>
+
+                        {/* Epoch Formatted Date Calendar String */}
+                        <td className="px-5 py-4 text-slate-500 font-medium">
+                          {row.date ? format(new Date(row.date), "MMM dd, yyyy") : "—"}
+                        </td>
+
+                        {/* Progress Screen State Level */}
+                        <td className="px-5 py-4 text-slate-800 font-bold tracking-tight">{row.stage || "—"}</td>
+
+                        {/* Operations Layout Button Group */}
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                            {row.isDraft && hasAccess && (
+                              <button onClick={() => saveSingleDraft(row)} className="text-emerald-600 font-bold hover:text-emerald-700 text-xs px-2 py-1 rounded-md hover:bg-emerald-50 transition-colors">Sync</button>
+                            )}
+                            <button onClick={() => openEditModal(row)} className="text-slate-400 hover:text-slate-800 transition-colors p-1.5 rounded-lg hover:bg-slate-100" title="Modify Index Elements">
+                              <Edit3 size={13} />
+                            </button>
+                            <button onClick={() => deleteRow(row)} className="text-slate-400 hover:text-rose-600 transition-colors p-1.5 rounded-lg hover:bg-rose-50" title="Discard Model Element Row">
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
-                    ) : (
-                      rows.map((row) => (
-                        <tr key={getRowKey(row)} className={cn("hover:bg-neutral-50/50 transition-colors", row.isDraft && "bg-amber-50/30")}>
-                          <td className="px-4 py-3 font-medium text-neutral-900">{row.company || "-"}</td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              {row.title || "-"}
-                              {row.isDraft && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9px] text-amber-700 font-bold uppercase">Draft</span>}
-                            </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <select
-                              value={row.status}
-                              onChange={(e) => updateRowStatus(row, e.target.value as ApplicationStatus)}
-                              className="rounded-full border border-neutral-200 bg-white px-2 py-1 text-[10px] font-semibold"
-                            >
-                              <option value="Applied">Applied</option>
-                              <option value="Interview">Interview</option>
-                              <option value="Offer">Offer</option>
-                              <option value="Rejected">Rejected</option>
-                            </select>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className={cn(
-                              "px-2 py-0.5 rounded text-[10px] font-bold",
-                              row.priority === "High" ? "bg-red-50 text-red-600 border border-red-100" :
-                                row.priority === "Medium" ? "bg-blue-50 text-blue-600 border border-blue-100" :
-                                  "bg-neutral-50 text-neutral-500 border border-neutral-200"
-                            )}>
-                              {row.priority}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-neutral-500">{row.location || "-"}</td>
-                          <td className="px-4 py-3 text-neutral-500">
-                            {row.date ? format(new Date(row.date), "MMM dd, yyyy") : "-"}
-                          </td>
-                          <td className="px-4 py-3 text-neutral-500 font-medium">{row.stage || "-"}</td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-3">
-                              {row.isDraft && (
-                                <button onClick={() => saveSingleDraft(row)} className="text-emerald-600 font-bold hover:text-emerald-700">Save</button>
-                              )}
-                              <button onClick={() => openEditModal(row)} className="text-neutral-500 hover:text-neutral-900">Edit</button>
-                              <button onClick={() => deleteRow(row)} className="text-red-400 hover:text-red-600">Delete</button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
 
-              {/* EDIT MODAL */}
-              {editingRow && editForm && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/40 backdrop-blur-xs">
-                  {/* Modal Container */}
-                  <motion.div 
-                  initial={{ opacity: 0, scale: 0.96, y: 10 }}
+          {/* COLORFUL MODAL INPUT EDITOR */}
+          <AnimatePresence>
+            {editingRow && editForm && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs">
+                
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0" onClick={closeEditModal} />
+
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.97, y: 12 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.96, y: 10 }}
-                  transition={{ type: "spring", duration: 0.4, bounce: 0.15 }}
-                  className="w-full max-w-2xl rounded-lg border border-neutral-200 bg-white p-6 shadow-xl animate-in fade-in-50 zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto font-sans text-neutral-950">
+                  exit={{ opacity: 0, scale: 0.97, y: 12 }}
+                  transition={{ type: "spring", duration: 0.4, bounce: 0.1 }}
+                  className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white shadow-2xl relative z-10 max-h-[92vh] overflow-y-auto flex flex-col overflow-hidden"
+                >
+                  {/* Decorative Border Identity Gradient Line */}
+                  <div className="h-1.5 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 shrink-0" />
 
-                    {/* Header Section */}
-                    <div className="mb-6 flex justify-between items-start border-b border-neutral-100 pb-4">
-                      <div>
-                        <h3 className="text-xl font-bold font-display text-neutral-950 tracking-tight">
-                          Edit Application
-                        </h3>
-                        <p className="text-xs font-body text-neutral-500 mt-1">
-                          Refine details for <span className="font-semibold text-neutral-800">{editForm.company || "New Application"}</span>
-                        </p>
-                      </div>
-                      <button
-                        onClick={closeEditModal}
-                        className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
-                        aria-label="Close dialog"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
+                  {/* Header Form Node Container Panel */}
+                  <div className="p-6 border-b border-slate-100 flex justify-between items-start shrink-0 bg-slate-50/50">
+                    <div className="space-y-1">
+                      <h3 className="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                        <FileText size={16} className="text-indigo-500" /> Pipeline Parameter Ledger
+                      </h3>
+                      <p className="text-xs font-medium text-slate-500">
+                        Modifying operational indexes for <span className="font-bold text-slate-800">{editForm.company || "New Identity Vector"}</span>
+                      </p>
+                    </div>
+                    <button onClick={closeEditModal} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200/60 hover:text-slate-700 transition-colors">
+                      <X size={15} strokeWidth={2.5} />
+                    </button>
+                  </div>
+
+                  {/* High-Fidelity Input Content Schema Layout Grid */}
+                  <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5 overflow-y-auto">
+
+                    {/* Corporate Entity Block */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                        <Building2 size={11} className="text-blue-500" /> Corporate Entity
+                      </label>
+                      <Input
+                        value={editForm.company}
+                        onChange={(e) => handleEditChange("company", e.target.value)}
+                        placeholder="e.g. Google"
+                        className="bg-white border-slate-200 rounded-xl text-xs font-semibold focus-visible:ring-2 focus-visible:ring-indigo-500 h-10 shadow-3xs text-slate-900 focus-visible:border-transparent"
+                      />
                     </div>
 
-                    {/* Grid Form Body */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 font-body">
-
-                      {/* Company */}
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Company</label>
-                        <Input
-                          value={editForm.company}
-                          onChange={(e) => handleEditChange("company", e.target.value)}
-                          placeholder="e.g. Google"
-                          className="bg-white border-neutral-200 text-neutral-950 focus-visible:ring-teal-700"
-                        />
-                      </div>
-
-                      {/* Job Title */}
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Job Title</label>
-                        <Input
-                          value={editForm.title}
-                          onChange={(e) => handleEditChange("title", e.target.value)}
-                          placeholder="e.g. Senior Developer"
-                          className="bg-white border-neutral-200 text-neutral-950 focus-visible:ring-teal-700"
-                        />
-                      </div>
-
-                      {/* Posting Link */}
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Posting Link</label>
-                        <Input
-                          value={editForm.link}
-                          onChange={(e) => handleEditChange("link", e.target.value)}
-                          placeholder="https://linkedin.com/..."
-                          className="bg-white border-neutral-200 text-neutral-950 focus-visible:ring-teal-700"
-                        />
-                      </div>
-
-                      {/* Salary Range */}
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Salary Range</label>
-                        <Input
-                          value={editForm.salary}
-                          onChange={(e) => handleEditChange("salary", e.target.value)}
-                          placeholder="e.g. $140k - $160k"
-                          className="bg-white border-neutral-200 text-neutral-950 focus-visible:ring-teal-700"
-                        />
-                      </div>
-
-                      {/* Applied Date Popover */}
-                      <div className="space-y-1.5 flex flex-col">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Applied Date</label>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "w-full justify-start text-left font-normal bg-white border-neutral-200 text-neutral-950 hover:bg-neutral-50 focus:ring-2 focus:ring-teal-700",
-                                !editForm.date && "text-neutral-400"
-                              )}
-                            >
-                              <CalendarIcon className="mr-2 h-4 w-4 text-neutral-400" />
-                              {editForm.date ? format(new Date(editForm.date), "PPP") : <span>Pick a date</span>}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0 border border-neutral-200 bg-white text-neutral-950 shadow-md" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={editForm.date ? new Date(editForm.date) : undefined}
-                              onSelect={(d) => handleEditChange("date", d ? d.toISOString() : "")}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-
-                      {/* Interview Stage Dropdown */}
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Interview Stage</label>
-                        <Select value={editForm.stage} onValueChange={(val) => handleEditChange("stage", val)}>
-                          <SelectTrigger className="border-neutral-200 bg-white text-neutral-950 focus:ring-teal-700">
-                            <SelectValue placeholder="Select Stage" />
-                          </SelectTrigger>
-                          <SelectContent className="border border-neutral-200 !bg-white text-neutral-950 shadow-md">
-                            <SelectItem value="Initial Screening" className="hover:bg-neutral-50 focus:bg-neutral-100 cursor-pointer text-neutral-950 data-[highlighted]:bg-neutral-100 data-[highlighted]:text-neutral-950">Initial Screening</SelectItem>
-                            <SelectItem value="Technical Round" className="hover:bg-neutral-50 focus:bg-neutral-100 cursor-pointer text-neutral-950 data-[highlighted]:bg-neutral-100 data-[highlighted]:text-neutral-950">Technical Round</SelectItem>
-                            <SelectItem value="Managerial Round" className="hover:bg-neutral-50 focus:bg-neutral-100 cursor-pointer text-neutral-950 data-[highlighted]:bg-neutral-100 data-[highlighted]:text-neutral-950">Managerial Round</SelectItem>
-                            <SelectItem value="Culture Fit" className="hover:bg-neutral-50 focus:bg-neutral-100 cursor-pointer text-neutral-950 data-[highlighted]:bg-neutral-100 data-[highlighted]:text-neutral-950">Culture Fit</SelectItem>
-                            <SelectItem value="Final Round" className="hover:bg-neutral-50 focus:bg-neutral-100 cursor-pointer text-neutral-950 data-[highlighted]:bg-neutral-100 data-[highlighted]:text-neutral-950">Final Round</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Location */}
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Location</label>
-                        <Input
-                          value={editForm.location}
-                          onChange={(e) => handleEditChange("location", e.target.value)}
-                          placeholder="Remote / Hybrid / City"
-                          className="bg-white border-neutral-200 text-neutral-950 focus-visible:ring-teal-700"
-                        />
-                      </div>
-
-                      {/* Priority Dropdown */}
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Priority</label>
-                        <Select value={editForm.priority} onValueChange={(val) => handleEditChange("priority", val)}>
-                          <SelectTrigger className="border-neutral-200 bg-white text-neutral-950 focus:ring-teal-700">
-                            <SelectValue placeholder="Select Priority" />
-                          </SelectTrigger>
-                          <SelectContent className="border border-neutral-200 !bg-white text-neutral-950 shadow-md">
-                            <SelectItem value="High" className="hover:bg-neutral-50 focus:bg-neutral-100 cursor-pointer text-neutral-950 data-[highlighted]:bg-neutral-100 data-[highlighted]:text-neutral-950">High 🔥</SelectItem>
-                            <SelectItem value="Medium" className="hover:bg-neutral-50 focus:bg-neutral-100 cursor-pointer text-neutral-950 data-[highlighted]:bg-neutral-100 data-[highlighted]:text-neutral-950">Medium ⚡</SelectItem>
-                            <SelectItem value="Low" className="hover:bg-neutral-50 focus:bg-neutral-100 cursor-pointer text-neutral-950 data-[highlighted]:bg-neutral-100 data-[highlighted]:text-neutral-950">Low 🧊</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Referral Status Dropdown */}
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Referral Status</label>
-                        <Select value={editForm.referral} onValueChange={(val) => handleEditChange("referral", val)}>
-                          <SelectTrigger className="border-neutral-200 bg-white text-neutral-950 focus:ring-teal-700">
-                            <SelectValue placeholder="Referral status?" />
-                          </SelectTrigger>
-                          <SelectContent className="border border-neutral-200 !bg-white text-neutral-950 shadow-md">
-                            <SelectItem value="none" className="hover:bg-neutral-50 focus:bg-neutral-100 cursor-pointer text-neutral-950 data-[highlighted]:bg-neutral-100 data-[highlighted]:text-neutral-950">Cold Applied</SelectItem>
-                            <SelectItem value="requested" className="hover:bg-neutral-50 focus:bg-neutral-100 cursor-pointer text-neutral-950 data-[highlighted]:bg-neutral-100 data-[highlighted]:text-neutral-950">Requested</SelectItem>
-                            <SelectItem value="secured" className="hover:bg-neutral-50 focus:bg-neutral-100 cursor-pointer text-neutral-950 data-[highlighted]:bg-neutral-100 data-[highlighted]:text-neutral-950">Referral Secured</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Point of Contact */}
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Point of Contact</label>
-                        <Input
-                          value={editForm.contact}
-                          onChange={(e) => handleEditChange("contact", e.target.value)}
-                          placeholder="Recruiter name or email"
-                          className="bg-white border-neutral-200 text-neutral-950 focus-visible:ring-teal-700"
-                        />
-                      </div>
-
-                      {/* Internal Notes Textarea */}
-                      <div className="space-y-1.5 md:col-span-2">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Internal Notes</label>
-                        <textarea
-                          value={editForm.notes}
-                          onChange={(e) => handleEditChange("notes", e.target.value)}
-                          placeholder="Tech stack, red flags, follow-up reminders..."
-                          className="w-full min-h-[100px] rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700 focus-visible:border-transparent"
-                        />
-                      </div>
+                    {/* Designation Title Block */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                        <Briefcase size={11} className="text-indigo-500" /> Designation Title
+                      </label>
+                      <Input
+                        value={editForm.title}
+                        onChange={(e) => handleEditChange("title", e.target.value)}
+                        placeholder="e.g. Senior Staff Architect"
+                        className="bg-white border-slate-200 rounded-xl text-xs font-semibold focus-visible:ring-2 focus-visible:ring-indigo-500 h-10 shadow-3xs text-slate-900 focus-visible:border-transparent"
+                      />
                     </div>
 
-                    {/* Footer Actions */}
-                    <div className="mt-8 flex justify-end gap-3 border-t border-neutral-100 pt-5 font-body">
-                      <Button
-                        variant="ghost"
-                        onClick={closeEditModal}
-                        className="text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        onClick={saveEditedRow}
-                        disabled={saveEditLoader || !hasChanges}
-                        className="bg-teal-700 hover:bg-teal-800 active:bg-teal-900 text-white font-medium px-8 transition-colors disabled:opacity-50 disabled:pointer-events-none"
-                      >
-                        {saveEditLoader ? "Saving..." : "Save Changes"}
-                      </Button>
+                    {/* Destination Target URI Vector */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                        <Link2 size={11} className="text-sky-500" /> Target URL Vector
+                      </label>
+                      <Input
+                        value={editForm.link}
+                        onChange={(e) => handleEditChange("link", e.target.value)}
+                        placeholder="https://careers.google.com/..."
+                        className="bg-white border-slate-200 rounded-xl text-xs font-semibold focus-visible:ring-2 focus-visible:ring-indigo-500 h-10 shadow-3xs text-slate-900 focus-visible:border-transparent"
+                      />
                     </div>
 
-                  </motion.div>
+                    {/* Remuneration Input Canvas Block */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                        <DollarSign size={11} className="text-emerald-500" /> Remuneration Scale
+                      </label>
+                      <Input
+                        value={editForm.salary}
+                        onChange={(e) => handleEditChange("salary", e.target.value)}
+                        placeholder="e.g. $140k - $160k"
+                        className="bg-white border-slate-200 rounded-xl text-xs font-semibold focus-visible:ring-2 focus-visible:ring-indigo-500 h-10 shadow-3xs text-slate-900 focus-visible:border-transparent"
+                      />
+                    </div>
+
+                    {/* Epoch Timestamp Popover Box Field */}
+                    <div className="space-y-1.5 flex flex-col">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5 mb-0.5">
+                        <CalendarIcon size={11} className="text-amber-500" /> System Epoch Date
+                      </label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-semibold text-xs bg-white border-slate-200 rounded-xl hover:bg-slate-50 focus:ring-2 focus:ring-indigo-500 h-10 shadow-3xs text-slate-900",
+                              !editForm.date && "text-slate-400"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-3.5 w-3.5 text-slate-400" />
+                            {editForm.date ? format(new Date(editForm.date), "PPP") : <span>Select Calendar Coordinates</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 border border-slate-200 bg-white shadow-xl rounded-xl" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={editForm.date ? new Date(editForm.date) : undefined}
+                            onSelect={(d) => handleEditChange("date", d ? d.toISOString() : "")}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    {/* Dropdown Process Phase Step Selector */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                        <ExternalLink size={11} className="text-purple-500" /> Evaluation Pipeline Phase
+                      </label>
+                      <Select value={editForm.stage} onValueChange={(val) => handleEditChange("stage", val)}>
+                        <SelectTrigger className="border-slate-200 bg-white rounded-xl text-xs font-semibold text-slate-800 h-10 focus:ring-2 focus:ring-indigo-500 shadow-3xs">
+                          <SelectValue placeholder="Identify Stage Level" />
+                        </SelectTrigger>
+                        <SelectContent className="border border-slate-200 bg-white rounded-xl shadow-xl text-xs font-semibold text-slate-700">
+                          <SelectItem value="Initial Screening" className="cursor-pointer focus:bg-slate-50 rounded-lg">Initial Screening</SelectItem>
+                          <SelectItem value="Technical Round" className="cursor-pointer focus:bg-slate-50 rounded-lg">Technical Round</SelectItem>
+                          <SelectItem value="Managerial Round" className="cursor-pointer focus:bg-slate-50 rounded-lg">Managerial Round</SelectItem>
+                          <SelectItem value="Culture Fit" className="cursor-pointer focus:bg-slate-50 rounded-lg">Culture Fit</SelectItem>
+                          <SelectItem value="Final Round" className="cursor-pointer focus:bg-slate-50 rounded-lg">Final Round</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Localization Block Field Node */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                        <MapPin size={11} className="text-rose-500" /> Geographic Node
+                      </label>
+                      <Input
+                        value={editForm.location}
+                        onChange={(e) => handleEditChange("location", e.target.value)}
+                        placeholder="Remote / Hybrid / City"
+                        className="bg-white border-slate-200 rounded-xl text-xs font-semibold focus-visible:ring-2 focus-visible:ring-indigo-500 h-10 shadow-3xs text-slate-900 focus-visible:border-transparent"
+                      />
+                    </div>
+
+                    {/* Critical Selection Level Dropdown */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Critical Priority Tier</label>
+                      <Select value={editForm.priority} onValueChange={(val) => handleEditChange("priority", val)}>
+                        <SelectTrigger className="border-slate-200 bg-white rounded-xl text-xs font-semibold text-slate-800 h-10 focus:ring-2 focus:ring-indigo-500 shadow-3xs">
+                          <SelectValue placeholder="Identify Priority State" />
+                        </SelectTrigger>
+                        <SelectContent className="border border-slate-200 bg-white rounded-xl shadow-xl text-xs font-semibold text-slate-700">
+                          <SelectItem value="High" className="cursor-pointer focus:bg-rose-50 focus:text-rose-700 rounded-lg">High 🔥</SelectItem>
+                          <SelectItem value="Medium" className="cursor-pointer focus:bg-indigo-50 focus:text-indigo-700 rounded-lg">Medium ⚡</SelectItem>
+                          <SelectItem value="Low" className="cursor-pointer focus:bg-slate-100 rounded-lg">Low 🧊</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Referral Protocol Dropdown Block Selector */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Channel Referral Protocol</label>
+                      <Select value={editForm.referral} onValueChange={(val) => handleEditChange("referral", val)}>
+                        <SelectTrigger className="border-slate-200 bg-white rounded-xl text-xs font-semibold text-slate-800 h-10 focus:ring-2 focus:ring-indigo-500 shadow-3xs">
+                          <SelectValue placeholder="Identify Channel Vector" />
+                        </SelectTrigger>
+                        <SelectContent className="border border-slate-200 bg-white rounded-xl shadow-xl text-xs font-semibold text-slate-700">
+                          <SelectItem value="none" className="cursor-pointer focus:bg-slate-50 rounded-lg">Cold Protocol</SelectItem>
+                          <SelectItem value="requested" className="cursor-pointer focus:bg-slate-50 rounded-lg">Referral Requested</SelectItem>
+                          <SelectItem value="secured" className="cursor-pointer focus:bg-slate-50 rounded-lg">Referral Secured</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Point of Contact Field Node Block Input */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                        <UserCheck size={11} className="text-teal-500" /> Direct Intermediary Node
+                      </label>
+                      <Input
+                        value={editForm.contact}
+                        onChange={(e) => handleEditChange("contact", e.target.value)}
+                        placeholder="Recruiter routing name or data email"
+                        className="bg-white border-slate-200 rounded-xl text-xs font-semibold focus-visible:ring-2 focus-visible:ring-indigo-500 h-10 shadow-3xs text-slate-900 focus-visible:border-transparent"
+                      />
+                    </div>
+
+                    {/* Internal Analysis Document Log Canvas Textarea */}
+                    <div className="space-y-1.5 md:col-span-2">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Internal Analysis Analysis Ledger</label>
+                      <textarea
+                        value={editForm.notes}
+                        onChange={(e) => handleEditChange("notes", e.target.value)}
+                        placeholder="Record deployment stack attributes, internal framework red flags, operational milestones..."
+                        className="w-full min-h-[110px] rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 transition-all placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-3xs"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Operational Bottom Control Action Pane */}
+                  <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3 shrink-0">
+                    <Button variant="ghost" onClick={closeEditModal} className="text-slate-500 hover:bg-slate-200/60 hover:text-slate-800 rounded-xl text-xs font-bold">
+                      Discard Changes
+                    </Button>
+                    <Button
+                      onClick={saveEditedRow}
+                      disabled={saveEditLoader || !hasChanges}
+                      className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 rounded-xl text-xs shadow-sm transition-all disabled:opacity-40"
+                    >
+                      {saveEditLoader ? "Syncing Workspace..." : "Commit Parameter Changes"}
+                    </Button>
+                  </div>
+
                 </motion.div>
-              )}
-          </>
+              </div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>
