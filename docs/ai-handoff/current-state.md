@@ -1,6 +1,6 @@
 # Current State — AI Handoff
 
-_Last updated: 2026-06-17 (sessions 7–9: login redirect fix, /referrals page redesign, referrer marketplace backend + frontend). Update this file at the end of each session._
+_Last updated: 2026-07-05 (session 12: JobFlix homepage redesign — Ledger design system, marketing scaffolding, hero Sprint 1 built then creatively rejected; "Chain Reaction" product-demonstration direction locked). Update this file at the end of each session._
 
 ---
 
@@ -450,9 +450,150 @@ If resuming: ask user for test credentials or a valid `jf_accessToken` value bef
 
 ---
 
-## 12. Next Intended Task
+---
 
-No next task defined. Ask the user.
+## 12. Sessions 10–11 — 2026-06-22
+
+### 12a. `/api/hr` route — new backend file
+
+**Bug fixed:** `HrEmailsTable` on `/job-tracker?tab=emails` (and `dubai-hr`) was throwing `AxiosError: Network Error` / `SyntaxError: Unexpected token '<'` because the `/api/hr` route was never registered on the backend. The models existed but no route wired them up.
+
+**New file:** `jobflix-backend-js/routes/resumeassist/hr.route.js`
+
+| Route | Auth | Behaviour |
+|---|---|---|
+| `GET /api/hr/list/demo` | none | Returns all 100 entries from `hrContactDetailsDemo.js` as `{ success: true, list: [...] }` |
+| `GET /api/hr/list/purchased/:country` | `isLoggedIn` | Paginated (20/page) from `HrIndianList` (india) or `HrDubaiContacts` (dubai). Optional `?company=` regex search. `?count=true` on page 1 returns `pagination.totalPages`. Response: `{ success: true, data, pagination }` |
+
+**`server.js` changes (jobflix-backend-js):**
+```js
+import hrRoutes from "./routes/resumeassist/hr.route.js";
+app.use('/api/hr', hrRoutes);   // after /api/referrers line
+```
+
+**Frontend contract (`HrEmailsTable`):**
+- Non-member / basic / no active membership → `GET /hr/list/demo` → reads `res.data.list`
+- Premium → `GET /hr/list/purchased/india` → reads `res.data.data`
+- Ultra → `GET /hr/list/purchased/dubai` → reads `res.data.data`
+- Pagination: `res.data.pagination.totalPages` updated only on page 1 or new search
+
+---
+
+### 12b. `/create` page — Phase 1: Resume-only UI
+
+**Product decision:** `/create` is now AI Resume Builder only. Portfolio creation entry removed from this page.
+
+**Only file changed:** `src/components/create-resume-simple.tsx`
+
+**What changed:**
+- Heading: `"Import Your Professional Data"` → `"Build Your AI Resume"`
+- Subtext updated to resume-specific copy
+- Two-column card grid (`sm:grid-cols-2 max-w-xl`) → single centered card (`max-w-sm mx-auto`)
+- "Create Portfolio" card (`<label>` with `Globe` icon, `handlePortfolioUpload`) removed from JSX
+- `{inputMode === "portfolio" && ...}` block removed from expanded panel
+- `{inputMode !== "portfolio" && ...}` guard removed from "Get started" button — now unconditional
+- Expanded panel width changed from `max-w-xl` to `max-w-sm mx-auto` to match card
+
+**What was NOT touched (Phase 1 safety):**
+- All portfolio state (9 `useState` declarations remain)
+- All portfolio handlers (`handlePortfolioUpload`, `handlePortfolioPublish`, `handlePortfolioCopyLink`)
+- `renderPortfolioEditStep()` and `renderPortfolioPublishedStep()` — still present, still wired
+- All portfolio imports (`extractPortfolioData`, `PortfolioPreview`, `Globe`, `ResumeData`, `normalizeProfileLinks`)
+- `app/portfolio/**`, `app/p/**`, `create-portfolio-page.tsx` — untouched
+
+**Phase 2 (not yet done):** Delete the dormant portfolio state, handlers, steps, and imports from `create-resume-simple.tsx`. Requires explicit confirmation before proceeding.
+
+---
+
+### 12c. `CREATE_MODEL` migration — `openai/gpt-oss-120b` → `openai/gpt-oss-20b`
+
+**Integration path for `/create`:**
+```
+Browser → POST /api/extract-resume (jobflix-backend-js port 7005)
+         → extractFromPDFWithGptOss()   [services/gptOssExtractor.js]
+         → pdfjs-dist text extraction
+         → POST https://integrate.api.nvidia.com/v1/chat/completions
+             Authorization: Bearer ${CREATE_API_KEY}
+             model: ${CREATE_MODEL} || 'openai/gpt-oss-120b'
+         → JSON parse → normalizeParserResponse → res.json()
+```
+
+**Key facts:**
+- `CREATE_API_KEY` and `CREATE_MODEL` are read at process startup — backend must be restarted after `.env` changes
+- `gptOssExtractor.js:117` has a hardcoded `_parser: 'gpt-oss-120b-pipeline'` label — this is a metadata string only, not functional. Do not change it unless explicitly asked.
+- Timeout: 120s (`TIMEOUT_MS = 120_000`)
+- NVIDIA endpoint: `integrate.api.nvidia.com/v1/chat/completions` (OpenAI-compatible)
+
+**Status:** `.env` manual update by user was in progress as of 2026-06-22. Integration verification (real PDF upload → NVIDIA API → parse → render) was pending user confirmation of env changes. No code was modified.
+
+**Safety rule:** Never print the full `CREATE_API_KEY`. Only log masked form: `nvapi-****<last4>`.
+
+---
+
+## 13. Session 12 — 2026-07-05 — JobFlix Homepage Redesign (marketing track)
+
+Repositioning the ResumeAssist homepage as **JobFlix** (an AI-powered Career Operating System). This is a **marketing/frontend** track, separate from the backend/job-board work above. Multi-phase creative process; extensive design decisions live in the session thread — the load-bearing ones are captured here so they survive.
+
+### 13a. Visual source of truth — Ledger Design System (updated)
+- The **updated Ledger Design System HTML** is canonical for typography, color, spacing, components, motion.
+- **Single accent is azure `#1B9FF0`** (hover `#1387D6`, soft `#DBF0FD`, ink `#0B5488`). No other accent, ever.
+- Warm paper `#F4F2ED`, ink `#16181D`, ink-70 `#5B5D63`, border `#E1DDD3`. Fonts: **Hanken Grotesk** (display/body) + **JetBrains Mono** (labels/data). Pill buttons, 16px cards, quiet shadows, mono eyebrows.
+- Phase-1 extraction notes on disk: `docs/jobflix-ledger-design-system-notes.md`.
+
+### 13b. Locked brand hierarchy (do not re-litigate)
+| Layer | Value |
+|---|---|
+| Mission | Open more career opportunities. |
+| Category | AI-powered Career Operating System. |
+| Promise | An unfair career advantage, for everyone. |
+| **Feeling** (how it feels) | **Momentum** — every interaction creates forward progress. *Design principle, not the hero.* |
+| **Villain** (what we fight) | Being **stuck / not knowing your next move**; in the job search its acute mask is **the silence** (invisible, ghosted, one of thousands). |
+| Signature **story** | Helping people **stop disappearing / get seen** — a *chapter*, NOT the whole identity. |
+| Outcome | More opportunity, real growth, earned confidence. |
+
+Homepage narrative arc: **Dream → Stuck → Silence → Seen → Momentum → Opportunity → Growth.** Every future product = a new chapter of the same "stuck → moving" pattern (so it scales to 20+ products). "Seen" lives at the story's floor/turn, never the masthead.
+
+### 13c. Hero direction — APPROVED but NOT yet built: "The Chain Reaction"
+The hero must **DEMONSTRATE THE PRODUCT**, not visualize philosophy. The visitor **watches JobFlix work** on one real career, as a connected chain of **real product actions** (~10s):
+
+`Resume improves → ATS clears → Jobs match → Recruiter surfaces → Referral opens → Interview prep generates → Tracker organizes` — **AI drives each step** (the connective tissue).
+
+- Order is the real causal chain of getting hired; each step *causes* the next (that's what reads as "connected/intelligent").
+- **Must be built from REAL product surfaces** (real résumé renderer, real job-match cards, real HR-contact/referral surfaces, real tracker). NOT a bespoke mock. If a surface can't exist in the product, it doesn't appear.
+- Copy is proof-anchored (product does 80%, copy 20%). Approved headline: **"One résumé. Every step to the offer."** Support: a factual list of the beats watched. CTA: **"Start with your résumé →"** (`/create`). Per-beat captions state the real action (e.g. "Rewrote your bullet to match the job", "Now clears the ATS screen — 92%", "3 roles matched to your updated résumé"). **No slogans; no "AI-powered/unfair advantage" copy.**
+
+### 13d. What is on disk now (Sprint 1 — REJECTED, to be replaced)
+Sprint 1 built a hero, then it was **creatively rejected** (it visualized philosophy — a "forward path / blue line" motif — instead of demonstrating the product). Files are still live on the homepage and must be replaced by the Chain-Reaction hero:
+
+| File | State | Keep / Replace |
+|---|---|---|
+| `src/index.css` | **+** additive `@theme` block: `--brand-*` azure tokens + `--font-hanken`, `--font-mono-data`. Does not touch the existing `teal/green/purple` remap or `hub-*`. | **KEEP** (reusable foundation) |
+| `app/layout.tsx` | **+** Hanken Grotesk + JetBrains Mono Google Fonts `<link>` (additive). | **KEEP** |
+| `src/components/marketing/primitives.tsx` | NEW — `Container`, `MonoLabel`, `Button` (Ledger pill). | **KEEP** (reusable) |
+| `src/components/marketing/JobflixHero.tsx` | NEW — the rejected "forward path" hero. | **REPLACE** with Chain-Reaction hero |
+| `src/components/AnimatedPinDemo.tsx` | Hero line swapped: `HeroSection` → `JobflixHero` (2-line change; navbar & all other sections untouched). | Re-point to the new hero once rebuilt |
+| `src/components/hero-section.tsx` | Original ResumeAssist hero — now unused by homepage, left intact. | Rollback available |
+
+No packages added. Dev server: `npm run dev` → `:3002` (unchanged).
+
+### 13e. Known accessibility finding (decision pending)
+Ledger's primary button is white text on azure `#1B9FF0` ≈ **2.76:1**, below WCAG AA (4.5) for 15px text. Options: keep for brand fidelity, or darken the fill to `#1387D6`/`#0B5488`. This is a design-system-level call — flagged, not yet decided.
+
+### 13f. Hard rules for the homepage rebuild
+- **Preserve the navbar** (`src/components/navbar.tsx`) and **all existing routes/features** — do not edit, restyle, or simplify the navbar.
+- Ledger is the visual source of truth; **azure is the only accent**.
+- **No fake dashboards / fake analytics / floating cards / concept art / generic SaaS hero.** Every element = a real capability; every animation = a real product action.
+- Small blast radius; no unrelated refactors; no new packages without approval.
+- **Sprint-by-sprint**: one section at a time → stop → Playwright validate (desktop 1440 / tablet 820 / mobile 390) → screenshots → console check → a11y basics → report changed files → wait for approval before the next sprint.
+
+---
+
+## 14. Next Intended Task
+
+Two independent tracks are open:
+
+1. **Homepage (marketing) — active:** produce the **shot-list** mapping each of the 7 "Chain Reaction" beats to the **real** JobFlix product surface that performs it (still no code), then rebuild the hero (Sprint 1 redo) as a genuine product demonstration. Await approval of the shot-list first.
+2. **Backend (CREATE_MODEL) — paused:** integration verification — after user confirms `.env` edits saved, restart backend and run a real PDF upload test against `/api/extract-resume` with `CREATE_MODEL=openai/gpt-oss-20b`.
 
 ---
 
