@@ -121,7 +121,7 @@ export default function LoginPage() {
           {/* Footer */}
           <p className="text-center text-xs sm:text-sm text-[#647B8E]">
             New to our platform?{" "}
-            <Link href="/register" className="text-[#2F7BE0] font-bold hover:text-[#1D5FD8] underline decoration-2 decoration-[#CFE0FB] hover:decoration-[#2F7BE0] transition-all">
+            <Link href="/signup" className="text-[#2F7BE0] font-bold hover:text-[#1D5FD8] underline decoration-2 decoration-[#CFE0FB] hover:decoration-[#2F7BE0] transition-all">
               Create free account
             </Link>
           </p>

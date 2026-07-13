@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronDown, Sparkles } from "lucide-react";
-import { cn } from "../lib/utils";
-import { Button } from "./ui/button";
-import AuthModal from "./auth-modal";
-import { useUserStore } from "../stores/useUserStore";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import AuthModal from "@/components/auth-modal";
+import { useUserStore } from "@/stores/useUserStore";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { JOB_LINKS, LEARN_LINKS } from "./marketing/nav-links";
+import { JOB_LINKS, LEARN_LINKS } from "@/components/marketing/nav-links";
 
 export const Navbar = ({
   className,
@@ -22,7 +22,6 @@ export const Navbar = ({
   const [showAuth, setShowAuth] = useState(false);
   const { user, logout } = useUserStore();
   const isLight = tone === "light";
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [jobsOpen, setJobsOpen] = useState(false);
   const [learnOpen, setLearnOpen] = useState(false);
 
@@ -68,49 +67,31 @@ export const Navbar = ({
         <div className="flex justify-between items-center h-[76px]">
           
           {/* Logo Container */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="flex items-center cursor-pointer gap-2 group"
-            onClick={() => router.push("/")}
-          >
+          <Link href="/" className="flex items-center cursor-pointer gap-2 group">
             <img
               src="/logo.png"
               alt="jobflix logo"
               className="h-9 w-auto object-contain py-0.5 group-hover:scale-102 transition-transform duration-300"
             />
-          </motion.div>
+          </Link>
 
           {/* Desktop Navigation Link Cluster */}
           <div className="hidden md:flex items-center space-x-7">
             
             {/* Job Referrals */}
-            <motion.a
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              href="/referrals"
-              onClick={(e) => { e.preventDefault(); router.push("/referrals"); }}
-              className={cn(linkCls, "group")}
-            >
+            <Link href="/referrals" className={cn(linkCls, "group")}>
               Job Referrals
               <span className={underline} />
-            </motion.a>
+            </Link>
 
-            {/* JOBS MEGA DROPDOWN (WIDER & HIGHER VISUAL CONTRAST) */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="relative group"
-            >
-              <button className={linkCls}>
+            {/* JOBS MEGA DROPDOWN */}
+            <div className="relative group">
+              <button className={linkCls} type="button">
                 Jobs
                 <ChevronDown size={14} className="opacity-60 group-hover:rotate-180 transition-transform duration-300" />
               </button>
               
-              {/* Massive Dropdown Wrapper */}
+              {/* Dropdown Wrapper */}
               <div className="absolute top-full left-1/2 -translate-x-1/4 w-[580px] pt-4 opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-300 z-50">
                 <div
                   className={cn(
@@ -118,7 +99,7 @@ export const Navbar = ({
                     isLight ? "bg-[#ffffff] border-[#EEF2F1]" : "bg-[#09090b] border-white/10"
                   )}
                 >
-                  {/* Left Main Content Layout Column (Takes 8 blocks) */}
+                  {/* Left Main Content Layout Column */}
                   <div className="col-span-8 grid grid-cols-1 gap-1">
                     {JOB_LINKS.map((link, idx) => {
                       const Icon = link.icon;
@@ -148,7 +129,7 @@ export const Navbar = ({
                     })}
                   </div>
 
-                  {/* Right Accent Banner Section (Takes 4 blocks) */}
+                  {/* Right Accent Banner Section */}
                   <div className={cn("col-span-4 rounded-xl p-3.5 flex flex-col justify-between text-xs font-medium", isLight ? "bg-[#F5F8F7]" : "bg-white/5")}>
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-1 text-[#2F7BE0] font-bold text-[10px] uppercase tracking-wider">
@@ -164,16 +145,11 @@ export const Navbar = ({
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
 
             {/* LEARN MEGA DROPDOWN */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-              className="relative group"
-            >
-              <button className={linkCls}>
+            <div className="relative group">
+              <button className={linkCls} type="button">
                 Learn
                 <ChevronDown size={14} className="opacity-60 group-hover:rotate-180 transition-transform duration-300" />
               </button>
@@ -207,6 +183,7 @@ export const Navbar = ({
                       "group/item flex items-start gap-3.5 px-3 py-3 rounded-xl transition-all duration-200",
                       isLight ? "hover:bg-[#F5F8F7]" : "hover:bg-white/5"
                     );
+
                     return link.external ? (
                       <a key={link.name} href={link.href} target="_blank" rel="noopener noreferrer" className={itemCls}>
                         {inner}
@@ -219,42 +196,23 @@ export const Navbar = ({
                   })}
                 </div>
               </div>
-            </motion.div>
+            </div>
 
             {/* Pricing */}
-            <motion.a
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.6 }}
-              href="/pricing"
-              onClick={(e) => { e.preventDefault(); router.push("/pricing"); }}
-              className={cn(linkCls, "group")}
-            >
+            <Link href="/pricing" className={cn(linkCls, "group")}>
               Pricing
               <span className={underline} />
-            </motion.a>
+            </Link>
 
             {/* Blog */}
-            <motion.a
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.7 }}
-              href="/blog"
-              onClick={(e) => { e.preventDefault(); router.push("/blog/feed"); }}
-              className={cn(linkCls, "group")}
-            >
+            <Link href="/blog" className={cn(linkCls, "group")}>
               Blog
               <span className={underline} />
-            </motion.a>
+            </Link>
           </div>
 
           {/* Action Buttons Right Side */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="hidden md:flex items-center space-x-3.5"
-          >
+          <div className="hidden md:flex items-center space-x-3.5">
             <Button
               variant="ghost"
               size="sm"
@@ -266,9 +224,11 @@ export const Navbar = ({
             >
               Contact Us
             </Button>
+            
             {user ? (
               <div className="relative group">
                 <button
+                  type="button"
                   className={cn(
                     "flex items-center justify-center w-9 h-9 rounded-full text-white text-xs font-bold transition-all border",
                     isLight ? "bg-[#0B2A3C] border-[#0B2A3C]" : "bg-white/15 border-white/10"
@@ -286,23 +246,23 @@ export const Navbar = ({
                   <a href={`${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/my-account/dashboard/me`} className={cn("block px-4 py-2 text-xs font-semibold rounded-lg", isLight ? "text-[#0B2A3C] hover:bg-[#F5F8F7]" : "text-[#fafafa] hover:bg-white/10")}>Profile</a>
                   <a href={`${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/my-account/membership`} className={cn("block px-4 py-2 text-xs font-semibold rounded-lg", isLight ? "text-[#0B2A3C] hover:bg-[#F5F8F7]" : "text-[#fafafa] hover:bg-white/10")}>Memberships</a>
                   <Link href="/resume" className={cn("block px-4 py-2 text-xs font-semibold rounded-lg", isLight ? "text-[#0B2A3C] hover:bg-[#F5F8F7]" : "text-[#fafafa] hover:bg-white/10")}>My resume</Link>
-                  <button onClick={async () => { await logout(); router.replace("/"); }} className={cn("w-full text-left px-4 py-2 text-xs font-bold text-[#D6455B] rounded-lg", isLight ? "hover:bg-[#F5F8F7]" : "hover:bg-white/10")}>Logout</button>
+                  <button type="button" onClick={async () => { await logout(); router.replace("/"); }} className={cn("w-full text-left px-4 py-2 text-xs font-bold text-[#D6455B] rounded-lg", isLight ? "hover:bg-[#F5F8F7]" : "hover:bg-white/10")}>Logout</button>
                 </div>
               </div>
             ) : (
               <Button
                 size="sm"
-                onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/login?next=${encodeURIComponent(window.location.origin)}`}
+                onClick={() => router.push('/login')}
                 className="bg-[#2F7BE0] hover:bg-[#1D5FD8] text-white font-bold text-xs px-4 rounded-xl shadow-md h-9 transition-all"
               >
                 Login
               </Button>
             )}
-          </motion.div>
+          </div>
 
           {/* Mobile Navigation Interface Panel Trigger */}
           <div className="md:hidden flex items-center gap-3">
-            <button onClick={() => setIsOpen(!isOpen)} className={cn("p-2 rounded-lg transition-colors", isLight ? "text-[#0B2A3C] hover:bg-[#F5F8F7]" : "text-[#fafafa] hover:bg-white/5")}>
+            <button type="button" onClick={() => setIsOpen(!isOpen)} className={cn("p-2 rounded-lg transition-colors", isLight ? "text-[#0B2A3C] hover:bg-[#F5F8F7]" : "text-[#fafafa] hover:bg-white/5")}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {isOpen ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /> : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />}
               </svg>
@@ -315,17 +275,17 @@ export const Navbar = ({
           {isOpen && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="md:hidden overflow-hidden pb-4">
               <div className={cn("p-3 space-y-1.5 rounded-2xl border", isLight ? "bg-[#ffffff] border-[#EEF2F1]" : "bg-[#09090b] border-white/10")}>
-                <a href="/referrals" className={mobileLinkCls} onClick={() => setIsOpen(false)}>Job Referrals</a>
+                <Link href="/referrals" className={mobileLinkCls} onClick={() => setIsOpen(false)}>Job Referrals</Link>
                 
                 {/* Mobile Expandable Jobs Section */}
                 <div>
-                  <button onClick={() => setJobsOpen(!jobsOpen)} className={cn("w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold", isLight ? "text-[#0B2A3C] hover:bg-[#F5F8F7]" : "text-[#fafafa] hover:bg-white/10")}>
+                  <button type="button" onClick={() => setJobsOpen(!jobsOpen)} className={cn("w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold", isLight ? "text-[#0B2A3C] hover:bg-[#F5F8F7]" : "text-[#fafafa] hover:bg-white/10")}>
                     <span>Jobs</span><ChevronDown size={14} className={cn("transition-transform duration-200", jobsOpen && "rotate-180")} />
                   </button>
                   {jobsOpen && (
                     <div className="mt-1 ml-4 space-y-1 border-l pl-3 border-[#EEF2F1]">
                       {JOB_LINKS.map((link) => (
-                        <a key={link.name} href={link.href} className="block px-3 py-2 rounded-lg text-xs font-semibold text-[#647B8E] hover:text-[#2F7BE0]" onClick={() => setIsOpen(false)}>{link.name}</a>
+                        <Link key={link.name} href={link.href} className="block px-3 py-2 rounded-lg text-xs font-semibold text-[#647B8E] hover:text-[#2F7BE0]" onClick={() => setIsOpen(false)}>{link.name}</Link>
                       ))}
                     </div>
                   )}
@@ -333,20 +293,24 @@ export const Navbar = ({
 
                 {/* Mobile Expandable Learn Section */}
                 <div>
-                  <button onClick={() => setLearnOpen(!learnOpen)} className={cn("w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold", isLight ? "text-[#0B2A3C] hover:bg-[#F5F8F7]" : "text-[#fafafa] hover:bg-white/10")}>
+                  <button type="button" onClick={() => setLearnOpen(!learnOpen)} className={cn("w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold", isLight ? "text-[#0B2A3C] hover:bg-[#F5F8F7]" : "text-[#fafafa] hover:bg-white/10")}>
                     <span>Learn</span><ChevronDown size={14} className={cn("transition-transform duration-200", learnOpen && "rotate-180")} />
                   </button>
                   {learnOpen && (
                     <div className="mt-1 ml-4 space-y-1 border-l pl-3 border-[#EEF2F1]">
-                      {LEARN_LINKS.map((link) => (
-                        <a key={link.name} href={link.href} className="block px-3 py-2 rounded-lg text-xs font-semibold text-[#647B8E] hover:text-[#2F7BE0]" onClick={() => setIsOpen(false)}>{link.name}</a>
-                      ))}
+                      {LEARN_LINKS.map((link) => {
+                        return link.external ? (
+                          <a key={link.name} href={link.href} target="_blank" rel="noopener noreferrer" className="block px-3 py-2 rounded-lg text-xs font-semibold text-[#647B8E] hover:text-[#2F7BE0]" onClick={() => setIsOpen(false)}>{link.name}</a>
+                        ) : (
+                          <Link key={link.name} href={link.href} className="block px-3 py-2 rounded-lg text-xs font-semibold text-[#647B8E] hover:text-[#2F7BE0]" onClick={() => setIsOpen(false)}>{link.name}</Link>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
 
-                <a href="/pricing" className={mobileLinkCls} onClick={() => setIsOpen(false)}>Pricing</a>
-                <a href="/blog" className={mobileLinkCls} onClick={() => setIsOpen(false)}>Blog</a>
+                <Link href="/pricing" className={mobileLinkCls} onClick={() => setIsOpen(false)}>Pricing</Link>
+                <Link href="/blog/feed" className={mobileLinkCls} onClick={() => setIsOpen(false)}>Blog</Link>
                 
                 {!user && (
                   <div className="pt-2 px-2">
