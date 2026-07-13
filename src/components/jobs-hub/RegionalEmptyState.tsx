@@ -1,4 +1,5 @@
 import type { TabId } from "./tabs.config";
+import { ProductFrame } from "../marketing/primitives";
 
 interface Attribute {
   label: string;
@@ -75,28 +76,25 @@ export function RegionalEmptyState({ tabId }: RegionalEmptyStateProps) {
   if (!config) return null;
 
   return (
-    <div
-      className="border border-hub-border rounded-[14px] px-7 py-8"
-      style={{ fontFamily: "var(--font-hub)" }}
-    >
-      <p className="text-[13.5px] text-hub-text-2 leading-relaxed max-w-[520px] mb-7">
+    <ProductFrame emphasis="flat" className="px-7 py-8">
+      <p className="text-[13.5px] text-ink-600 leading-relaxed max-w-[520px] mb-7">
         {config.description}
       </p>
 
       <div className="flex flex-col gap-[9px]">
         {config.attributes.map((attr) => (
           <div key={attr.label} className="flex items-baseline gap-4">
-            <span className="text-[11.5px] font-semibold text-hub-text-3 w-[110px] flex-shrink-0">
+            <span className="text-[11.5px] font-semibold text-ink-500 w-[110px] flex-shrink-0">
               {attr.label}
             </span>
-            <span className="text-[13px] text-hub-text-2">{attr.value}</span>
+            <span className="text-[13px] text-ink-600">{attr.value}</span>
           </div>
         ))}
       </div>
 
-      <div className="mt-7 pt-5 border-t border-hub-border">
-        <p className="text-[11.5px] text-hub-text-3">{config.launchNote}</p>
+      <div className="mt-7 pt-5 border-t border-border-soft">
+        <p className="text-[11.5px] text-ink-500">{config.launchNote}</p>
       </div>
-    </div>
+    </ProductFrame>
   );
 }

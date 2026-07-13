@@ -11,7 +11,7 @@ const config = TABS.find((t) => t.id === "tracker")!
 
 export default function JobTrackerPage() {
   return (
-    <div className="min-h-screen bg-hub-bg pt-16" style={{ fontFamily: "var(--font-hub)" }}>
+    <div className="min-h-screen bg-page pt-[74px]">
       <Navbar tone="light" />
       <main className="max-w-7xl mx-auto px-5 pt-7 pb-20">
         <motion.div {...TAB_PANEL}>

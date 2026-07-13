@@ -11,7 +11,7 @@ import { TAB_PANEL } from "@/lib/motion";
 import axiosInstance from "@/lib/axios";
 import { useUserStore } from "@/stores/useUserStore";
 
-const TABLE_CLASS = "border border-hub-border bg-hub-surface rounded-[14px]";
+const TABLE_CLASS = "border border-border-soft bg-page rounded-(--jf-radius-frame)";
 const config = TABS.find((t) => t.id === "dubai-hr")!;
 
 export default function DubaiHrPage() {
@@ -88,7 +88,7 @@ export default function DubaiHrPage() {
   const renderedRows = hasAccess ? contacts : contacts.length > 0 ? contacts : demoContactsPlaceholder;
 
   return (
-    <div className="min-h-screen bg-hub-bg pt-16" style={{ fontFamily: "var(--font-hub)" }}>
+    <div className="min-h-screen bg-page pt-[74px]">
       <Navbar tone="light" />
       <main className="max-w-7xl mx-auto px-5 pt-7 pb-20">
         <motion.div {...TAB_PANEL}>

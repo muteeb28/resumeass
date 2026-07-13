@@ -1,5 +1,18 @@
 import type { Transition, Variants } from 'framer-motion'
 
+/**
+ * ADL v1.0 motion rule (Direct, from the JobFlix Design System spec):
+ * only background-color/border-color ever transition, at 0.15s ease.
+ * Never animate: hover scale or transform, panel tilts, shadows, glow
+ * washes, headlines, scroll-triggered reveals, parallax. Do not add a new
+ * whileTap/whileHover scale or transform constant here — extend the ADL
+ * first if a genuinely new interaction pattern is needed.
+ *
+ * TAB_INDICATOR/TAB_DOT below predate this rule and are only consumed by
+ * the currently-unused JobsHubNav.tsx — left as-is since that component
+ * isn't live, not because the pattern is approved for reuse.
+ */
+
 /** Tab indicator slide — fast spring, near-critically damped (no perceptible bounce) */
 export const TAB_INDICATOR = {
   type: 'spring' as const,
@@ -38,18 +51,6 @@ export const TAB_DOT = {
   transition: { type: 'spring', stiffness: 400, damping: 22 },
 } as const
 
-/** Card hover lift — use with whileHover */
-export const CARD_HOVER = {
-  y: -1,
-  transition: { duration: 0.18, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
-} as const
-
-/** Chip hover */
-export const CHIP_HOVER = {
-  scale: 1.01,
-  transition: { duration: 0.12 },
-} as const
-
 /**
  * Tab panel transition — wraps the entire content area for each tab.
  * Concurrent with exit (default AnimatePresence mode): enter starts as old panel fades out.
@@ -73,12 +74,6 @@ export const TABLE_ROW: Variants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { duration: 0.20, ease: [0.16, 1, 0.3, 1] } as Transition },
 }
-
-/** Standard button press feedback — use as whileTap target */
-export const PRESS = {
-  scale: 0.97,
-  transition: { duration: 0.09, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
-} as const
 
 /** Reduced-motion safe wrapper */
 export function safeMotion<T extends { initial?: object; animate?: object }>(
