@@ -1,3 +1,8 @@
+
+
+
+
+
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -24,6 +29,8 @@ import { toast } from "sonner";
 import { useUserStore } from "../../src/stores/useUserStore";
 import { useRouter } from "next/navigation";
 import { Calendar } from "@/components/ui/calendar";
+import { SectionHeader, ProductFrame } from "@/components/marketing/primitives";
+import { H1_CTA_BAND, CARD_TITLE } from "@/lib/typography";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -100,14 +107,14 @@ function getAvatarPalette(name: string) {
 
 function CardSkeleton() {
   return (
-    <div className="animate-pulse rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+    <div className="animate-pulse rounded-(--jf-radius-frame) border border-border-frame bg-page p-5 shadow-[var(--jf-shadow-frame)]">
       <div className="flex flex-col items-center gap-3 pt-2">
-        <div className="h-16 w-16 rounded-full bg-neutral-100" />
-        <div className="h-4 w-3/4 rounded bg-neutral-100" />
-        <div className="h-3 w-1/2 rounded bg-neutral-100" />
-        <div className="h-3 w-2/3 rounded bg-neutral-100" />
+        <div className="h-16 w-16 rounded-full bg-surface-alt" />
+        <div className="h-4 w-3/4 rounded bg-surface-alt" />
+        <div className="h-3 w-1/2 rounded bg-surface-alt" />
+        <div className="h-3 w-2/3 rounded bg-surface-alt" />
       </div>
-      <div className="mt-4 h-9 w-full rounded-xl bg-neutral-100" />
+      <div className="mt-4 h-9 w-full rounded-(--jf-radius-pill) bg-surface-alt" />
     </div>
   );
 }
@@ -123,9 +130,9 @@ function Field({
 }) {
   return (
     <div className="space-y-2">
-      <Label className="text-sm font-semibold text-neutral-800">
+      <Label className="text-sm font-semibold text-ink-700">
         {label}
-        {required ? <span className="ml-1 text-rose-500">*</span> : null}
+        {required ? <span className="ml-1 text-error">*</span> : null}
       </Label>
       {children}
     </div>
@@ -269,7 +276,7 @@ export default function ReferralsPage() {
   const paginatedList = displayList.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   return (
-    <BackgroundRippleLayout tone="light" contentClassName="pt-6 sm:pt-8">
+    <BackgroundRippleLayout tone="light" contentClassName="pt-6 sm:pt-8" showRipple={false}>
       <Navbar tone="light" />
 
       <main className="mx-auto max-w-7xl px-4 pb-24 pt-6 sm:pt-8 sm:px-6 lg:px-8">
@@ -283,23 +290,25 @@ export default function ReferralsPage() {
           >
             <Link
               href="/referrals/list"
-              className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 px-4 py-1.5 text-xs font-semibold text-neutral-700 transition-colors hover:bg-neutral-100"
+              className="inline-flex items-center gap-2 rounded-full border border-border-soft bg-surface-alt px-4 py-1.5 text-xs font-semibold text-ink-700 transition-colors hover:bg-border-soft"
             >
               Looking for open referral opportunities? Browse Referral Opportunities
               <ArrowRight className="h-3 w-3" />
             </Link>
-            <h1 className="mx-auto max-w-4xl text-4xl font-black tracking-tight text-neutral-950 sm:text-5xl lg:text-6xl">
-              Connect with professionals who are willing to refer &amp; guide you
-            </h1>
-            <p className="mx-auto max-w-2xl text-base leading-7 text-neutral-500">
-              Browse referrers at top companies, or submit your own referral request and let the right people find you.
-            </p>
+            <SectionHeader
+              headingLevel="h1"
+              align="center"
+              heading="Connect with professionals who are willing to refer & guide you"
+              intro="Browse referrers at top companies, or submit your own referral request and let the right people find you."
+              headingClassName={`mx-auto max-w-4xl ${H1_CTA_BAND}`}
+              introClassName="text-base leading-7 text-ink-500"
+            />
 
             <div className="flex flex-wrap justify-center gap-3 pt-2">
               <Button
                 variant="primary"
                 onClick={() => setIsModalOpen(true)}
-                className="h-11 rounded-xl px-6"
+                className="h-11 rounded-(--jf-radius-pill) px-6"
               >
                 Ask for referral
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -307,7 +316,7 @@ export default function ReferralsPage() {
               <Button
                 asChild
                 variant="outline"
-                className="h-11 rounded-xl border-neutral-200 bg-white px-6 text-neutral-800 shadow-sm hover:bg-neutral-50"
+                className="h-11 rounded-(--jf-radius-pill) border-border-soft bg-page px-6 text-ink-700 hover:bg-surface-alt"
               >
                 <Link href="/referrals/list">
                   View referrals board
@@ -315,11 +324,11 @@ export default function ReferralsPage() {
               </Button>
             </div>
 
-            <p className="text-sm text-neutral-500">
+            <p className="text-sm text-ink-500">
               Work at a company and can refer?{" "}
               <Link
                 href="/referrals/become-referrer"
-                className="font-semibold text-neutral-900 underline-offset-2 hover:underline"
+                className="font-medium text-ink-600 underline-offset-2 hover:text-ink-900 hover:underline"
               >
                 Become a referrer →
               </Link>
@@ -330,7 +339,7 @@ export default function ReferralsPage() {
         {/* ── UNIFIED CENTER COLUMN ───────────────────────────────────── */}
         <div className="mx-auto max-w-3xl w-full mb-8 space-y-5">
           {/* Rotating Testimonials */}
-          <div className="rounded-2xl border border-[#e6e6e3] bg-white px-6 py-5 text-center shadow-sm w-full min-h-[140px] sm:min-h-[120px] flex flex-col justify-between overflow-hidden">
+          <div className="rounded-(--jf-radius-frame) border border-border-frame bg-page px-6 py-5 text-center shadow-[var(--jf-shadow-frame)] w-full min-h-[140px] sm:min-h-[120px] flex flex-col justify-between overflow-hidden">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentTestimonial}
@@ -340,20 +349,20 @@ export default function ReferralsPage() {
                 transition={{ duration: 0.3 }}
                 className="flex flex-col h-full justify-between"
               >
-                <p className="text-sm italic leading-relaxed text-neutral-600">
+                <p className="text-sm italic leading-relaxed text-ink-600">
                   &ldquo;{TESTIMONIALS[currentTestimonial].quote}&rdquo;
                 </p>
                 <div className="mt-4 flex items-center justify-center gap-3">
                   <img
                     src={TESTIMONIALS[currentTestimonial].avatar}
                     alt={TESTIMONIALS[currentTestimonial].name}
-                    className="h-8 w-8 flex-shrink-0 rounded-full object-cover border border-neutral-100"
+                    className="h-8 w-8 flex-shrink-0 rounded-full object-cover border border-border-soft"
                   />
                   <div className="text-left">
-                    <p className="text-sm font-semibold text-neutral-900">
+                    <p className="text-sm font-semibold text-ink-900">
                       {TESTIMONIALS[currentTestimonial].name}
                     </p>
-                    <p className="text-xs text-neutral-500">
+                    <p className="text-xs text-ink-500">
                       {TESTIMONIALS[currentTestimonial].role} @ {TESTIMONIALS[currentTestimonial].company}
                     </p>
                   </div>
@@ -364,7 +373,7 @@ export default function ReferralsPage() {
 
           {/* Search bar */}
           <div className="relative w-full">
-            <Search className={`pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 ${hasFullAccess ? "text-neutral-400" : "text-neutral-300"}`} />
+            <Search className={`pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 ${hasFullAccess ? "text-ink-400" : "text-ink-400"}`} />
             <input
               type="text"
               value={searchInput}
@@ -372,10 +381,10 @@ export default function ReferralsPage() {
               onKeyDown={(e) => hasFullAccess && e.key === "Enter" && handleSearch()}
               placeholder={hasFullAccess ? "Skills/Designation/Company" : "Search requires Premium or Ultra membership"}
               disabled={!hasFullAccess}
-              className={`h-14 w-full rounded-2xl border border-[#e6e6e3] bg-white pl-10 pr-24 sm:pl-12 sm:pr-36 text-sm placeholder:text-neutral-400 transition-colors focus:outline-none ${
+              className={`h-14 w-full rounded-(--jf-radius-frame) border border-border-soft bg-page pl-10 pr-24 sm:pl-12 sm:pr-36 text-sm placeholder:text-ink-400 transition-colors focus:outline-none ${
                 hasFullAccess
-                  ? "text-neutral-900 focus:border-neutral-400 focus:ring-2 focus:ring-neutral-900/10"
-                  : "text-neutral-300 cursor-not-allowed bg-neutral-50 select-none"
+                  ? "text-ink-900 focus:border-sapphire-bright focus:ring-2 focus:ring-sapphire-bright/15"
+                  : "text-ink-400 cursor-not-allowed bg-surface-alt select-none"
               }`}
             />
             {searchInput && hasFullAccess && (
@@ -385,7 +394,7 @@ export default function ReferralsPage() {
                   setReferrerQuery("");
                   setCurrentPage(1);
                 }}
-                className="absolute right-[4.5rem] sm:right-[7.5rem] top-1/2 -translate-y-1/2 text-neutral-400 transition-colors hover:text-neutral-700"
+                className="absolute right-[4.5rem] sm:right-[7.5rem] top-1/2 -translate-y-1/2 text-ink-400 transition-colors hover:text-ink-700"
                 aria-label="Clear search"
               >
                 <X className="h-4 w-4" />
@@ -393,13 +402,13 @@ export default function ReferralsPage() {
             )}
             {!hasFullAccess && (
               <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                <Lock className="h-4 w-4 text-neutral-300" />
+                <Lock className="h-4 w-4 text-ink-400" />
               </div>
             )}
             {hasFullAccess && (
               <button
                 onClick={handleSearch}
-                className="absolute right-2 top-1/2 -translate-y-1/2 h-10 rounded-xl bg-amber-500 px-3 sm:px-5 text-sm font-semibold text-slate-950 transition-colors hover:bg-amber-400 active:scale-[0.98]"
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-10 rounded-(--jf-radius-pill) bg-primary px-3 sm:px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
               >
                 Search
               </button>
@@ -407,16 +416,16 @@ export default function ReferralsPage() {
           </div>
 
           {/* Banner */}
-          <div className="flex flex-col gap-3 rounded-2xl border border-[#e6e6e3] bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between w-full">
+          <div className="flex flex-col gap-3 rounded-(--jf-radius-frame) border border-border-frame bg-page px-5 py-4 shadow-[var(--jf-shadow-frame)] sm:flex-row sm:items-center sm:justify-between w-full">
             <div className="flex items-center gap-4">
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-600">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-(--jf-radius-tile) bg-surface-alt text-ink-600">
                 <Users className="h-5 w-5" />
               </div>
               <div className="text-left">
-                <p className="text-sm font-semibold text-neutral-900">
+                <p className="text-sm font-semibold text-ink-900">
                   Got openings? Refer candidates in 30 seconds
                 </p>
-                <p className="text-xs text-neutral-500">
+                <p className="text-xs text-ink-500">
                   Share a referral, make an impact, earn recognition
                 </p>
               </div>
@@ -424,7 +433,7 @@ export default function ReferralsPage() {
             <Button
               asChild
               variant="primary"
-              className="h-10 flex-shrink-0 rounded-xl px-5 text-sm"
+              className="h-10 flex-shrink-0 rounded-(--jf-radius-pill) px-5 text-sm"
             >
               <Link href="/referrals/become-referrer">
                 + Become a Referrer
@@ -436,7 +445,7 @@ export default function ReferralsPage() {
         {/* ── RESULTS AREA ──────────────────────────────────────────────── */}
         <div>
           {!hasFullAccess && (
-            <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="mb-6 rounded-(--jf-radius-frame) border border-amber-200 bg-amber-50 px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex items-start gap-3">
                 <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-amber-100">
                   <Lock className="h-3.5 w-3.5 text-amber-600" />
@@ -455,14 +464,14 @@ export default function ReferralsPage() {
               {!user ? (
                 <a
                   href={loginHref}
-                  className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-xl bg-amber-500 px-4 h-9 text-xs font-bold text-neutral-950 hover:bg-amber-400 transition-colors"
+                  className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-(--jf-radius-pill) bg-primary px-4 h-9 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
                 >
                   Log in <ArrowRight className="h-3 w-3" />
                 </a>
               ) : (
                 <Link
                   href={membershipHref}
-                  className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-xl bg-amber-500 px-4 h-9 text-xs font-bold text-neutral-950 hover:bg-amber-400 transition-colors"
+                  className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-(--jf-radius-pill) bg-primary px-4 h-9 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
                 >
                   Upgrade now <ArrowRight className="h-3 w-3" />
                 </Link>
@@ -477,12 +486,12 @@ export default function ReferralsPage() {
               ))}
             </div>
           ) : displayList.length === 0 ? (
-            <div className="py-12 text-center">
-              <UserCheck className="mx-auto h-8 w-8 text-neutral-300" />
-              <p className="mt-3 text-sm font-medium text-neutral-900">
+            <ProductFrame emphasis="flat" className="py-12 text-center">
+              <UserCheck className="mx-auto h-8 w-8 text-ink-400" />
+              <p className="mt-3 text-sm font-medium text-ink-900">
                 No profiles relevant to this requirement found.
               </p>
-              <p className="mt-1 text-sm text-neutral-500">
+              <p className="mt-1 text-sm text-ink-500">
                 Try different keywords or remove some filters.
               </p>
               {hasActiveFilters && (
@@ -492,14 +501,14 @@ export default function ReferralsPage() {
                     setReferrerQuery("");
                     setCurrentPage(1);
                   }}
-                  className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-neutral-700 hover:underline"
+                  className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-ink-700 hover:underline"
                   type="button"
                 >
                   <RefreshCw className="h-3.5 w-3.5" />
                   Reset filters
                 </button>
               )}
-            </div>
+            </ProductFrame>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {paginatedList.map((item: any, index: number) => {
@@ -523,9 +532,9 @@ export default function ReferralsPage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="flex flex-col rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm hover:shadow-md transition-all duration-200"
+                    className="flex flex-col rounded-(--jf-radius-frame) border border-border-frame bg-page p-5 shadow-[var(--jf-shadow-frame)] transition-all duration-200"
                   >
-                    <div className="h-1.5 w-full rounded-t-2xl -mt-5 -mx-5 mb-5 bg-gradient-to-r from-neutral-200 to-neutral-50" />
+                    <div className="h-1.5 w-full rounded-t-2xl -mt-5 -mx-5 mb-5 bg-gradient-to-r from-border-soft to-surface-alt" />
                     <div className="flex flex-col items-center text-center flex-1">
                       <div className="mb-3 h-16 w-16 flex-shrink-0">
                         {hasImage ? (
@@ -539,28 +548,28 @@ export default function ReferralsPage() {
                           />
                         ) : (
                           <div
-                            className={`flex h-16 w-16 items-center justify-center rounded-full text-lg font-bold border-2 border-white ring-2 ring-neutral-100 shadow-sm ${palette.bg} ${palette.text}`}
+                            className={`flex h-16 w-16 items-center justify-center rounded-full text-lg font-semibold border-2 border-white ring-2 ring-neutral-100 shadow-sm ${palette.bg} ${palette.text}`}
                           >
                             {initial}
                           </div>
                         )}
                       </div>
 
-                      <h4 className="text-sm font-bold text-neutral-900 line-clamp-1">
+                      <h4 className="text-sm font-medium text-ink-900 line-clamp-1">
                         {name}
                       </h4>
                       {designation && (
-                        <p className="text-xs font-semibold text-neutral-500 mt-0.5 line-clamp-1">
+                        <p className="text-xs font-semibold text-ink-500 mt-0.5 line-clamp-1">
                           {designation}
                         </p>
                       )}
                       {company && (
-                        <p className="text-[11px] text-neutral-400 font-medium mt-0.5">
+                        <p className="text-[11px] text-ink-400 font-medium mt-0.5">
                           {company}
                         </p>
                       )}
 
-                      <p className="text-xs text-neutral-500 leading-relaxed mt-3 mb-4 line-clamp-3 text-center w-full min-h-[48px]">
+                      <p className="text-xs text-ink-500 leading-relaxed mt-3 mb-4 line-clamp-3 text-center w-full min-h-[48px]">
                         {about}
                       </p>
                     </div>
@@ -569,7 +578,7 @@ export default function ReferralsPage() {
                       {revealState === undefined && (
                         <button
                           onClick={() => handleContactClick(item)}
-                          className="h-9 w-full rounded-xl bg-amber-500 text-xs font-semibold text-slate-950 transition-colors hover:bg-amber-400 active:scale-[0.98]"
+                          className="h-9 w-full rounded-(--jf-radius-pill) bg-primary text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
                         >
                           Contact
                         </button>
@@ -577,7 +586,7 @@ export default function ReferralsPage() {
                       {revealState === "loading" && (
                         <button
                           disabled
-                          className="h-9 w-full rounded-xl bg-neutral-400 text-xs font-semibold text-white cursor-not-allowed"
+                          className="h-9 w-full rounded-(--jf-radius-pill) bg-ink-400 text-xs font-semibold text-white cursor-not-allowed"
                         >
                           Revealing...
                         </button>
@@ -585,7 +594,7 @@ export default function ReferralsPage() {
                       {revealState === "error" && (
                         <button
                           onClick={() => handleContactClick(item)}
-                          className="h-9 w-full rounded-xl border border-rose-200 bg-rose-50 text-xs font-semibold text-rose-600 hover:bg-rose-100"
+                          className="h-9 w-full rounded-(--jf-radius-pill) border border-error/20 bg-error/10 text-xs font-semibold text-error hover:bg-error/15"
                         >
                           Failed — Retry
                         </button>
@@ -595,7 +604,7 @@ export default function ReferralsPage() {
                         revealState !== "error" && (
                           <button
                             onClick={() => handleContactClick(item)}
-                            className="h-9 w-full rounded-xl bg-amber-500 text-xs font-semibold text-slate-950 transition-colors hover:bg-amber-400 active:scale-[0.98]"
+                            className="h-9 w-full rounded-(--jf-radius-pill) bg-primary text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
                           >
                             Contact
                           </button>
@@ -612,17 +621,17 @@ export default function ReferralsPage() {
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="h-9 rounded-xl border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="h-9 rounded-(--jf-radius-pill) border border-border-soft bg-page px-4 text-sm font-medium text-ink-700 hover:bg-surface-alt disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Previous
               </button>
-              <span className="text-sm text-neutral-500">
+              <span className="text-sm text-ink-500">
                 Page {currentPage} of {totalPages}
               </span>
               <button
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="h-9 rounded-xl border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="h-9 rounded-(--jf-radius-pill) border border-border-soft bg-page px-4 text-sm font-medium text-ink-700 hover:bg-surface-alt disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Next
               </button>
@@ -633,26 +642,26 @@ export default function ReferralsPage() {
 
       {/* ── SEEKER MODAL (ASK FOR REFERRAL) ───────────────────────────── */}
       {isModalOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/60 px-4 py-6 backdrop-blur-md">
-          <div className="relative max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-[2rem] border border-neutral-200 bg-white p-6 shadow-2xl sm:p-8 flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/60 px-4 py-6 backdrop-blur-md">
+          <div className="relative max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-(--jf-radius-panel) border border-border-soft bg-page p-6 shadow-[var(--jf-shadow-frame)] sm:p-8 flex flex-col">
             
             {/* Clear Close Button (Always Active) */}
             <button
               onClick={() => setIsModalOpen(false)}
-              className="absolute right-4 top-4 z-40 rounded-full border border-neutral-200 p-2 text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-800"
+              className="absolute right-4 top-4 z-40 rounded-full border border-border-soft p-2 text-ink-500 transition-colors hover:bg-surface-alt hover:text-ink-700"
               aria-label="Close referral form"
             >
               <X className="h-4 w-4" />
             </button>
 
             <div className="pr-10 flex-shrink-0">
-              <p className="text-sm font-bold uppercase tracking-[0.24em] text-neutral-500">
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-ink-500">
                 Ask for referral
               </p>
-              <h2 className="mt-2 text-3xl font-black tracking-tight text-neutral-950">
+              <h2 className="mt-2 text-2xl font-medium tracking-tight text-ink-900">
                 Tell us about the opportunity you want
               </h2>
-              <p className="mt-3 text-sm leading-6 text-neutral-600">
+              <p className="mt-3 text-sm leading-6 text-ink-600">
                 Share the basics and we&apos;ll save it as a referral request.
               </p>
             </div>
@@ -669,7 +678,7 @@ export default function ReferralsPage() {
                       value={formData.fullName}
                       onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                       placeholder="Jane Doe"
-                      className="h-11 rounded-xl border-neutral-200 focus-visible:ring-neutral-900/10"
+                      className="h-11 rounded-(--jf-radius-frame) border-border-soft focus-visible:ring-sapphire-bright/15"
                     />
                   </Field>
                   <Field label="Email" required>
@@ -678,7 +687,7 @@ export default function ReferralsPage() {
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       placeholder="jane@example.com"
-                      className="h-11 rounded-xl border-neutral-200 focus-visible:ring-neutral-900/10"
+                      className="h-11 rounded-(--jf-radius-frame) border-border-soft focus-visible:ring-sapphire-bright/15"
                     />
                   </Field>
                 </div>
@@ -689,7 +698,7 @@ export default function ReferralsPage() {
                       value={formData.phoneNumber}
                       onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
                       placeholder="+91 98765 43210"
-                      className="h-11 rounded-xl border-neutral-200 focus-visible:ring-neutral-900/10"
+                      className="h-11 rounded-(--jf-radius-frame) border-border-soft focus-visible:ring-sapphire-bright/15"
                     />
                   </Field>
                   <Field label="Desired job" required>
@@ -697,7 +706,7 @@ export default function ReferralsPage() {
                       value={formData.desiredJob}
                       onChange={(e) => setFormData({ ...formData, desiredJob: e.target.value })}
                       placeholder="Frontend Developer"
-                      className="h-11 rounded-xl border-neutral-200 focus-visible:ring-neutral-900/10"
+                      className="h-11 rounded-(--jf-radius-frame) border-border-soft focus-visible:ring-sapphire-bright/15"
                     />
                   </Field>
                 </div>
@@ -707,7 +716,7 @@ export default function ReferralsPage() {
                     value={formData.experience}
                     onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
                     placeholder="3 years in React and Next.js"
-                    className="h-11 rounded-xl border-neutral-200 focus-visible:ring-neutral-900/10"
+                    className="h-11 rounded-(--jf-radius-frame) border-border-soft focus-visible:ring-sapphire-bright/15"
                   />
                 </Field>
 
@@ -716,7 +725,7 @@ export default function ReferralsPage() {
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Tell us about your background, what roles you're targeting, and any useful context."
-                    className="min-h-[140px] rounded-2xl border-neutral-200 p-4 focus-visible:ring-neutral-900/10"
+                    className="min-h-[140px] rounded-(--jf-radius-frame) border-border-soft p-4 focus-visible:ring-sapphire-bright/15"
                   />
                 </Field>
 
@@ -725,14 +734,14 @@ export default function ReferralsPage() {
                     type="button"
                     variant="outline"
                     onClick={() => setIsModalOpen(false)}
-                    className="h-11 rounded-xl border-neutral-200 bg-white px-5 text-neutral-700 hover:bg-neutral-50"
+                    className="h-11 rounded-(--jf-radius-pill) border-border-soft bg-page px-5 text-ink-700 hover:bg-surface-alt"
                   >
                     Cancel
                   </Button>
                   <Button
                     type="submit"
                     disabled={submitting}
-                    className="h-11 rounded-xl bg-neutral-900 px-5 text-white hover:bg-neutral-700"
+                    className="h-11 rounded-(--jf-radius-pill) bg-ink-900 px-5 text-white hover:bg-ink-700"
                   >
                     {submitting ? "Sending..." : "Submit referral request"}
                   </Button>
@@ -746,22 +755,22 @@ export default function ReferralsPage() {
                     initial={{ opacity: 0, scale: 0.96, y: 15 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     transition={{ duration: 0.4, ease: "easeOut" }}
-                    className="w-full max-w-md rounded-2xl border border-neutral-200 bg-white/90 p-6 text-center shadow-[0_20px_50px_rgba(0,0,0,0.12)] backdrop-blur-md"
+                    className="w-full max-w-md rounded-(--jf-radius-frame) border border-border-frame bg-page/90 p-6 text-center shadow-[var(--jf-shadow-theatrical-sm)] backdrop-blur-md"
                   >
-                    <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-neutral-950 text-white shadow-md mb-3">
+                    <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-ink-900 text-white shadow-md mb-3">
                       <Lock className="h-4 w-4" />
                     </div>
 
-                    <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600">
+                    <div className="flex items-center justify-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-600">
                       <Sparkles className="h-3 w-3 fill-amber-500 text-amber-500" />
                       Members Only
                     </div>
 
-                    <h3 className="mt-2 text-base font-black tracking-tight text-neutral-950">
+                    <h3 className={`mt-2 ${CARD_TITLE}`}>
                       {user ? "Unlock Referral Matching" : "Sign in to request referrals"}
                     </h3>
                     
-                    <p className="mt-2 text-xs leading-relaxed text-neutral-500 px-4">
+                    <p className="mt-2 text-xs leading-relaxed text-ink-500 px-4">
                       Active membership tiers instantly lift the referral request constraint, matching your profile directly into the tracking pipeline of top internal referrers.
                     </p>
 
@@ -769,7 +778,7 @@ export default function ReferralsPage() {
                       {!user ? (
                         <a
                           href={loginHref}
-                          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-950 h-11 text-xs font-semibold text-white shadow-sm hover:bg-neutral-800 transition-colors"
+                          className="inline-flex w-full items-center justify-center gap-2 rounded-(--jf-radius-pill) bg-ink-900 h-11 text-xs font-semibold text-white shadow-sm hover:bg-ink-700 transition-colors"
                         >
                           Login to Unlock
                           <ArrowRight className="h-3.5 w-3.5" />
@@ -777,7 +786,7 @@ export default function ReferralsPage() {
                       ) : (
                         <a
                           href={membershipHref}
-                          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 h-11 text-xs font-bold text-neutral-950 shadow-sm hover:bg-amber-400 transition-colors tracking-wide"
+                          className="inline-flex w-full items-center justify-center gap-2 rounded-(--jf-radius-pill) bg-primary h-11 text-xs font-medium text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors tracking-wide"
                         >
                           Upgrade Tier Instantly
                           <ArrowRight className="h-3.5 w-3.5" />
@@ -795,67 +804,67 @@ export default function ReferralsPage() {
 
       {/* ── CONTACT DETAILS MODAL ─────────────────────────────────────── */}
       {contactModalData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/60 px-4 py-6 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="relative w-full max-w-sm rounded-[2rem] border border-neutral-200 bg-white p-6 shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/60 px-4 py-6 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-sm rounded-(--jf-radius-panel) border border-border-soft bg-page p-6 shadow-[var(--jf-shadow-frame)] overflow-hidden">
             <button
               onClick={() => setContactModalData(null)}
-              className="absolute right-4 top-4 z-40 rounded-full border border-neutral-200 p-2 text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-800"
+              className="absolute right-4 top-4 z-40 rounded-full border border-border-soft p-2 text-ink-500 transition-colors hover:bg-surface-alt hover:text-ink-700"
               aria-label="Close modal"
             >
               <X className="h-4 w-4" />
             </button>
 
             <div className="text-center mt-2 relative">
-              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-neutral-500">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-ink-500">
                 Contact Referrer
               </p>
-              <h3 className="mt-2 text-lg font-black tracking-tight text-neutral-950 truncate px-4">
+              <h3 className="mt-2 text-lg font-medium tracking-tight text-ink-900 truncate px-4">
                 {contactModalData.name}
               </h3>
 
               {/* --- Added Book Appointment Header Feature --- */}
-              <div className="mt-3 mb-12 flex items-center justify-center gap-2 px-4 py-1.5 bg-neutral-50 border border-neutral-100 rounded-full w-fit mx-auto">
-                <span className="text-xs font-semibold text-neutral-600">Book Appointment</span>
-                <span className="text-[9px] font-bold uppercase tracking-wider bg-neutral-900 text-white px-2 py-0.5 rounded-full scale-90">
+              <div className="mt-3 mb-12 flex items-center justify-center gap-2 px-4 py-1.5 bg-surface-alt border border-border-soft rounded-full w-fit mx-auto">
+                <span className="text-xs font-semibold text-ink-600">Book Appointment</span>
+                <span className="text-[9px] font-semibold uppercase tracking-wider bg-ink-900 text-white px-2 py-0.5 rounded-full scale-90">
                   Coming Soon
                 </span>
               </div>
 
               {/* --- Blurred Contact Details Container --- */}
               <div
-                className={`mt-6 space-y-4 text-left border-t border-neutral-100 pt-4 transition-all duration-500 ${!hasAccess && !loading
+                className={`mt-6 space-y-4 text-left border-t border-border-soft pt-4 transition-all duration-500 ${!hasAccess && !loading
                     ? 'blur-md select-none opacity-40 pointer-events-none'
                     : ''
                   }`}
               >
                 <div>
-                  <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
+                  <p className="text-[10px] font-semibold text-ink-400 uppercase tracking-wider">
                     Email
                   </p>
                   {contactModalData.email ? (
                     <a
                       href={`mailto:${contactModalData.email}`}
-                      className="mt-1 block text-sm font-semibold text-neutral-900 hover:underline break-all"
+                      className="mt-1 block text-sm font-semibold text-ink-900 hover:underline break-all"
                     >
                       {contactModalData.email}
                     </a>
                   ) : (
-                    <p className="mt-1 text-sm text-neutral-500 italic font-medium">
+                    <p className="mt-1 text-sm text-ink-500 italic font-medium">
                       Not added yet
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
+                  <p className="text-[10px] font-semibold text-ink-400 uppercase tracking-wider">
                     Phone
                   </p>
                   {contactModalData.phone ? (
-                    <p className="mt-1 text-sm font-semibold text-neutral-900 break-all">
+                    <p className="mt-1 text-sm font-semibold text-ink-900 break-all">
                       {contactModalData.phone}
                     </p>
                   ) : (
-                    <p className="mt-1 text-sm text-neutral-500 italic font-medium">
+                    <p className="mt-1 text-sm text-ink-500 italic font-medium">
                       Not added yet
                     </p>
                   )}
@@ -863,7 +872,7 @@ export default function ReferralsPage() {
 
                 <Button
                   onClick={() => setContactModalData(null)}
-                  className="mt-8 w-full h-10 rounded-xl bg-neutral-900 text-xs font-semibold text-white hover:bg-neutral-700"
+                  className="mt-8 w-full h-10 rounded-(--jf-radius-pill) bg-ink-900 text-xs font-semibold text-white hover:bg-ink-700"
                 >
                   Close
                 </Button>
@@ -876,26 +885,26 @@ export default function ReferralsPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, ease: "easeOut" }}
-                    className="w-full rounded-2xl border border-neutral-200/80 bg-white/90 p-5 shadow-[0_12px_32px_rgba(0,0,0,0.08)] backdrop-blur-md text-center"
+                    className="w-full rounded-(--jf-radius-frame) border border-border-frame/80 bg-page/90 p-5 shadow-[var(--jf-shadow-theatrical-sm)] backdrop-blur-md text-center"
                   >
-                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-neutral-950 text-white shadow-md mb-3">
+                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-ink-900 text-white shadow-md mb-3">
                       <Lock className="h-4 w-4" />
                     </div>
-                    <div className="flex items-center justify-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.2em] text-amber-600">
+                    <div className="flex items-center justify-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.2em] text-amber-600">
                       <Sparkles className="h-3 w-3 fill-amber-500 text-amber-500" />
                       Premium Feature
                     </div>
-                    <h4 className="mt-1 text-sm font-bold text-neutral-900">
+                    <h4 className="mt-1 text-sm font-medium text-ink-900">
                       {user ? "Unlock Contact Information" : "Sign in to view details"}
                     </h4>
-                    <p className="mt-1 text-[11px] leading-relaxed text-neutral-500 px-2">
+                    <p className="mt-1 text-[11px] leading-relaxed text-ink-500 px-2">
                       Gain instant access to verified direct emails, phone numbers, and hidden internal network tags.
                     </p>
                     <div className="mt-4">
                       {!user ? (
                         <a
                           href={loginHref}
-                          className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-neutral-950 h-10 text-xs font-semibold text-white shadow-sm hover:bg-neutral-800 transition-colors"
+                          className="inline-flex w-full items-center justify-center gap-1.5 rounded-(--jf-radius-pill) bg-ink-900 h-10 text-xs font-semibold text-white shadow-sm hover:bg-ink-700 transition-colors"
                         >
                           Login to Unlock
                           <ArrowRight className="h-3 w-3" />
@@ -903,7 +912,7 @@ export default function ReferralsPage() {
                       ) : (
                         <a
                           href={membershipHref}
-                          className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-amber-500 h-10 text-xs font-bold text-neutral-950 shadow-sm hover:bg-amber-400 transition-colors tracking-wide"
+                          className="inline-flex w-full items-center justify-center gap-1.5 rounded-(--jf-radius-pill) bg-primary h-10 text-xs font-medium text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors tracking-wide"
                         >
                           Upgrade Tier Now
                           <ArrowRight className="h-3 w-3" />

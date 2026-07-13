@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { H1_CTA_BAND, INTRO_TEXT, SECTION_TITLE } from "@/lib/typography";
 import { Mail, Briefcase, HelpCircle, ChevronDown, Send, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { BackgroundRippleLayout } from "@/components/background-ripple-layout";
@@ -75,7 +76,7 @@ export default function ContactPage() {
   };
 
   return (
-    <BackgroundRippleLayout tone="light" contentClassName="min-h-screen">
+    <BackgroundRippleLayout tone="light" contentClassName="min-h-screen" showRipple={false}>
       <Navbar tone="light" />
 
       <main className="mx-auto max-w-6xl px-6 pb-20 pt-32">
@@ -86,14 +87,14 @@ export default function ContactPage() {
           transition={{ duration: 0.5 }}
           className="text-center mb-16"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-100 text-amber-700 text-xs font-bold uppercase tracking-wider mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sapphire-50 border border-sapphire-100 text-sapphire-brand text-xs font-semibold uppercase tracking-wider mb-4">
             <Sparkles className="w-3 h-3" />
             Support Center
           </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold text-neutral-900 tracking-tight">
-            Let's build your <span className="text-amber-500">career together.</span>
+          <h1 className={H1_CTA_BAND}>
+            Let's build your <span className="text-sapphire-brand">career together.</span>
           </h1>
-          <p className="mt-4 text-lg text-neutral-600 max-w-2xl mx-auto">
+          <p className={`mt-4 max-w-2xl mx-auto ${INTRO_TEXT}`}>
             Whether you have a question about features, trials, or pricing, our team is ready to help you land your dream job.
           </p>
         </motion.div>
@@ -107,36 +108,36 @@ export default function ContactPage() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="space-y-4"
           >
-            <div className="p-5 rounded-2xl border border-neutral-200 bg-white shadow-sm">
-              <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center mb-3">
-                <Mail className="w-4 h-4 text-amber-600" />
+            <div className="p-5 rounded-(--jf-radius-frame) border border-border-soft bg-page shadow-[var(--jf-shadow-frame)]">
+              <div className="w-9 h-9 rounded-(--jf-radius-tile) bg-sapphire-50 flex items-center justify-center mb-3">
+                <Mail className="w-4 h-4 text-sapphire-brand" />
               </div>
-              <p className="text-xs font-bold uppercase tracking-wider text-neutral-500 mb-1">Email Support</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-ink-500 mb-1">Email Support</p>
               <a
                 href="mailto:contact@jobflix.in"
-                className="text-sm font-semibold text-neutral-900 hover:text-amber-600 transition-colors"
+                className="text-sm font-semibold text-ink-900 hover:text-sapphire-brand transition-colors"
               >
                 contact@jobflix.in
               </a>
-              <p className="text-xs text-neutral-400 mt-1">Under 24 hours</p>
+              <p className="text-xs text-ink-400 mt-1">Under 24 hours</p>
             </div>
 
-            <div className="p-5 rounded-2xl border border-neutral-200 bg-white shadow-sm">
-              <div className="w-9 h-9 rounded-xl bg-neutral-100 flex items-center justify-center mb-3">
-                <Briefcase className="w-4 h-4 text-neutral-600" />
+            <div className="p-5 rounded-(--jf-radius-frame) border border-border-soft bg-page shadow-[var(--jf-shadow-frame)]">
+              <div className="w-9 h-9 rounded-(--jf-radius-tile) bg-surface-alt flex items-center justify-center mb-3">
+                <Briefcase className="w-4 h-4 text-ink-600" />
               </div>
-              <p className="text-xs font-bold uppercase tracking-wider text-neutral-500 mb-1">Partnerships</p>
-              <p className="text-sm font-semibold text-neutral-900">For hiring &amp; collaborations</p>
-              <p className="text-xs text-neutral-400 mt-1">Reach out via the form</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-ink-500 mb-1">Partnerships</p>
+              <p className="text-sm font-semibold text-ink-900">For hiring &amp; collaborations</p>
+              <p className="text-xs text-ink-400 mt-1">Reach out via the form</p>
             </div>
 
-            <div className="p-5 rounded-2xl border border-neutral-200 bg-white shadow-sm">
-              <div className="w-9 h-9 rounded-xl bg-neutral-100 flex items-center justify-center mb-3">
-                <HelpCircle className="w-4 h-4 text-neutral-600" />
+            <div className="p-5 rounded-(--jf-radius-frame) border border-border-soft bg-page shadow-[var(--jf-shadow-frame)]">
+              <div className="w-9 h-9 rounded-(--jf-radius-tile) bg-surface-alt flex items-center justify-center mb-3">
+                <HelpCircle className="w-4 h-4 text-ink-600" />
               </div>
-              <p className="text-xs font-bold uppercase tracking-wider text-neutral-500 mb-1">Product Support</p>
-              <p className="text-sm font-semibold text-neutral-900">ResumeAssist &amp; Job Tracker</p>
-              <p className="text-xs text-neutral-400 mt-1">Technical help &amp; bug reports</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-ink-500 mb-1">Product Support</p>
+              <p className="text-sm font-semibold text-ink-900">ResumeAssist &amp; Job Tracker</p>
+              <p className="text-xs text-ink-400 mt-1">Technical help &amp; bug reports</p>
             </div>
           </motion.div>
 
@@ -147,26 +148,26 @@ export default function ContactPage() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="lg:col-span-2"
           >
-            <div className="bg-white border border-neutral-200 rounded-3xl p-8 shadow-sm">
+            <div className="bg-page border border-border-soft rounded-(--jf-radius-panel) p-8 shadow-[var(--jf-shadow-frame)]">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="name" className="text-sm font-semibold text-neutral-700">Name</Label>
+                    <Label htmlFor="name" className="text-sm font-semibold text-ink-700">Name</Label>
                     <Input
                       id="name"
                       placeholder="Jane Doe"
-                      className="rounded-xl border-neutral-200 bg-white text-neutral-900 focus-visible:ring-neutral-900/10 h-11"
+                      className="rounded-(--jf-radius-frame) border-border-soft bg-white text-ink-900 focus-visible:ring-sapphire-bright/15 h-11"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-sm font-semibold text-neutral-700">Email</Label>
+                    <Label htmlFor="email" className="text-sm font-semibold text-ink-700">Email</Label>
                     <Input
                       id="email"
                       type="email"
                       placeholder="jane@jobflix.in"
-                      className="rounded-xl border-neutral-200 bg-white text-neutral-900 focus-visible:ring-neutral-900/10 h-11"
+                      className="rounded-(--jf-radius-frame) border-border-soft bg-white text-ink-900 focus-visible:ring-sapphire-bright/15 h-11"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     />
@@ -174,28 +175,28 @@ export default function ContactPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="subject" className="text-sm font-semibold text-neutral-700">Subject</Label>
+                  <Label htmlFor="subject" className="text-sm font-semibold text-ink-700">Subject</Label>
                   <Select
                     value={formData.subject}
                     onValueChange={(val) => setFormData({ ...formData, subject: val })}
                   >
-                    <SelectTrigger className="h-11 rounded-xl border-neutral-200 bg-white text-neutral-900">
+                    <SelectTrigger className="h-11 rounded-(--jf-radius-frame) border-border-soft bg-white text-ink-900">
                       <SelectValue placeholder="How can we help?" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border-neutral-200 text-neutral-900">
+                    <SelectContent className="bg-white border-border-soft text-ink-900">
                       {SUBJECT_OPTIONS.map((opt) => (
-                        <SelectItem key={opt} value={opt} className="text-neutral-900 focus:bg-neutral-50 focus:text-neutral-900">{opt}</SelectItem>
+                        <SelectItem key={opt} value={opt} className="text-ink-900 focus:bg-surface-alt focus:text-ink-900">{opt}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="message" className="text-sm font-semibold text-neutral-700">Message</Label>
+                  <Label htmlFor="message" className="text-sm font-semibold text-ink-700">Message</Label>
                   <Textarea
                     id="message"
                     placeholder="Tell us more about your inquiry..."
-                    className="min-h-[160px] rounded-xl border-neutral-200 bg-white text-neutral-900 focus-visible:ring-neutral-900/10 p-4"
+                    className="min-h-[160px] rounded-(--jf-radius-frame) border-border-soft bg-white text-ink-900 focus-visible:ring-sapphire-bright/15 p-4"
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                   />
@@ -204,7 +205,7 @@ export default function ContactPage() {
                 <Button
                   variant="primary"
                   disabled={submitting}
-                  className="w-full md:w-auto px-10 h-12 rounded-xl font-bold"
+                  className="w-full md:w-auto px-10 h-12 rounded-(--jf-radius-pill) font-medium"
                 >
                   {submitting ? (
                     <span className="flex items-center gap-2">
@@ -228,29 +229,29 @@ export default function ContactPage() {
           transition={{ duration: 0.5, delay: 0.5 }}
           className="mt-16"
         >
-          <h2 className="text-xl font-bold text-neutral-900 mb-6 text-center">
+          <h2 className={`${SECTION_TITLE} mb-6 text-center`}>
             Frequently Asked Questions
           </h2>
           <div className="max-w-2xl mx-auto space-y-3">
             {FAQ_ITEMS.map((item, i) => (
               <div
                 key={i}
-                className="rounded-2xl border border-neutral-200 bg-white shadow-sm overflow-hidden"
+                className="rounded-(--jf-radius-frame) border border-border-soft bg-page shadow-[var(--jf-shadow-frame)] overflow-hidden"
               >
                 <button
                   type="button"
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  className="w-full flex items-center justify-between px-5 py-4 text-left text-sm font-semibold text-neutral-900 hover:bg-neutral-50 transition-colors"
+                  className="w-full flex items-center justify-between px-5 py-4 text-left text-sm font-semibold text-ink-900 hover:bg-surface-alt transition-colors"
                 >
                   {item.q}
                   <ChevronDown
-                    className={`w-4 h-4 text-neutral-400 shrink-0 transition-transform duration-200 ${
+                    className={`w-4 h-4 text-ink-400 shrink-0 transition-transform duration-200 ${
                       openFaq === i ? "rotate-180" : ""
                     }`}
                   />
                 </button>
                 {openFaq === i && (
-                  <div className="px-5 pb-4 text-sm text-neutral-600 leading-relaxed">
+                  <div className="px-5 pb-4 text-sm text-ink-600 leading-relaxed">
                     {item.a}
                   </div>
                 )}

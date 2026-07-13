@@ -28,13 +28,13 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-sm font-semibold text-neutral-800">
+      <Label className="text-sm font-semibold text-ink-700">
         {label}
-        {required && <span className="ml-1 text-rose-500">*</span>}
+        {required && <span className="ml-1 text-error">*</span>}
       </Label>
       {children}
-      {hint && !error && <p className="text-xs text-neutral-500">{hint}</p>}
-      {error && <p className="text-xs font-medium text-rose-500">{error}</p>}
+      {hint && !error && <p className="text-xs text-ink-500">{hint}</p>}
+      {error && <p className="text-xs font-medium text-error">{error}</p>}
     </div>
   );
 }
@@ -57,18 +57,18 @@ function SkillsInput({
   };
 
   return (
-    <div className="min-h-[44px] cursor-text rounded-xl border border-neutral-200 bg-white px-3 py-2 transition-colors focus-within:border-[#4353CF]/40 focus-within:ring-2 focus-within:ring-[#4353CF]/15">
+    <div className="min-h-[44px] cursor-text rounded-(--jf-radius-frame) border border-border-soft bg-page px-3 py-2 transition-colors focus-within:border-sapphire-bright/40 focus-within:ring-2 focus-within:ring-sapphire-bright/15">
       <div className="flex flex-wrap gap-2">
         {skills.map((skill) => (
           <span
             key={skill}
-            className="inline-flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700"
+            className="inline-flex items-center gap-1 rounded-full border border-sapphire-100 bg-sapphire-50 px-3 py-1 text-xs font-semibold text-sapphire-brand"
           >
             {skill}
             <button
               type="button"
               onClick={() => onChange(skills.filter((s) => s !== skill))}
-              className="ml-0.5 text-blue-400 hover:text-blue-700"
+              className="ml-0.5 text-sapphire-mid hover:text-sapphire-brand"
               aria-label={`Remove ${skill}`}
             >
               ×
@@ -89,7 +89,7 @@ function SkillsInput({
           }}
           onBlur={addSkill}
           placeholder={skills.length === 0 ? "Type a skill and press Enter" : "Add more..."}
-          className="min-w-[140px] flex-1 bg-transparent text-sm text-neutral-900 outline-none placeholder:text-neutral-400"
+          className="min-w-[140px] flex-1 bg-transparent text-sm text-ink-900 outline-none placeholder:text-ink-400"
         />
       </div>
     </div>
@@ -143,10 +143,7 @@ export default function BecomeReferrerPage() {
   };
 
   return (
-    <BackgroundRippleLayout
-      tone="light"
-      contentClassName="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(67,83,207,0.08),_transparent_35%),linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)]"
-    >
+    <BackgroundRippleLayout tone="light" showRipple={false}>
       <Navbar tone="light" />
 
       <main className="mx-auto max-w-2xl px-4 pb-24 pt-28 sm:px-6">
@@ -157,7 +154,7 @@ export default function BecomeReferrerPage() {
         >
           <Link
             href="/referrals"
-            className="inline-flex items-center gap-2 text-sm font-medium text-neutral-500 transition-colors hover:text-neutral-900"
+            className="inline-flex items-center gap-2 text-sm font-medium text-ink-500 transition-colors hover:text-ink-900"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to referrals hub
@@ -167,29 +164,29 @@ export default function BecomeReferrerPage() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-10 rounded-[2rem] border border-neutral-200 bg-white p-10 text-center shadow-sm"
+              className="mt-10 rounded-(--jf-radius-panel) border border-border-soft bg-page p-10 text-center shadow-sm"
             >
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
-                <BadgeCheck className="h-8 w-8 text-emerald-600" />
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
+                <BadgeCheck className="h-8 w-8 text-success" />
               </div>
-              <h2 className="mt-5 text-2xl font-black tracking-tight text-neutral-950">
+              <h2 className="mt-5 text-2xl font-medium tracking-tight text-ink-900">
                 You're now visible to job seekers
               </h2>
-              <p className="mt-3 text-sm leading-6 text-neutral-600">
+              <p className="mt-3 text-sm leading-6 text-ink-600">
                 Job seekers looking for referrals at{" "}
-                <span className="font-semibold text-neutral-900">{formData.company}</span>{" "}
+                <span className="font-semibold text-ink-900">{formData.company}</span>{" "}
                 can now find and contact you.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
                 <Button
                   asChild
-                  variant="primary" className="rounded-xl px-6"
+                  variant="primary" className="rounded-(--jf-radius-pill) px-6"
                 >
                   <Link href="/referrals">Back to referrals hub</Link>
                 </Button>
                 <Button
                   variant="outline"
-                  className="rounded-xl border-neutral-200 bg-white px-6 text-neutral-700 hover:bg-neutral-50"
+                  className="rounded-(--jf-radius-pill) border-border-soft bg-page px-6 text-ink-700 hover:bg-surface-alt"
                   onClick={() => {
                     setSuccess(false);
                     setEmailError(null);
@@ -201,15 +198,15 @@ export default function BecomeReferrerPage() {
               </div>
             </motion.div>
           ) : (
-            <div className="mt-8 rounded-[2rem] border border-neutral-200 bg-white p-8 shadow-sm">
-              <div className="mb-8 border-b border-neutral-100 pb-6">
-                <p className="text-sm font-bold uppercase tracking-[0.24em] text-[#4353CF]">
+            <div className="mt-8 rounded-(--jf-radius-panel) border border-border-soft bg-page p-8 shadow-sm">
+              <div className="mb-8 border-b border-border-soft pb-6">
+                <p className="text-sm font-bold uppercase tracking-[0.24em] text-sapphire-bright">
                   Become a referrer
                 </p>
-                <h1 className="mt-2 text-3xl font-black tracking-tight text-neutral-950">
+                <h1 className="mt-2 text-[28px] font-medium tracking-tight text-ink-900">
                   Help someone get their foot in the door
                 </h1>
-                <p className="mt-3 text-sm leading-6 text-neutral-600">
+                <p className="mt-3 text-sm leading-6 text-ink-600">
                   Set up your referrer profile so job seekers targeting your company can find and reach out to you.
                 </p>
               </div>
@@ -229,7 +226,7 @@ export default function BecomeReferrerPage() {
                       setEmailError(null);
                     }}
                     placeholder="you@yourcompany.com"
-                    className="h-11 rounded-xl border-neutral-200 focus-visible:ring-[#4353CF]/30"
+                    className="h-11 rounded-(--jf-radius-frame) border-border-soft focus-visible:ring-sapphire-bright/30"
                     required
                   />
                 </Field>
@@ -242,7 +239,7 @@ export default function BecomeReferrerPage() {
                         setFormData({ ...formData, company: e.target.value })
                       }
                       placeholder="Razorpay"
-                      className="h-11 rounded-xl border-neutral-200 focus-visible:ring-[#4353CF]/30"
+                      className="h-11 rounded-(--jf-radius-frame) border-border-soft focus-visible:ring-sapphire-bright/30"
                       required
                     />
                   </Field>
@@ -253,7 +250,7 @@ export default function BecomeReferrerPage() {
                         setFormData({ ...formData, designation: e.target.value })
                       }
                       placeholder="Senior Software Engineer"
-                      className="h-11 rounded-xl border-neutral-200 focus-visible:ring-[#4353CF]/30"
+                      className="h-11 rounded-(--jf-radius-frame) border-border-soft focus-visible:ring-sapphire-bright/30"
                       required
                     />
                   </Field>
@@ -277,23 +274,23 @@ export default function BecomeReferrerPage() {
                       setFormData({ ...formData, experience: e.target.value })
                     }
                     placeholder="e.g. 3 years"
-                    className="h-11 rounded-xl border-neutral-200 focus-visible:ring-[#4353CF]/30"
+                    className="h-11 rounded-(--jf-radius-frame) border-border-soft focus-visible:ring-sapphire-bright/30"
                   />
                 </Field>
 
-                <div className="flex flex-col-reverse gap-3 border-t border-neutral-100 pt-6 sm:flex-row sm:justify-end">
+                <div className="flex flex-col-reverse gap-3 border-t border-border-soft pt-6 sm:flex-row sm:justify-end">
                   <Button
                     type="button"
                     variant="outline"
                     asChild
-                    className="rounded-xl border-neutral-200 bg-white px-6 text-neutral-700 hover:bg-neutral-50"
+                    className="rounded-(--jf-radius-pill) border-border-soft bg-page px-6 text-ink-700 hover:bg-surface-alt"
                   >
                     <Link href="/referrals">Cancel</Link>
                   </Button>
                   <Button
                     type="submit"
                     disabled={submitting || formData.skills.length === 0}
-                    variant="primary" className="rounded-xl px-6 disabled:opacity-50"
+                    variant="primary" className="rounded-(--jf-radius-pill) px-6 disabled:opacity-50"
                   >
                     {submitting ? "Saving..." : "Become a referrer"}
                   </Button>
