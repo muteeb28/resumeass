@@ -13,7 +13,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     if (hasHydrated && !loading && !user) {
-      router.replace('/login')
+      router.replace(`${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/login?next=${encodeURIComponent(window.location.origin)}`)
     }
   }, [hasHydrated, loading, user, router])
 
