@@ -120,7 +120,7 @@ export default function CourseDetailPage() {
               {/* Course thumbnail */}
               {course.image && (
                 <div className="aspect-video rounded-2xl overflow-hidden mb-6 border border-[#EEF2F1]">
-                  <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
+                  <img src={`/courses/${course.slug}.jpg`} alt={course.title} className="w-full h-full object-cover" />
                 </div>
               )}
 

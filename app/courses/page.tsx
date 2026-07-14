@@ -132,13 +132,7 @@ export default function CoursesPage() {
                 <div className="border border-[#EEF2F1] rounded-2xl overflow-hidden hover:shadow-md transition-shadow duration-200 bg-white h-full flex flex-col">
                   {/* Thumbnail */}
                   <div className="aspect-video bg-gradient-to-br from-sapphire-50 to-page overflow-hidden">
-                    {course.image ? (
-                      <img src={course.image} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-[#2F7BE0]/20">
-                        {course.title.slice(0, 2).toUpperCase()}
-                      </div>
-                    )}
+                    <img src={`/courses/${course.slug}.jpg`} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </div>
 
                   {/* Content */}
