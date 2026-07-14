@@ -243,8 +243,8 @@ export const Navbar = ({
                     isLight ? "bg-[#ffffff] border-[#EEF2F1]" : "bg-[#09090b] border-white/10"
                   )}
                 >
-                  <a href={`${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/my-account/dashboard/me`} className={cn("block px-4 py-2 text-xs font-semibold rounded-lg", isLight ? "text-[#0B2A3C] hover:bg-[#F5F8F7]" : "text-[#fafafa] hover:bg-white/10")}>Profile</a>
-                  <a href={`${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/my-account/membership`} className={cn("block px-4 py-2 text-xs font-semibold rounded-lg", isLight ? "text-[#0B2A3C] hover:bg-[#F5F8F7]" : "text-[#fafafa] hover:bg-white/10")}>Memberships</a>
+                  <a href={"/my-account/dashboard/me"} className={cn("block px-4 py-2 text-xs font-semibold rounded-lg", isLight ? "text-[#0B2A3C] hover:bg-[#F5F8F7]" : "text-[#fafafa] hover:bg-white/10")}>Profile</a>
+                  <a href={"/my-account/membership"} className={cn("block px-4 py-2 text-xs font-semibold rounded-lg", isLight ? "text-[#0B2A3C] hover:bg-[#F5F8F7]" : "text-[#fafafa] hover:bg-white/10")}>Memberships</a>
                   <Link href="/resume" className={cn("block px-4 py-2 text-xs font-semibold rounded-lg", isLight ? "text-[#0B2A3C] hover:bg-[#F5F8F7]" : "text-[#fafafa] hover:bg-white/10")}>My resume</Link>
                   <button type="button" onClick={async () => { await logout(); router.replace("/"); }} className={cn("w-full text-left px-4 py-2 text-xs font-bold text-[#D6455B] rounded-lg", isLight ? "hover:bg-[#F5F8F7]" : "hover:bg-white/10")}>Logout</button>
                 </div>

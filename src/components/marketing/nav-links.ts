@@ -19,8 +19,8 @@ export const JOB_LINKS: NavDropdownLink[] = [
 ];
 
 export const LEARN_LINKS: NavDropdownLink[] = [
-  { name: "Courses", href: "https://jobflix.in/courses", description: "Video courses and learning paths.", icon: GraduationCap, external: true },
-  { name: "Opportunities", href: "http://localhost:3000/opportunities", description: "Explore job and career opportunities.", icon: Briefcase, external: true },
-  { name: "Prepare", href: "http://localhost:3000/prepare", description: "Practice problems and interview prep.", icon: ClipboardList, external: true },
+  { name: "Courses", href: "/courses", description: "Video courses and learning paths.", icon: GraduationCap, external: true },
+  { name: "Opportunities", href: "/opportunities", description: "Explore job and career opportunities.", icon: Briefcase, external: true },
+  { name: "Prepare", href: "/prepare", description: "Practice problems and interview prep.", icon: ClipboardList, external: true },
   { name: "Interview Questions", href: "/interview-questions", description: "Practice company-wise interview questions.", icon: BookOpen, external: false },
 ];

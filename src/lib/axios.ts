@@ -2,7 +2,7 @@ import axios from "axios";
 import { useUserStore } from "@/stores/useUserStore";
 
 const axiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_JOBFILX_APIURL,
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -23,10 +23,7 @@ axiosInstance.interceptors.response.use(
       useUserStore.getState().setUser(null);
 
       if (typeof window !== "undefined") {
-        // Constructs a clean fallback pointing to your main login page
-        // If your login logic is on account.jobflix.in, change this to match your central auth domain.
-        const loginBaseUrl = `${process.env.NEXT_PUBLIC_JOBFLIX_VIEW}/login` || 'https://jobflix.in/login';
-        window.location.href = loginBaseUrl;
+        window.location.href = '/';
       }
       
       // Stop the error chain since we are forcing a window relocation redirect
